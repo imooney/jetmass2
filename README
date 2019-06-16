@@ -1,0 +1,5 @@
+Jetmass2.0 is the next iteration of the jetmass analysis codebase. I don't plan to add any programming wizardry or bells and whistles; jetmass1.0 was simply getting too clunky, scattered, and chaotic as I heaped things haphazardly onto the disorganized pile of code. The goals for 2.0 are flexibility, streamlining, speed, organization, and clarity. And I hope it will be much easier after this to integrate the AA analysis once that is started.
+
+Currently, the project only handles QA, but it will (hopefully) match 1.0's capabilities within the next week or two. A few tests of the QA have been done and it seems the pp JP2 of 1.0 has been perfectly replicated in 2.0 (exact same number of accepted events, etc.).
+
+For more details on the jetmass project, see the 'jetmass' repo also on my GitHub.

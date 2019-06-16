@@ -1,0 +1,69 @@
+# ignore lists for git
+
+# that crap emacs generates
+*~
+*#
+
+# build directory
+build
+
+# executable directory
+bin
+
+# object files
+*.slo
+*.lo
+*.o
+*.cuo
+*.obj
+
+# dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# ROOT files
+*.root
+
+# logs
+*.err
+*.log
+*.out
+log
+
+# compiled python
+*.pyc
+*.pyd
+
+# apple DS_Store stuff
+.DS_Store*
+._*
+
+# possible output from analysis scripts
+*png
+*pdf
+
+# Executables
+*.exe
+*.out
+*.app
+
+
+# condor files
+CondorFile
+
+# RIVET stuff
+*.yoda
+*.hepmc
+
+# not sure what these files are but they're large...
+core.*
+
+# old code [careful if you use e.g. the word "gold"...]
+old_*

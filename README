@@ -1,5 +1,17 @@
 Jetmass2.0 is the next iteration of the jetmass analysis codebase. I don't plan to add any programming wizardry or bells and whistles; jetmass1.0 was simply getting too clunky, scattered, and chaotic as I heaped things haphazardly onto the disorganized pile of code. The goals for 2.0 are flexibility, streamlining, speed, organization, and clarity. And I hope it will be much easier after this to integrate the AA analysis once that is started.
 
-Currently, the project only handles QA, but it will (hopefully) match 1.0's capabilities within the next week or two. A few tests of the QA have been done and it seems the pp JP2 of 1.0 has been perfectly replicated in 2.0 (exact same number of accepted events, etc.).
+Currently, the project only handles QA and the main data analysis [reading in picos -> writing jet trees], but it will (hopefully) match 1.0's capabilities within the next week or two. A few tests of the QA have been done and it seems the pp JP2 of 1.0 has been perfectly replicated in 2.0 (exact same number of accepted events, etc.). Tests of the data analysis TBD.
 
 For more details on the jetmass project, see the 'jetmass' repo also on my GitHub.
+
+To use this code:
+   1) the file “macros/runroot” needs to be included in the path, e.g. “export PATH=~/jetmass2/macros/:{PATH}” in your config file (e.g. bashrc, cshrc, …) in order to compile macros
+   2) if you don’t have access to the WSU RHIG nodes on the WSU HPC Grid (or to the Grid itself), the “qsub” line of the submit script will need to be changed. If not using the RHIG nodes, simply remove -q erhiq. If not using the Grid at all, you’ll need to change the line to whatever job scheduler syntax is required on your setup.
+   3) to make some of the necessary directories, run "mkdir bin log out src/obj macros/bin macros/obj".
+   4) Perform the QA by running the "analyze.csh" submit script with the flag QA, the desired trigger, and the collision species.
+      E.g. "csh submit/analyze.csh QA JP2 pp".
+   5) Step 4) will have produced some output root files in "out/QA". You can 'hadd -f all_files.root individual_file*.root" to combine all events into one file.
+   6) Perform the data analysis by running "csh submit/analyze.csh data JP2 pp full" e.g. for ch+ne jets output.
+   7) To transform the jet trees into histograms, see the instructions in the README in the "CompileRoot" directory of my "fundamentals" repo, and use this method to run the file "macros/TreetoHist.cxx" with the submit script "submit/macro_submit.csh". It will take in each root file, and write as many root files as output, all of which can then be post facto 'hadd'ed.
+   8) Eventually there will be a nice plotting macro to run to take in these histograms, beautify them, plot them, and save them as pdfs. 
+ 

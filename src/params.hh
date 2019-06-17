@@ -72,7 +72,7 @@ namespace Analysis {
   //~~~~~~~~~~~~~~~~~~~~~~~pp quality cuts~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
   //bad runs and towers
-  const std::string sim_badTowers = "lists/dummy_tower_list.txt";
+  const std::string sim_badTowers = "lists/dummy_badtows.list";
   const std::string det_badTowers = "lists/Combined_pp200Y12_badtower.list";
   const std::string sim_bad_run_list = "lists/dummy_badrun.list";
   const std::string dat_bad_run_list = "lists/pp200Y12_badrun.list";
@@ -92,7 +92,7 @@ namespace Analysis {
   const double truth_FitOverMaxPts = -1; //still don't really understand this cut
 
   //detector: event, track, tower cuts
-  const std::string det_triggerString = "ppJP2"; //these trigger strings are not used in QA - it's done by hand
+  const std::string det_triggerString = "ppJP2"; //these trigger strings are not really used - it's done by hand with the triggerIDs
   const double det_absMaxVz = 30.0;//cm //|Vz|<=30 cm
   const double det_vZDiff = 1000.0;//cm //max diff btwn selected TPC vertex & most probable VPD vertex (in ppRun6 VPD vz = 0, so vZDiff should be > absMaxVz)
   const double det_evEtMin = -1;//GeV
@@ -130,7 +130,7 @@ namespace Analysis {
   //~~~~~~~~~~~~~~~~~~~~~~~~pAu quality cuts~~~~~~~~~~~~~~~~~~~~~~~~~//
   
   const std::string pAu_triggerString = "All";
-  const std::string pAu_badTowers = "lists/dummy_tower_list.txt";
+  const std::string pAu_badTowers = "lists/dummy_badtows.list";
   const std::string pAu_bad_run_list = "lists/dummy_badrun.list";
   
   //event, track, tower cuts

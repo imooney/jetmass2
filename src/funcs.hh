@@ -76,8 +76,11 @@ namespace Analysis {
   //initializes the reader with the appropriate cuts & selections
   void InitReader(TStarJetPicoReader *, TChain*, int, const std::string, const double, const double, const double, const double, const double, const double, const double, const double, const double, const double, const bool, const std::string, const std::string);
   
+  //converts tstarjetvectors into pseudojets for later clustering into jets; also assigns particle masses
+  void GatherParticles (TStarJetVectorContainer<TStarJetVector> *, TStarJetVector*, std::vector<fastjet::PseudoJet> &, const bool, const bool, TDatabasePDG*);
 
-
+  //accepts jets which pass a neutral energy fraction cut
+  void ApplyNEFSelection (const std::vector<fastjet::PseudoJet>, std::vector<fastjet::PseudoJet> &);
 
   //HISTOGRAMS [not used currently but might be useful in the future, so saving it here]
   template<class Key, class H, class hash=std::hash<Key>>

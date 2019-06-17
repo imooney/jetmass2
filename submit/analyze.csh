@@ -1,9 +1,13 @@
 #!/bin/csh
 #Isaac Mooney, WSU - June 2019
 #This script will expand as I add in more of the analyses: pp, pA, AA
-#It currently handles just the QA for pp. The next step is for it to handle pA QA:
-    #a "system" string can be added as $3. This will delineate what "base" should be for file input and will be chained with $2 to set the trigger as well.
-    #to test, though, will need also to work on the QA.cxx file to make it inclusive of the two.
+#It currently handles just the QA (for all three systems). Next it will be expanded to handle the data.
+
+#args:
+#1: the analysis type. Current options: QA, data
+#2: the trigger. Current options for pp: JP2, VPDMB(-nobsmd); for pA: JP2, BBCMB
+#3: the species. Current options: pp, pA, AA
+#4: an analysis-specific wildcard (not required). Currently being used in data to take either full or charged jets.
 
 set ExecPath = `pwd`
 set arg = '' 
@@ -15,6 +19,12 @@ if ($1 == 'QA') then
     # Create the folder name for output
     set outFile = QA
     echo 'Running in QA mode!'
+else if ($1 == 'data') then
+    make bin/data || exit
+    set execute = './bin/data'
+    # Create the folder name for output
+    set outFile = data
+    echo 'Running in data mode!'
 else
     echo 'Error: unrecognized analysis type option'
     exit
@@ -24,18 +34,18 @@ if ($2 == 'JP2' && $3 == 'pp') then
     set trigger = "ppJP2"
     set base = /nfs/rhi/STAR/Data/ppJP2Run12/sum	
     echo "Running on the ppJP2-triggered data!"
-else if ($2 == 'VPDMB' && $3 == 'pp') then
+else if ($2 == 'VPDMB' && $3 == 'pp') then #NOTE: for data mode, a request for anything but JP2 for pp is ignored!!!
     set trigger = "ppVPDMB"
     set base = /nfs/rhi/STAR/Data/ppMBRun12/sum
-    echo "Running on the ppMB-triggered data!"
+    echo "Running on the ppMB-triggered data, if this is QA mode! Otherwise, reverting back to ppJP2!"
 else if ($2 == 'JP2' && $3 == 'pA') then
     set trigger = "pAuJP2"
     set base = /nfs/rhi/STAR/Data/P16id/production_pAu200_2015/HT/pAu_2015_200_HT_1
     echo "Running on the pAuJP2-triggered data!"
-else if ($2 == 'BBCMB' && $3 == 'pA') then
+else if ($2 == 'BBCMB' && $3 == 'pA') then #NOTE: for data mode, a request for anything but JP2 for pA is ignored!!!
     set trigger = "pAuBBCMB"
     set base = /nfs/rhi/STAR/Data/P16id/production_pAu200_2015/MB/pAu_2015_200_MB_1
-    echo "Running on the pAuBBCMB-triggered data!"
+    echo "Running on the pAuBBCMB-triggered data, if this is QA mode! Otherwise, reverting back to pAuJP2!"
 else if ($3 == 'AA' || $3 == 'AuAu') then
     echo "AA is not ready yet - be patient!"
 else
@@ -84,7 +94,12 @@ foreach input ( ${base}* )
 
     set dummy = 'dummy' #this extra argument is for compatibility between QA and the other segments of the analysis (or for future expansion)
 
-    set arg = "$outLocation $outName $trigger $dummy $Files"
+    #setting command-line args based on the analysis file being used:
+    if ($1 == 'QA') then
+	set arg = "$outLocation $outName $trigger $dummy $Files"
+    else if ($1 == 'data') then
+	set arg = "$outLocation $outName $3 $4 $Files" #currently the only place that argument 4 shows up
+    endif
 
     echo "now submitting this script: "
     echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg

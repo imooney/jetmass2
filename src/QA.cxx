@@ -57,13 +57,13 @@ using namespace Analysis;
 typedef fastjet::contrib::SoftDrop SD;
 
 // -------------------------
-// Command line arguments: ( Defaults
-// Defined for debugging in main )
+// Command line arguments:
+// (Defaults defined for debugging)
 // [0]: output directory
 // [1]: name for the output root file containing histograms of observables
 // [2]: string for selecting events which pass a trigger
 // [3]: a dummy for now - if I add more features I may use it for something
-// [3]: input data: can be a single .root or a .txt or .list of root files - should always be last argument
+// [4]: input data: can be a single .root or a .txt or .list of root files - should always be last argument
 
 // DEF MAIN()
 int main ( int argc, const char** argv) {
@@ -78,7 +78,7 @@ int main ( int argc, const char** argv) {
   // Read in command line arguments
   // ------------------------------
   // Defaults
-  std::string executable = "./bin/ppjetmass"; // placeholder
+  std::string executable = "./bin/QA"; // placeholder
   std::string outputDir = "out/"; // directory where everything will be saved
   std::string outFileName = "test.root"; // histograms will be saved here
   std::string chainList = "list.txt"; // input file: can be .root, .txt, .list
@@ -105,7 +105,7 @@ int main ( int argc, const char** argv) {
     dummy             = arguments[3]; //can be replaced by another flag if I want to add it in later
     chainList         = arguments[4];
     
-    std::cout << "Running QA on the " << trigger << "-triggered data located in " << outputDir << "." << std::endl;
+    std::cout << "Running QA on the " << trigger << "-triggered data. Results will be output to " << outputDir << "." << std::endl;
     std::cout << "The input file is " << chainList << " and the output file is " << outFileName << "." << std::endl;
     
     break;
@@ -116,13 +116,26 @@ int main ( int argc, const char** argv) {
     break;
   }
   }
-  
-  //in place for now; will encapsulate in a function if it gets much more involved
+
+  //Setting up specifics of analysis based on the flags that were received above!
+  //bad run and tower lists specific to each dataset. Also apply the vzdiff cut to pAu.
+  string badtows = "", badruns = "";
+  double vzdiff= -1;
+  if (trigger.find("pp") != string::npos) {badtows = det_badTowers; badruns = dat_bad_run_list; vzdiff = det_vZDiff;}
+  if (trigger.find("pA") != string::npos) {badtows = pAu_badTowers; badruns = pAu_bad_run_list; vzdiff = pAu_vZDiff;}
+  if (trigger.find("AA") != string::npos) {badtows = ""; badruns = ""; vzdiff = -1;} //TBD
+  //in place for now; will encapsulate in a function if it gets much more involved. Hardcodes the trigger IDs.
   int tID1 = -9999, tID2 = -9999;
   if (trigger == "ppJP2") {tID1 = tppJP2; tID2 = -8888;} //-8888 just ensures it won't accidentally match a trigger
   if (trigger == "ppVPDMB") {tID1 = tppVPDMB_nobsmd; tID2 = -8888;}
   if (trigger == "pAuJP2") {tID1 = tpAuJP2a; tID2 = tpAuJP2b;}
   if (trigger == "pAuBBCMB") {tID1 = tpAuBBCMBa; tID2 = tpAuBBCMBb;}
+  //using the collision species, sets the run period range (would need to be done differently if using the same species from a different run period).
+  double run_period_start = 0, run_period_end = 0;
+  if (trigger.find("pp") != string::npos) {run_period_start = 13015000; run_period_end = 13075000;}
+  else if (trigger.find("pAu") != string::npos) {run_period_start = 16125000; run_period_end = 16159025;}
+  else {cout << "Warning: couldn't locate the start and end of the desired run period. Not filling the runID histograms!" << endl;}
+
 
   // Build our input now
   // --------------------
@@ -144,13 +157,14 @@ int main ( int argc, const char** argv) {
   // ---------------------------------
   TStarJetPicoReader* reader = new TStarJetPicoReader();
   //NOTE: I am implementing the trigger in this file, rather than pulling it from src/params.hh. So in this case, what is set in that file is irrelevant!
-  InitReader(reader, chain,100000 /*nEvents*/, "All" /*det_triggerString*/, det_absMaxVz, det_vZDiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, dat_maxEtTow, 0.9999, false, det_badTowers, dat_bad_run_list);
+  InitReader(reader, chain, nEvents, "All" /*det_triggerString*/, det_absMaxVz, vzdiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, dat_maxEtTow, 0.9999, false, badtows, badruns);
   
   // Data classes
   // ------------
   TStarJetVectorContainer<TStarJetVector>* container;
   TStarJetPicoEventHeader* header;
   TStarJetPicoEvent* event;
+  TStarJetPicoEventCuts* EventCuts = reader->GetEventCuts();//will use this for hardcoding checks if events passed selections
   
   // Histograms
   // ----------
@@ -165,7 +179,7 @@ int main ( int argc, const char** argv) {
   TH1D* hevt_vtx = new TH1D("hevt_vtx","hevt_vtx",100,-35,35);
   TH1D* hvpdvz = new TH1D("hvpdvz","hvpdvz",100,-35,35);
   TH1D* hvzdiff = new TH1D("hvzdiff","hvzdiff",100,0,5);
-  TH1D* hrunId = new TH1D("hrunId","hrunId",1000,13000000,14000000);//this is actually a dummy for now
+  TH1D* hrunId = new TH1D("hrunId","hrunId",1000,run_period_start,run_period_end);//this is actually a dummy for now
   TH1D* hn_vertices = new TH1D("hn_vertices","hn_vertices",40,0,40);
   TH1D* hn_globals = new TH1D("hn_globals","hn_globals",200,0,4000);
 
@@ -211,19 +225,19 @@ int main ( int argc, const char** argv) {
   TH2D* hbbc_coinc_trackPt = new TH2D("hbbc_coinc_trackPt",";BBC coincidence;p^{trk}_{T} [GeV/c]",200,0,2600000,200,0,40);
   TH2D* hbbc_coinc_towerEt = new TH2D("hbbc_coinc_towerEt",";BBC coincidence;E^{tow}_{T} [GeV]",200,0,2600000,200,0,40);
   
-  //all runID histograms are currently in a very wide range (the whole calendar year), will narrow once I've seen the actual range in the plots
-  TH2D* hrunId_trackPt = new TH2D("hrunId_trackPt",";run ID; p^{trk}_{T} [GeV/c]",1000,13015000,13075000,200,0,40);
-  TH2D* hrunId_towerEt = new TH2D("hrunId_towerEt",";run ID; E^{tow}_{T} [GeV]",1000,13015000,13075000,200,0,40);
-  TH2D* hrunId_towerId = new TH2D("hrunId_towerId",";run ID; tower ID",1000,13015000,13075000,4800,0.5,4800.5);
+  //all pp runID histograms are currently over a wide range, will narrow once I've seen the actual range in the plots  
+  TH2D* hrunId_trackPt = new TH2D("hrunId_trackPt",";run ID; p^{trk}_{T} [GeV/c]",1000,run_period_start,run_period_end,200,0,40);
+  TH2D* hrunId_towerEt = new TH2D("hrunId_towerEt",";run ID; E^{tow}_{T} [GeV]",1000,run_period_start,run_period_end,200,0,40);
+  TH2D* hrunId_towerId = new TH2D("hrunId_towerId",";run ID; tower ID",1000,run_period_start,run_period_end,4800,0.5,4800.5);
   
   //2D run ID dependence of events and tracks
-  TH2D* hrunId_evt_vtx = new TH2D("hrunId_evt_vtx","; runID; v_{z} [cm]",1000,13015000,13075000,100,-35,35);
-  TH2D* hrunId_bbc_coinc = new TH2D("hrunId_bbc_coinc","; runID; BBC coincidence [kHz]",1000,13015000,13075000,200,0,2600000);
-  TH2D* hrunId_trackDCA = new TH2D("hrunId_trackDCA","; runID; track DCA",1000,13015000,13075000,200,0,1);
+  TH2D* hrunId_evt_vtx = new TH2D("hrunId_evt_vtx","; runID; v_{z} [cm]",1000,run_period_start,run_period_end,100,-35,35);
+  TH2D* hrunId_bbc_coinc = new TH2D("hrunId_bbc_coinc","; runID; BBC coincidence [kHz]",1000,run_period_start,run_period_end,200,0,2600000);
+  TH2D* hrunId_trackDCA = new TH2D("hrunId_trackDCA","; runID; track DCA",1000,run_period_start,run_period_end,200,0,1);
   
   //3D run ID dependence of tracks and towers
-  TH3D* hrunId_trackEta_Phi = new TH3D("hrunId_trackEta_Phi",";runID;#eta_{trk};#phi_{trk}",1000,13015000,13075000,40,-1,1,120,-M_PI,M_PI);
-  TH3D* hrunId_towerEta_Phi = new TH3D("hrunId_towerEta_Phi",";runID;#eta_{tow};#phi_{tow}",1000,13015000,13075000,40,-1,1,120,-M_PI,M_PI);
+  TH3D* hrunId_trackEta_Phi = new TH3D("hrunId_trackEta_Phi",";runID;#eta_{trk};#phi_{trk}",1000,run_period_start,run_period_end,40,-1,1,120,-M_PI,M_PI);
+  TH3D* hrunId_towerEta_Phi = new TH3D("hrunId_towerEta_Phi",";runID;#eta_{tow};#phi_{tow}",1000,run_period_start,run_period_end,40,-1,1,120,-M_PI,M_PI);
 
   
   //vector of hists for easy writing
@@ -308,8 +322,11 @@ int main ( int argc, const char** argv) {
       // ----------------------------------------
       container = reader->GetOutputContainer();
 
-      // if it HAS the trigger, do the QA for the triggered events. Should ALWAYS be satisfied for pp, since I selected the JP2 trigger in initialization!
+      //if the event has the desired trigger, do the QA for the event
       if (header->HasTriggerId(tID1) || header->HasTriggerId(tID2)) {//see function "SetTriggers()" for assignment of tID1, tID2 (or above until it's written) 
+	//the event cuts don't check if the vzdiff is acceptable, so I have to hardcode it here.
+	if (!EventCuts->IsVertexZDiffOK(event)) {continue;}
+	
 	++ n_evts;
 	
 	//~~~global observables~~~//

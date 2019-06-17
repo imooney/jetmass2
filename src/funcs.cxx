@@ -130,10 +130,56 @@ namespace Analysis {
     reader->Init( nEvents ); //runs through all events with -1
   }
 
+  //This function simply converts TStarJetVectors from the event into PseudoJets for later clustering into jets with FastJet.
+  //It also very importantly assigns a mass to each particle after the conversion.
+  //The assigned mass is dependent on whether the function call is for particle-level (e.g. Pythia) [where we know the rest masses] or detector-level (e.g. Geant, data) [where we don't know them].
+  void GatherParticles ( TStarJetVectorContainer<TStarJetVector> * container, TStarJetVector *sv, std::vector<fastjet::PseudoJet> & Particles, const bool full, const bool py, TDatabasePDG *pdg){
+    for ( int i = 0; i < container->GetEntries() ; ++i ) {
+      sv = container->Get(i);
+      fastjet::PseudoJet current = fastjet::PseudoJet( *sv );
 
+      if (sv->GetCharge() != 0 && !py) { // charged at detector-level -> charged pion mass
+        current.reset_PtYPhiM(sqrt(current.perp2()),current.rap(),current.phi(), chPionMass); //assigning pion mass to charged particles
+      }
+      else if (sv->GetCharge() == 0 && !py) { // neutral at detector-level -> zero mass
+        current.reset_PtYPhiM(sqrt(current.perp2()),current.rap(),current.phi(), 0); //neutral particles massless!
+      }
+      else if (py) { // at particle-level -> PDG mass
+        current.reset_PtYPhiM(sqrt(current.perp2()), current.rap(), current.phi(), pdg->GetParticle(sv->mc_pdg_pid())->Mass());
+      }
+      //DEBUG:
+      std::cout << "Particle-level? " << py << std::endl << "ASSIGNING MASS " << current.m() << " TO CONSTITUENT " << i << " WITH CHARGE " << sv->GetCharge() << " AND MASS " << sv->GetPicoMass() << std::endl;
+      std::cout << "THE PARTICLE, WITH PID " << sv->mc_pdg_pid() << ", HAS MASS " << pdg->GetParticle(sv->mc_pdg_pid())->Mass() << "[should be the same as the last number above]" << std::endl;               
 
+      if ((sv->GetCharge() == 0) && (full == 0)) { continue; } //!if we don't want full jets, skip neutrals                                                     
+      current.set_user_index( sv->GetCharge() );
+      
+      //DEBUG:
+      std::cout << "ending with charge: " << current.user_index() << " for particle " << i << std::endl;
+      
+      Particles.push_back(current);
+    }
+    return;
+  }
 
-
+  //this function takes in a jet sample, and keeps whichever ones pass a neutral energy fraction selection (i.e. have >= x% of their energy in tracks) 
+  //!the name is a bit of a misnomer, we're actually using pT, not energy
+  void ApplyNEFSelection(const std::vector<fastjet::PseudoJet> init, std::vector<fastjet::PseudoJet> & result) {
+    //!Implementing a neutral energy fraction cut on inclusive jets 
+    for (int i = 0; i < init.size(); ++ i) { //looping over the jet
+      double towersum = 0; double ptsum = 0; //start with zero energy, neutral or otherwise
+      for (int j = 0; j < init[i].constituents().size(); ++ j) { //loop over the jet constituents
+        if (init[i].constituents()[j].user_index() == 0) { //if it's neutral, add its pT to the towers
+          towersum += init[i].constituents()[j].pt();
+        }
+        ptsum += init[i].constituents()[j].pt(); //whether or not it's neutral, add its pT to the total
+      }//constituent loop
+      if (towersum / (double) ptsum < NEF_max) { //if the fraction in the towers is less than the threshold, accept it
+        result.push_back(init[i]);
+      }//if
+    }//jet loop
+    return;
+  }
   
   //~~~~~~~FILL HISTS [not used currently, but might be useful in the future so saving it here]~~~~~~~//
   

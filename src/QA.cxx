@@ -322,118 +322,127 @@ int main ( int argc, const char** argv) {
       // ----------------------------------------
       container = reader->GetOutputContainer();
 
-      //if the event has the desired trigger, do the QA for the event
-      if (header->HasTriggerId(tID1) || header->HasTriggerId(tID2)) {//see function "SetTriggers()" for assignment of tID1, tID2 (or above until it's written) 
-	//the event cuts don't check if the vzdiff is acceptable, so I have to hardcode it here.
-	if (!EventCuts->IsVertexZDiffOK(event)) {continue;}
+      //~~~~~~~~~~~~~~~~~~~~~~~~~~~Skipping undesired events!~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+      
+      //if the event lacks the desired trigger, skip it
+      //see function "SetTriggers()" for assignment of tID1, tID2 (or above until I write it)
+      if (!(header->HasTriggerId(tID1) || header->HasTriggerId(tID2))) {continue;}
+      //the event cuts don't check if the vzdiff is acceptable, so I have to hardcode it here.
+      if (!EventCuts->IsVertexZDiffOK(event)) {continue;}
+      if (trigger.find("pA") != string::npos) {//removing some runs by hand in pA until we have bad run/tower lists
+	//TEMPORARILY SKIPPING THESE RUNS for pA [should define these runIDs somewhere later so they're not magic numbers]
+	if (header->GetRunId() >= 16142059 && header->GetRunId() <= 16149001) {continue;}
+	//something weird happened to the towers in run 16135032 (and it looks like it started at the end of run 16135031), so excluding both
+	if (header->GetRunId() == 16135031 || header->GetRunId() == 16135032) {continue;}
+      }
+      //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+      
+      ++ n_evts;
 	
-	++ n_evts;
+      //~~~global observables~~~//
+      //1Ds
+      double n_tows_raw = header->GetNOfTowers();        //!this would be before cuts - see later for actual assignment [this isn't used currently]
+      double n_primaries = header->GetNOfPrimaryTracks(); //!this would be before cuts - see later for actual assignment
+      //first, assigning some info to variables for ease of repeated use later
+      double bbc = header->GetBbcCoincidenceRate();
+      double runId = header->GetRunId();
+      hbbc_coinc->Fill(bbc); //BBC coincidence rate
+      hn_vertices->Fill(header->GetNumberOfVertices()); //vertex multiplicity
+      hn_globals->Fill(header->GetNGlobalTracks()); //global multiplicity
+      hrunId->Fill(runId); //run ID
+      //~~~event vertex information~~~//
+      double evt_vtx = header->GetPrimaryVertexZ();
+      double vpdvz = header->GetVpdVz();
+      hevt_vtx->Fill(evt_vtx); //TPC event vertex
+      hvpdvz->Fill(vpdvz); //VPD event vertex
+      hvzdiff->Fill(abs(evt_vtx - vpdvz)); //|TPC - VPD Vz|
+      //2Ds [trk and tow multiplicity vs. bbc coincidence to be filled later since cuts must be applied first]
+      hbbc_coinc_evt_vtx->Fill(bbc, evt_vtx);
+      hbbc_coinc_n_vertices->Fill(bbc, header->GetNumberOfVertices());
+      hbbc_coinc_n_globals->Fill(bbc, header->GetNGlobalTracks());
+      hrunId_evt_vtx->Fill(runId, evt_vtx);
+      hrunId_bbc_coinc->Fill(runId, bbc);
+      hn_globals_n_primaries->Fill(header->GetNGlobalTracks(), header->GetNOfPrimaryTracks());
 	
-	//~~~global observables~~~//
+      //~~~raw track observables~~~//
+      for (int i = 0; i < header->GetNOfPrimaryTracks(); ++ i) {
+	double nhits = event->GetPrimaryTrack(i)->GetNOfFittedHits();
+	double nhitsposs = event->GetPrimaryTrack(i)->GetNOfPossHits();
+	htrackNhits->Fill(nhits); //number of used pad hits
+	htrackNhitsposs->Fill(nhitsposs); //number of possible pad hits
+	htrackNhitsratio->Fill(nhits/(double)nhitsposs); //ratio between the above two
+      }//end raw track loop
+	
+      //~~~applying selection criteria~~~//
+      TList *trks = reader->GetListOfSelectedTracks();
+      TIter nxt_trk(trks);
+
+      unsigned n_trks_in_evt = 0;
+      //now looping over the tracks which pass selections (including hardcoded eta and pT cuts)
+      while (TStarJetPicoPrimaryTrack* trk = (TStarJetPicoPrimaryTrack*) nxt_trk()) {
+	if (fabs(trk->GetEta()) > 1.0 || trk->GetPt() < 0.2) {//!my cuts are on particle-level, not primary-level, so have to add these in by hand
+	  continue;
+	}
 	//1Ds
-	double n_tows_raw = header->GetNOfTowers();        //!this would be before cuts - see later for actual assignment [this isn't used currently]
-	double n_primaries = header->GetNOfPrimaryTracks(); //!this would be before cuts - see later for actual assignment
-	//first, assigning some info to variables for ease of repeated use later
-	double bbc = header->GetBbcCoincidenceRate();
-	double runId = header->GetRunId();
-	hbbc_coinc->Fill(bbc); //BBC coincidence rate
-        hn_vertices->Fill(header->GetNumberOfVertices()); //vertex multiplicity
-	hn_globals->Fill(header->GetNGlobalTracks()); //global multiplicity
-	hrunId->Fill(runId); //run ID
-	//~~~event vertex information~~~//
-	double evt_vtx = header->GetPrimaryVertexZ();
-	double vpdvz = header->GetVpdVz();
-	hevt_vtx->Fill(evt_vtx); //TPC event vertex
-	hvpdvz->Fill(vpdvz); //VPD event vertex
-	hvzdiff->Fill(abs(evt_vtx - vpdvz)); //|TPC - VPD Vz|
-	//2Ds [trk and tow multiplicity vs. bbc coincidence to be filled later since cuts must be applied first]
-	hbbc_coinc_evt_vtx->Fill(bbc, evt_vtx);
-	hbbc_coinc_n_vertices->Fill(bbc, header->GetNumberOfVertices());
-	hbbc_coinc_n_globals->Fill(bbc, header->GetNGlobalTracks());
-	hrunId_evt_vtx->Fill(runId, evt_vtx);
-	hrunId_bbc_coinc->Fill(runId, bbc);
-	hn_globals_n_primaries->Fill(header->GetNGlobalTracks(), header->GetNOfPrimaryTracks());
-	
-	//~~~raw track observables~~~//
-	for (int i = 0; i < header->GetNOfPrimaryTracks(); ++ i) {
-	  double nhits = event->GetPrimaryTrack(i)->GetNOfFittedHits();
-	  double nhitsposs = event->GetPrimaryTrack(i)->GetNOfPossHits();
-          htrackNhits->Fill(nhits); //number of used pad hits
-          htrackNhitsposs->Fill(nhitsposs); //number of possible pad hits
-	  htrackNhitsratio->Fill(nhits/(double)nhitsposs); //ratio between the above two
-        }//end raw track loop
-	
-	//~~~applying selection criteria~~~//
-	TList *trks = reader->GetListOfSelectedTracks();
-        TIter nxt_trk(trks);
-
-	unsigned n_trks_in_evt = 0;
-	//now looping over the tracks which pass selections (including hardcoded eta and pT cuts)
-        while (TStarJetPicoPrimaryTrack* trk = (TStarJetPicoPrimaryTrack*) nxt_trk()) {
-          if (fabs(trk->GetEta()) > 1.0 || trk->GetPt() < 0.2) {//!my cuts are on particle-level, not primary-level, so have to add these in by hand
-            continue;
-	  }
-	  //1Ds
-          htrackDCA->Fill(trk->GetDCA()); //distance of closest approach to the primary vertex
-          htrackPt->Fill(trk->GetPt());
-          htrackEta->Fill(trk->GetEta());
-          htrackPhi->Fill(trk->GetPhi());
-	  //2Ds
-	  htrackEta_Phi->Fill(trk->GetEta(), trk->GetPhi());
-	  hbbc_coinc_trackDCA->Fill(bbc, trk->GetDCA());
-	  hbbc_coinc_trackPt->Fill(bbc, trk->GetPt());
-	  hrunId_trackPt->Fill(runId, trk->GetPt());
-	  hrunId_trackDCA->Fill(runId, trk->GetDCA());
-	  //3Ds
-	  htrackPt_Eta_Phi->Fill(trk->GetPt(), trk->GetEta(), trk->GetPhi());
-	  hrunId_trackEta_Phi->Fill(runId, trk->GetEta(), trk->GetPhi());
+	htrackDCA->Fill(trk->GetDCA()); //distance of closest approach to the primary vertex
+	htrackPt->Fill(trk->GetPt());
+	htrackEta->Fill(trk->GetEta());
+	htrackPhi->Fill(trk->GetPhi());
+	//2Ds
+	htrackEta_Phi->Fill(trk->GetEta(), trk->GetPhi());
+	hbbc_coinc_trackDCA->Fill(bbc, trk->GetDCA());
+	hbbc_coinc_trackPt->Fill(bbc, trk->GetPt());
+	hrunId_trackPt->Fill(runId, trk->GetPt());
+	hrunId_trackDCA->Fill(runId, trk->GetDCA());
+	//3Ds
+	htrackPt_Eta_Phi->Fill(trk->GetPt(), trk->GetEta(), trk->GetPhi());
+	hrunId_trackEta_Phi->Fill(runId, trk->GetEta(), trk->GetPhi());
 	  
-	  //  trackNhits.push_back(trk->GetNOfFittedHits()); //this would be after cuts - see earlier for actual assignment
-          //trackNhitsposs.push_back(trk->GetNOfPossHits()); //this would be after cuts - see earlier for actual assignment
-          ++n_trks; //number of tracks passing all cuts in the event. Will help get an average number / event later, for debugging output
-	  ++n_trks_in_evt; //same as above but reset to zero for each event for a per-event count
-        }//end track loop
-	hn_trks->Fill(n_trks_in_evt); //trk multiplicity
+	//  trackNhits.push_back(trk->GetNOfFittedHits()); //this would be after cuts - see earlier for actual assignment
+	//trackNhitsposs.push_back(trk->GetNOfPossHits()); //this would be after cuts - see earlier for actual assignment
+	++n_trks; //number of tracks passing all cuts in the event. Will help get an average number / event later, for debugging output
+	++n_trks_in_evt; //same as above but reset to zero for each event for a per-event count
+      }//end track loop
+      hn_trks->Fill(n_trks_in_evt); //trk multiplicity
 
-	//~~~applying selection criteria~~~//
-        TList *tows = reader->GetListOfSelectedTowers();
-        TIter nxt_tow(tows);
+      //~~~applying selection criteria~~~//
+      TList *tows = reader->GetListOfSelectedTowers();
+      TIter nxt_tow(tows);
 	
-	unsigned n_tows_in_evt = 0;
-	//now looping over the towers which pass selections (including hardcoded eta and Et cuts)
-        while (TStarJetPicoTower* tow = (TStarJetPicoTower*) nxt_tow()) {
-          if (fabs(tow->GetEta()) > 1.0 || tow->GetEt() < 0.2)
-            continue;
-	  //1Ds
-          htowerEta->Fill(tow->GetEta());
-          htowerPhi->Fill(tow->GetPhi());
-          htowerEt->Fill(tow->GetEt());
-          htowerId->Fill(tow->GetId());
-	  //2Ds
-	  htowerEta_Phi->Fill(tow->GetEta(), tow->GetPhi());
-	  htowerId_Et->Fill(tow->GetId(), tow->GetEt());
-	  hbbc_coinc_towerEt->Fill(bbc, tow->GetEt());
-	  hrunId_towerEt->Fill(runId, tow->GetEt());
-	  hrunId_towerId->Fill(runId, tow->GetId());
-	  //3Ds
-	  htowerEt_Eta_Phi->Fill(tow->GetEt(), tow->GetEta(), tow->GetPhi());
-	  hrunId_towerEta_Phi->Fill(runId, tow->GetEta(), tow->GetPhi());
+      unsigned n_tows_in_evt = 0;
+      //now looping over the towers which pass selections (including hardcoded eta and Et cuts)
+      while (TStarJetPicoTower* tow = (TStarJetPicoTower*) nxt_tow()) {
+	if (fabs(tow->GetEta()) > 1.0 || tow->GetEt() < 0.2)
+	  continue;
+	//1Ds
+	htowerEta->Fill(tow->GetEta());
+	htowerPhi->Fill(tow->GetPhi());
+	htowerEt->Fill(tow->GetEt());
+	htowerId->Fill(tow->GetId());
+	//2Ds
+	htowerEta_Phi->Fill(tow->GetEta(), tow->GetPhi());
+	htowerId_Et->Fill(tow->GetId(), tow->GetEt());
+	hbbc_coinc_towerEt->Fill(bbc, tow->GetEt());
+	hrunId_towerEt->Fill(runId, tow->GetEt());
+	hrunId_towerId->Fill(runId, tow->GetId());
+	//3Ds
+	htowerEt_Eta_Phi->Fill(tow->GetEt(), tow->GetEta(), tow->GetPhi());
+	hrunId_towerEta_Phi->Fill(runId, tow->GetEta(), tow->GetPhi());
 	  
-	  ++n_tows; //number of towers passing all cuts in the event
-	  ++n_tows_in_evt;
-        }//tower loop
-	hn_tows->Fill(n_tows_in_evt); //tow multiplicity
-      }// if statement (trigger)
-    } // Event loop
+	++n_tows; //number of towers passing all cuts in the event
+	++n_tows_in_evt;
+      }//tower loop
+      hn_tows->Fill(n_tows_in_evt); //tow multiplicity
+    }//event loop
   }catch ( std::exception& e) {
     std::cerr << "Caught " << e.what() << std::endl;
     return -1;
   }
-
+  
   // Output
   // ------                                                                                                                                                                                               
   TFile* fout = new TFile((outputDir + outFileName).c_str(), "RECREATE");
-
+  
   // Close up shop
   // -------------
   //fout->Write();

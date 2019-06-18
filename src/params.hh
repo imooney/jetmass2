@@ -82,7 +82,7 @@ namespace Analysis {
   //truth: event, track, tower cuts
   const std::string truth_triggerString = "All"; //triggers are only mocked up in the Geant
   const double truth_absMaxVz = 1000;//cm //want events that come from the center of the detector, not e.g. beam pipe interactions
-  const double truth_vZDiff = 1000;//cm //want agreement between detectors - less likely to be trash
+  const double truth_vZDiff = 9999;//cm //want agreement between detectors - less likely to be trash
   const double truth_evEtMin = -1;//GeV //this basically acts like a trigger, but don't need it if we have actual triggers
   const double truth_evEtMax = 1000;//GeV //at detector-level, remove high energy events because high-pT tracks have poor resolution?
   const double truth_evPtMax = 1000;//GeV 
@@ -94,7 +94,7 @@ namespace Analysis {
   //detector: event, track, tower cuts
   const std::string det_triggerString = "ppJP2"; //these trigger strings are not really used - it's done by hand with the triggerIDs
   const double det_absMaxVz = 30.0;//cm //|Vz|<=30 cm
-  const double det_vZDiff = 1000.0;//cm //max diff btwn selected TPC vertex & most probable VPD vertex (in ppRun6 VPD vz = 0, so vZDiff should be > absMaxVz)
+  const double det_vZDiff = 9999;//cm //max diff btwn selected TPC vertex & most probable VPD vertex (in ppRun6 VPD vz = 0, so vZDiff should be > absMaxVz)
   const double det_evEtMin = -1;//GeV
   const double det_evEtMax = 30.0;//GeV
   const double det_evPtMax = 30.0;//GeV

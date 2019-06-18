@@ -148,14 +148,14 @@ namespace Analysis {
         current.reset_PtYPhiM(sqrt(current.perp2()), current.rap(), current.phi(), pdg->GetParticle(sv->mc_pdg_pid())->Mass());
       }
       //DEBUG:
-      std::cout << "Particle-level? " << py << std::endl << "ASSIGNING MASS " << current.m() << " TO CONSTITUENT " << i << " WITH CHARGE " << sv->GetCharge() << " AND MASS " << sv->GetPicoMass() << std::endl;
-      std::cout << "THE PARTICLE, WITH PID " << sv->mc_pdg_pid() << ", HAS MASS " << pdg->GetParticle(sv->mc_pdg_pid())->Mass() << "[should be the same as the last number above]" << std::endl;               
+      //std::cout << "Particle-level? " << py << std::endl << "ASSIGNING MASS " << current.m() << " TO CONSTITUENT " << i << " WITH CHARGE " << sv->GetCharge() << " AND MASS " << sv->GetPicoMass() << std::endl;
+      //std::cout << "THE PARTICLE, WITH PID " << sv->mc_pdg_pid() << ", HAS MASS " << pdg->GetParticle(sv->mc_pdg_pid())->Mass() << "[should be the same as the last number above]" << std::endl;               
 
       if ((sv->GetCharge() == 0) && (full == 0)) { continue; } //!if we don't want full jets, skip neutrals                                                     
       current.set_user_index( sv->GetCharge() );
       
       //DEBUG:
-      std::cout << "ending with charge: " << current.user_index() << " for particle " << i << std::endl;
+      //std::cout << "ending with charge: " << current.user_index() << " for particle " << i << std::endl;
       
       Particles.push_back(current);
     }

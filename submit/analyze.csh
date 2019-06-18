@@ -76,7 +76,7 @@ foreach input ( ${base}* )
     #synthesize the output file base name from the input file base name and the options passed
     set OutBase = `basename $input | sed 's/.root//g'`
     set uscore = "_" #useful for chaining variables together
-    set OutBase = "$OutBase$uscore$trigger"
+    set OutBase = "$OutBase$uscore$trigger$uscore$4" #need to test that the last appendage works even if $4 doesn't exist
     
     #make the output path and names
     set outLocation = out/${outFile}/
@@ -98,7 +98,7 @@ foreach input ( ${base}* )
     if ($1 == 'QA') then
 	set arg = "$outLocation $outName $trigger $dummy $Files"
     else if ($1 == 'data') then
-	set arg = "$outLocation $outName $3 $4 $Files" #currently the only place that argument 4 shows up
+	set arg = "$outLocation $outName $3 $4 $Files"
     endif
 
     echo "now submitting this script: "

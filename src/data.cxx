@@ -108,7 +108,7 @@ int main ( int argc, const char** argv) {
     if (arguments[3] == "ch") {full = 0;} else {full = 1;} //either ch+ne jets (default) or ch jets (if "ch")
     chainList         = arguments[4];
             
-    std::cout << "Running analysis of " << arguments[2] << " jets in the " << species << " data. Results will be output to " << outputDir << "." << std::endl;
+    std::cout << "Running analysis of " << arguments[3] << " jets in the " << species << " data. Results will be output to " << outputDir << "." << std::endl;
     std::cout << "The input file is " << chainList << " and the output file is " << outFileName << "." << std::endl;
     
     break;
@@ -150,7 +150,7 @@ int main ( int argc, const char** argv) {
   // Build the event structure w/ cuts
   // ---------------------------------
   TStarJetPicoReader * reader = new TStarJetPicoReader();
-  InitReader(reader, chain, 1000/*nEvents*/, "All"/*det_triggerString*/, det_absMaxVz, vzdiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, dat_maxEtTow, 0.9999, false, badtows, badruns);
+  InitReader(reader, chain, nEvents, "All"/*det_triggerString*/, det_absMaxVz, vzdiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, dat_maxEtTow, 0.9999, false, badtows, badruns);
 
   // Data classes
   // ------------
@@ -252,25 +252,34 @@ int main ( int argc, const char** argv) {
       //get the event header
       event = reader->GetEvent();
       header = event->GetHeader();
-      
-      //the event cuts don't check if the vzdiff is acceptable, so I have to hardcode it here.
-      if (!EventCuts->IsVertexZDiffOK(event)) {continue;} 
 
       particles.clear();
       
       // Get the output container from the reader
       // ----------------------------------------
       container = reader->GetOutputContainer();
+      
+      //~~~~~~~~~~~~~~~~~~~~~~~~~~~Skipping undesired events!~~~~~~~~~~~~~~~~~~~~~~~~~~~~//                                                                    
 
-      //if the event doesn't have the desired trigger, skip the event
-      if (!(header->HasTriggerId(tID1) || header->HasTriggerId(tID2))) {//see function "SetTriggers()" for assignment of tID1, tID2 (or above until it's written)
-	continue;
+      //if the event lacks the desired trigger, skip it                                                                                                        
+      //see function "SetTriggers()" for assignment of tID1, tID2 (or above until I write it)                                                                  
+      if (!(header->HasTriggerId(tID1) || header->HasTriggerId(tID2))) {cout << "DEBUG: skipping this event because it lacks appropriate triggers. Does it have trigger ID " << tID1 << "? " << header->HasTriggerId(tID1) << endl; continue;}
+      if (species == "pA") {//removing some runs by hand in pA until we have bad run/tower lists
+        //TEMPORARILY SKIPPING THESE RUNS for pA [should define these runIDs somewhere later so they're not magic numbers]                                     
+        if (header->GetRunId() >= 16142059 && header->GetRunId() <= 16149001) {cout << "DEBUG: should never see this for pp!" << endl; continue;}
+        //something weird happened to the towers in run 16135032 (and it looks like it started at the end of run 16135031), so excluding both                  
+        if (header->GetRunId() == 16135031 || header->GetRunId() == 16135032) {cout << "DEBUG: should never see this for pp!" << endl; continue;}
+	//the event cuts don't check if the vzdiff is acceptable, so I have to hardcode it here.
+	if (!EventCuts->IsVertexZDiffOK(event)) {cout << "DEBUG: shouldn't see this now!" << endl; continue;}
       }
+      
+      //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~// 
+
       //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~STARTING ANALYSIS ON THE EVENT!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
       
       // Transform TStarJetVectors into (FastJet) PseudoJets; assign mass to particles
       // ----------------------------------------------------------
-      GatherParticles(container, sv, particles, full, 0, pdg); //"pdg" here finds the rest mass for particles with a given PID
+      GatherParticles(container, sv, particles, full, 0, pdg); //"pdg" here finds the rest mass for particles with a given PID; 0 means detector-level.
       
       // Analysis
       // --------

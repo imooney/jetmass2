@@ -1,0 +1,14 @@
+#Determines whether Herwig or Pythia HepMC files will be the input
+inputIsPythia = TRUE
+#Sets the jet radius parameter for clustering
+jetRadius = 04
+#If hadronic final state, turns weak decays on or off; otherwise, partonic FS
+decayFlag = undecayed
+
+
+#Isaac Mooney, WSU - July 2019
+#Since Rivet does not have an obvious way to pass in command line arguments,
+#this file will serve the same purpose.
+#The submit/submit_rivet.sh submit script will change the flags depending on
+#the arguments passed to it just before runtime. The edited parameters will be read in
+#during runtime by the init() function in the submit/RivetSTAR_MASS.so shared library.

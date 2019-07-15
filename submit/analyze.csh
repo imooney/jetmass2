@@ -9,6 +9,12 @@
 #3: the species. Current options: pp, pA, AA
 #4: an analysis-specific wildcard (not required). Currently being used in data to take either full or charged jets.
 
+# Arguments       
+if ( $# < "3") then
+    echo 'Error: illegal number of parameters'
+    exit
+endif
+    
 set ExecPath = `pwd`
 set arg = '' 
 
@@ -50,12 +56,6 @@ else if ($3 == 'AA' || $3 == 'AuAu') then
     echo "AA is not ready yet - be patient!"
 else
     echo "Error: unrecognized trigger and/or species option!"
-    exit
-endif
-
-# Arguments       
-if ( $# < "3") then
-    echo 'Error: illegal number of parameters'
     exit
 endif
 
@@ -104,7 +104,7 @@ foreach input ( ${base}* )
     echo "now submitting this script: "
     echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
-    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg   
+    qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg   
     #add back in a second: -q erhiq
 
 end

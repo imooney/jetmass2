@@ -129,7 +129,7 @@ int main ( int argc, const char** argv) {
   //in place for now; will encapsulate in a function if it gets much more involved. Hardcodes the trigger IDs.
   int tID1 = -9999, tID2 = -9999;
   if (species == "pp") {tID1 = tppJP2; tID2 = -8888;} //ppJP2 trigger; -8888 just ensures it won't accidentally match a trigger
-  if (species == "pAu") {tID1 = tpAuJP2a; tID2 = tpAuJP2b;} //pAuJP2 trigger
+  if (species == "pA") {tID1 = tpAuJP2a; tID2 = tpAuJP2b;} //pAuJP2 trigger
 
   // Build our input now
   // --------------------
@@ -172,7 +172,7 @@ int main ( int argc, const char** argv) {
   double dummy_double;
 
   //variables to link to branches in the tree
-  double n_jets;
+  double n_jets; double bbc_east_rate, bbc_east_sum;
   vector<double> Pt; vector<double> Eta; vector<double> Phi; vector<double> M; vector<double> E;
   vector<double> ch_e_frac;
   vector<double> zg; vector<double> rg; vector<double> mg; vector<double> ptg;
@@ -183,6 +183,8 @@ int main ( int argc, const char** argv) {
   //contains all (important) jet observables for both groomed and ungroomed jets
   TTree *eventTree = new TTree("event","event");
   eventTree->Branch("n_jets", &n_jets);
+  eventTree->Branch("bbc_east_rate", &bbc_east_rate); //~lumi
+  eventTree->Branch("bbc_east_sum", &bbc_east_sum); //~centrality
   eventTree->Branch("Pt", &Pt); eventTree->Branch("Eta",&Eta); eventTree->Branch("Phi",&Phi); eventTree->Branch("M",&M); eventTree->Branch("E",&E);
   eventTree->Branch("ch_e_frac",&ch_e_frac);
   eventTree->Branch("zg", &zg); eventTree->Branch("rg", &rg); eventTree->Branch("mg", &mg); eventTree->Branch("ptg",&ptg);
@@ -245,7 +247,7 @@ int main ( int argc, const char** argv) {
       tau0.clear(); tau05.clear(); tau_05.clear(); tau_1.clear(); //for now, angularity observables may be wrong. Don't trust until further vetting
       tau0_g.clear(); tau05_g.clear(); tau_05_g.clear(); tau_1_g.clear();
       //initializing variables to -9999
-      n_jets = -9999;
+      n_jets = -9999; bbc_east_rate = -9999; bbc_east_sum = -9999;
 
       reader->PrintStatus(10);
       
@@ -263,7 +265,9 @@ int main ( int argc, const char** argv) {
 
       //if the event lacks the desired trigger, skip it                                                                                                        
       //see function "SetTriggers()" for assignment of tID1, tID2 (or above until I write it)                                                                  
-      if (!(header->HasTriggerId(tID1) || header->HasTriggerId(tID2))) {cout << "DEBUG: skipping this event because it lacks appropriate triggers. Does it have trigger ID " << tID1 << "? " << header->HasTriggerId(tID1) << endl; continue;}
+      if (!(header->HasTriggerId(tID1) || header->HasTriggerId(tID2))) {//cout << "DEBUG: skipping this event because it lacks appropriate triggers. Does it have trigger ID " << tID1 << "? " << header->HasTriggerId(tID1) << endl;
+	continue;
+      }
       if (species == "pA") {//removing some runs by hand in pA until we have bad run/tower lists
         //TEMPORARILY SKIPPING THESE RUNS for pA [should define these runIDs somewhere later so they're not magic numbers]                                     
         if (header->GetRunId() >= 16142059 && header->GetRunId() <= 16149001) {cout << "DEBUG: should never see this for pp!" << endl; continue;}
@@ -325,6 +329,8 @@ int main ( int argc, const char** argv) {
 	//SoftDrop is a groomer not a tagger, so if we have at least one ungroomed jet, we should also have a SoftDrop'd jet.
 	nJets += good_jets.size();
 	n_jets = good_jets.size();
+	bbc_east_rate = header->GetBbcEastRate();
+	bbc_east_sum = header->GetBbcAdcSumEast(); 
 	for (int i = 0; i < n_jets; ++ i) {
 	  Pt.push_back(good_jets[i].pt()); Eta.push_back(good_jets[i].eta()); Phi.push_back(good_jets[i].phi());
 	  M.push_back(good_jets[i].m()); E.push_back(good_jets[i].e());

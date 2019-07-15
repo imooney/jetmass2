@@ -1,6 +1,15 @@
 Jetmass2.0 is the next iteration of the jetmass analysis codebase. I don't plan to add any programming wizardry or bells and whistles; jetmass1.0 was simply getting too clunky, scattered, and chaotic as I heaped things haphazardly onto the disorganized pile of code. The goals for 2.0 are flexibility, streamlining, speed, organization, and clarity. And I hope it will be much easier after this to integrate the AA analysis once that is started.
 
-Currently, the project only handles QA and the main data analysis [reading in picos -> writing jet trees], but it will (hopefully) match 1.0's capabilities within the next week or two. A few tests of the QA have been done and it seems the pp JP2 of 1.0 has been perfectly replicated in 2.0 (exact same number of accepted events, etc.). Tests of the data analysis TBD.
+Currently, the project only handles QA and the main data analysis [reading in picos -> writing jet trees], but it will (hopefully) match 1.0's capabilities within the next week or two. A few tests of the QA and data analysis have been done and it seems the pp JP2 of 1.0 has been perfectly replicated in 2.0 (exact same number of accepted events, etc.).
+I've now (mid-July, 2019) finished up the rewriting of the code (in jetmass2/production/) to analyze HepMC files (e.g. Pythia8, Herwig7) using Rivet. The submit script will now take in command line arguments and write them to a text file to be read in at runtime since the Rivet build generates a shared library, not an executable. Note: I found in the process of rewriting this code that the HepMC format assigns mass to partons in a way that is tuned to some non-physical value, when hadronization is turned off. So the twin methods of: (a) generating HepMCs with hadronization off and clustering jets as normal and (b) generating HepMCs with hadronization on and projecting onto final state partons using Rivet are slightly different in their mass assignments. Just something to keep in mind - no a priori correct way to do it, in my opinion.
+     NOTE for running Rivet: Rivet and ROOT don't play well together so you'll need to source the Rivet environment separately each time you switch from running ROOT to Rivet. E.g. "source /nfs/rhi/STAR/software/RIVET/local/rivetenv.sh" (or wherever it's located for you).
+
+Next steps:
+     *fiddle with (all) submit scripts to be more careful at selecting input (and output) files based on the passed trigger, ion species, etc., so we don't start mixing streams by accident as we look at more datasets with this code.
+     *start rewriting the analysis (e.g. unfolding, systematics, etc.) of the simulation on disk; debug!
+
+NEW features, not included in jetmass1.0:
+    *Wrote a (very general) procedure ("macros/find_bad_towers.cxx") for determining bad towers. Have applied it so far to the 2015 pA dataset. To apply it to any other dataset, simply give the appropriate output location, output name, and input name, respectively when running the macro a la step 7) below. See comments throughout find_bad_towers.cxx for more details.
 
 For more details on the jetmass project, see the 'jetmass' repo also on my GitHub.
 
@@ -12,6 +21,6 @@ To use this code:
       E.g. "csh submit/analyze.csh QA JP2 pp".
    5) Step 4) will have produced some output root files in "out/QA". You can 'hadd -f all_files.root individual_file*.root" to combine all events into one file.
    6) Perform the data analysis by running "csh submit/analyze.csh data JP2 pp full" e.g. for ch+ne jets output.
-   7) To transform the jet trees into histograms, see the instructions in the README in the "CompileRoot" directory of my "fundamentals" repo, and use this method to run the file "macros/TreetoHist.cxx" with the submit script "submit/macro_submit.csh". It will take in each root file, and write as many root files as output, all of which can then be post facto 'hadd'ed.
+   7) To transform the jet trees into histograms, see the instructions in the README in the "CompileRoot" directory of my "fundamentals" repo, and use this method to run the file "macros/hists.cxx" with the submit script "submit/macro_submit.csh". It will take in each root file, and write as many root files as output, all of which can then be post facto 'hadd'ed.
    8) Eventually there will be a nice plotting macro to run to take in these histograms, beautify them, plot them, and save them as pdfs. 
  

@@ -9,6 +9,7 @@
     #1: the executable; this also doubles as the "analysisTag", i.e. the generic action taken on the files, e.g. "unfolded", or "closure"
     #2: the input type, e.g. 'data', or 'QA'
     #3: the collision species: pp, pA, or AA
+    #4: an analysis-specific wildcard (not required). Currently being used in data to take either full or charged jets.
 
 if ( $# < "1") then
     echo 'Error: illegal number of parameters'
@@ -25,6 +26,7 @@ set base = ""
 set analysisTag = $1 #this could be e.g. "unfolded" or "bin_drop"
 set inputType = $2 #this could be e.g. "data" or "sim"
 set species = $3 #i.e. pp, pA, AA
+set tag = $4 #analysis-specific tag (currently for full v. charged jets)
 
 #this block of conditionals will become more complicated when I have more macros than just hists.cxx. Will need to add in an "if $1 == x" capability 
 
@@ -56,7 +58,7 @@ if ( ! -d log/${inputType}/${analysisTag}) then
 mkdir -p log/${inputType}/${analysisTag} #making log directory
 endif
  
-foreach input ( ${base}* )
+foreach input ( ${base}*_${tag}* )
 
     set OutBase = `basename $input | sed 's/.root//g'` #this removes the filetype so we can append to the filename
     set OutBase = `basename $OutBase | sed 's:out/::g'` #this removes the out/ from the input since it is unnecessary
@@ -64,7 +66,7 @@ foreach input ( ${base}* )
     set OutBase = "$OutBase$uscore$analysisTag" #appending what we did to produce this file, e.g. "unfolded"
 
     set outLocation = out/${inputType}/${analysisTag}/ #producing a separate folder for output of different steps of the analysis
-    set outName = ${OutBase}.root #same as input name but with the analysisTag appended
+    set outName = ${OutBase}.root
 
     set inFiles = ${input}
 

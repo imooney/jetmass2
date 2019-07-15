@@ -133,7 +133,7 @@ int main ( int argc, const char** argv) {
   //using the collision species, sets the run period range (would need to be done differently if using the same species from a different run period).
   double run_period_start = 0, run_period_end = 0;
   if (trigger.find("pp") != string::npos) {run_period_start = 13015000; run_period_end = 13075000;}
-  else if (trigger.find("pAu") != string::npos) {run_period_start = 16125000; run_period_end = 16159025;}
+  else if (trigger.find("pA") != string::npos) {run_period_start = 16125000; run_period_end = 16159025;}
   else {cout << "Warning: couldn't locate the start and end of the desired run period. Not filling the runID histograms!" << endl;}
 
 
@@ -199,7 +199,10 @@ int main ( int argc, const char** argv) {
   TH1D* htowerEta = new TH1D("htowerEta","htowerEta",40,-1,1);
   TH1D* htowerPhi = new TH1D("htowerPhi","htowerPhi",120,-M_PI,M_PI);
   TH1D* htowerId = new TH1D("htowerId","htowerId",4800,0.5,4800.5);
-
+  TH1D* htowerId_Eabove2 = new TH1D("htowerId_Eabove2","htowerId_Eabove2",4800,0.5,4800.5); //for normalizing the htowerId_weighted_above2 by counts later to get an average
+  TH1D* htowerId_weighted = new TH1D("htowerId_weighted","htower_Id_weighted",4800,0.5,4800.5); //weighting is by Et of tower
+  TH1D* htowerId_weighted_above2 = new TH1D("htowerId_weighted_above2","htower_Id_weighted_above2",4800,0.5,4800.5); //weighting is by Et of tower - if greater than 2 GeV  
+  
   //2D event observables
   TH2D* hn_globals_n_primaries = new TH2D("hn_globals_n_primaries",";N_{glob};N_{prim}",400,0,4000,400,0,400);
   
@@ -209,7 +212,7 @@ int main ( int argc, const char** argv) {
   
   //2D tower observables
   TH2D* htowerEta_Phi = new TH2D("htowerEta_Phi",";#eta_{tow};#phi_{tow}",40,-1,1,120,-M_PI,M_PI);
-  TH2D* htowerId_Et = new TH2D("htowerId_Et",";#tower ID;E^{tow}_{T} [GeV]",4800,0.5,4800.5,200,0,40); //NEW!~~~
+  TH2D* htowerId_Et = new TH2D("htowerId_Et",";#tower ID;E^{tow}_{T} [GeV]",4800,0.5,4800.5,200,0,40);
 
   //3D event, track, tower observables
   TH3D* htrackPt_Eta_Phi = new TH3D("htrackPt_Eta_Phi",";#p^{trk}_{T};#eta_{trk};#phi_{trk}",200,0,40,40,-1,1,120,-M_PI,M_PI);
@@ -224,6 +227,10 @@ int main ( int argc, const char** argv) {
   TH2D* hbbc_coinc_trackDCA = new TH2D("hbbc_coinc_trackDCA",";BBC coincidence;track DCA",200,0,2600000,200,0,1);
   TH2D* hbbc_coinc_trackPt = new TH2D("hbbc_coinc_trackPt",";BBC coincidence;p^{trk}_{T} [GeV/c]",200,0,2600000,200,0,40);
   TH2D* hbbc_coinc_towerEt = new TH2D("hbbc_coinc_towerEt",";BBC coincidence;E^{tow}_{T} [GeV]",200,0,2600000,200,0,40);
+  
+  //3D vpdvz dependence of event observables (to see if HFT - from -5 to 5 cm in z - affects things)
+  TH3D* hvpdvz_trackNhits_Nhitsposs = new TH3D("hvpdvz_trackNhits_Nhitsposs",";VPD v_{z};track N_{hits};track N_{hits poss.}",140,-35,35,50,0,50,50,0,50);
+  TH3D* hvpdvz_trackDCA_Eta = new TH3D("hvpdvz_trackDCA_Eta",";VPD v_{z};DCA_{trk};#eta_{trk}",140,-35,35,200,0,1,40,-1,1);
   
   //all pp runID histograms are currently over a wide range, will narrow once I've seen the actual range in the plots  
   TH2D* hrunId_trackPt = new TH2D("hrunId_trackPt",";run ID; p^{trk}_{T} [GeV/c]",1000,run_period_start,run_period_end,200,0,40);
@@ -243,13 +250,13 @@ int main ( int argc, const char** argv) {
   //vector of hists for easy writing
   vector<TH1D*> events1D = {hn_trks,hn_tows,hbbc_coinc,hevt_vtx,hvpdvz,hvzdiff,hrunId,hn_vertices,hn_globals};
   vector<TH1D*> tracks1D = {htrackNhits,htrackNhitsposs,htrackNhitsratio,htrackPt,htrackEta,htrackPhi,htrackDCA};
-  vector<TH1D*> towers1D = {htowerEt,htowerEta,htowerPhi,htowerId};
+  vector<TH1D*> towers1D = {htowerEt,htowerEta,htowerPhi,htowerId,htowerId_Eabove2,htowerId_weighted,htowerId_weighted_above2};
   vector<TH2D*> events2D = {hbbc_coinc_evt_vtx,hbbc_coinc_n_trks,hbbc_coinc_n_tows,hbbc_coinc_n_vertices,hbbc_coinc_n_globals,
 			    hbbc_coinc_trackDCA,hbbc_coinc_trackPt,hbbc_coinc_towerEt,hrunId_evt_vtx,hrunId_bbc_coinc,hn_globals_n_primaries};
   vector<TH2D*> tracks2D = {htrackEta_Phi,htrackDCA_n_trks,hrunId_trackPt,hrunId_trackDCA};
   vector<TH2D*> towers2D = {htowerEta_Phi,htowerId_Et,hrunId_towerEt,hrunId_towerId};
   vector<TH3D*> events3D = {};
-  vector<TH3D*> tracks3D = {htrackPt_Eta_Phi,hrunId_trackEta_Phi};
+  vector<TH3D*> tracks3D = {htrackPt_Eta_Phi,hrunId_trackEta_Phi,hvpdvz_trackNhits_Nhitsposs,hvpdvz_trackDCA_Eta};
   vector<TH3D*> towers3D = {htowerEt_Eta_Phi,hrunId_towerEta_Phi};
 
   // Helpers
@@ -328,7 +335,7 @@ int main ( int argc, const char** argv) {
       //see function "SetTriggers()" for assignment of tID1, tID2 (or above until I write it)
       if (!(header->HasTriggerId(tID1) || header->HasTriggerId(tID2))) {continue;}
       //the event cuts don't check if the vzdiff is acceptable, so I have to hardcode it here.
-      if (!EventCuts->IsVertexZDiffOK(event)) {continue;}
+      //      if (!EventCuts->IsVertexZDiffOK(event)) {continue;}
       if (trigger.find("pA") != string::npos) {//removing some runs by hand in pA until we have bad run/tower lists
 	//TEMPORARILY SKIPPING THESE RUNS for pA [should define these runIDs somewhere later so they're not magic numbers]
 	if (header->GetRunId() >= 16142059 && header->GetRunId() <= 16149001) {continue;}
@@ -397,7 +404,9 @@ int main ( int argc, const char** argv) {
 	//3Ds
 	htrackPt_Eta_Phi->Fill(trk->GetPt(), trk->GetEta(), trk->GetPhi());
 	hrunId_trackEta_Phi->Fill(runId, trk->GetEta(), trk->GetPhi());
-	  
+	hvpdvz_trackNhits_Nhitsposs->Fill(vpdvz, trk->GetNOfFittedHits(), trk->GetNOfPossHits());
+	hvpdvz_trackDCA_Eta->Fill(vpdvz, trk->GetDCA(), trk->GetEta());
+	
 	//  trackNhits.push_back(trk->GetNOfFittedHits()); //this would be after cuts - see earlier for actual assignment
 	//trackNhitsposs.push_back(trk->GetNOfPossHits()); //this would be after cuts - see earlier for actual assignment
 	++n_trks; //number of tracks passing all cuts in the event. Will help get an average number / event later, for debugging output
@@ -419,6 +428,11 @@ int main ( int argc, const char** argv) {
 	htowerPhi->Fill(tow->GetPhi());
 	htowerEt->Fill(tow->GetEt());
 	htowerId->Fill(tow->GetId());
+	htowerId_weighted->Fill(tow->GetId(),tow->GetEt());//weighting the tower by its energy for later event-averaging
+	if (tow->GetEt() > 2) {
+	  htowerId_Eabove2->Fill(tow->GetId()); //unweighted version of histogram in next line, for later scaling
+	  htowerId_weighted_above2->Fill(tow->GetId(),tow->GetEt());//weighting the tower by its energy for later event-averaging - but only firings above 2GeV
+	}
 	//2Ds
 	htowerEta_Phi->Fill(tow->GetEta(), tow->GetPhi());
 	htowerId_Et->Fill(tow->GetId(), tow->GetEt());

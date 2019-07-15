@@ -99,7 +99,7 @@ namespace Analysis {
   const double det_evEtMax = 30.0;//GeV
   const double det_evPtMax = 30.0;//GeV
   const double dat_maxEtTow = 9999;//GeV
-  const double det_DCA = 1.0;//cm //I believe the pp Picos are already limited to 2 and the pA to 3 (or vice versa)
+  const double det_DCA = 1.0;//cm //The 2012 pp Picos are already limited to 2 and the 2015 pA to 3
   const double det_NFitPts = 20;
   const double det_FitOverMaxPts = 0.52;
 
@@ -130,7 +130,7 @@ namespace Analysis {
   //~~~~~~~~~~~~~~~~~~~~~~~~pAu quality cuts~~~~~~~~~~~~~~~~~~~~~~~~~//
   
   const std::string pAu_triggerString = "All";
-  const std::string pAu_badTowers = "lists/dummy_badtows.list";
+  const std::string pAu_badTowers = "lists/bad_towers_pAu2015.list";//preliminary; once calibrations and status tables are redone, list will likely be updated
   const std::string pAu_bad_run_list = "lists/dummy_badrun.list";
   
   //event, track, tower cuts

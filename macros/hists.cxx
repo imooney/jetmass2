@@ -20,7 +20,7 @@
 using namespace std;
 
 //self explanatory: takes branches in a tree, "treestr", in file f, and fills histograms with them
-void TreetoHist (TFile *f, string treestr, vector<TH1D*> h1Ds, vector<TH2D*> h2Ds, bool dataflag) {  
+void TreetoHist (TFile *f, string treestr, vector<TH1D*> h1Ds, vector<TH2D*> h2Ds, vector<TH3D*> h3Ds, bool dataflag) {  
   //initializing the variables that will be filled by the values in the branches later
   vector<double> *Pt = 0; vector<double> *Eta = 0; vector<double> *Phi = 0;
   vector<double> *M = 0; vector<double> *zg = 0; vector<double> *rg = 0; vector<double> *mg = 0;
@@ -28,11 +28,13 @@ void TreetoHist (TFile *f, string treestr, vector<TH1D*> h1Ds, vector<TH2D*> h2D
   vector<double> *tau0 = 0; vector<double> *tau05 = 0; vector<double> *tau_05 = 0; vector<double> *tau_1 = 0;
   vector<double> *tau0_g = 0; vector<double> *tau05_g = 0; vector<double> *tau_05_g = 0; vector<double> *tau_1_g = 0;
 
-  double weight = 1; double n_jets = -1;
+  double weight = 1, n_jets = -1, bbc_east_rate = -1, bbc_east_sum = -1;
     
   //getting the tree and linking the branches with the variables
   TTree *t = (TTree*) f->Get(treestr.c_str());
   t->SetBranchAddress("n_jets",&n_jets);
+  t->SetBranchAddress("bbc_east_rate",&bbc_east_rate);
+  t->SetBranchAddress("bbc_east_sum",&bbc_east_sum);
   t->SetBranchAddress("Pt",&Pt);
   t->SetBranchAddress("Eta",&Eta);
   t->SetBranchAddress("Phi",&Phi);
@@ -108,6 +110,9 @@ void TreetoHist (TFile *f, string treestr, vector<TH1D*> h1Ds, vector<TH2D*> h2D
       h2Ds[13]->Fill(log10(tau05->at(j)), Pt->at(j), weight);
       h2Ds[14]->Fill(log10(tau_05->at(j)), Pt->at(j), weight);
       h2Ds[15]->Fill(log10(tau_1->at(j)), Pt->at(j), weight);
+      
+      h3Ds[0]->Fill(bbc_east_rate, Pt->at(j), M->at(j), weight);
+      h3Ds[1]->Fill(bbc_east_sum, Pt->at(j), M->at(j), weight);
     }//!jet loop
   }//!event loop
   
@@ -125,6 +130,10 @@ int main (int argc, const char ** argv) {
 	 << argc << ". Exiting." << endl;
     exit(1);
   }
+
+  TH1::SetDefaultSumw2();
+  TH2::SetDefaultSumw2();
+  TH3::SetDefaultSumw2();
 
   //opening file containing some example trees
   //argv[3] should be the name of the input file
@@ -174,7 +183,6 @@ int main (int argc, const char ** argv) {
   TH2D* jetMult_v_pt = new TH2D("jetMult_v_pt","",25,0,25,ptbins,ptlow,pthigh);
   TH2D* jetGirth_v_pt = new TH2D("jetGirth_v_pt","",20,0,0.3,ptbins,ptlow,pthigh);
 
-  
   TH2D* phi_v_pt = new TH2D("phi_v_pt","",24,0,2*M_PI,ptbins,ptlow,pthigh);
   TH2D* eta_v_pt = new TH2D("eta_v_pt","",25,-1,1,ptbins,ptlow,pthigh);
   TH2D* m_v_pt = new TH2D("m_v_pt","",14,0,14,ptbins,ptlow,pthigh);
@@ -186,6 +194,10 @@ int main (int argc, const char ** argv) {
   TH2D* ratio_ptgpt_v_pt = new TH2D("ratio_ptgpt_v_pt","",21,0,2,ptbins,ptlow,pthigh);
   TH2D* mcd_v_pt = new TH2D("mcd_v_pt","",20,0,5,ptbins,ptlow,pthigh);
 
+  //jet mass dependence on event activity
+  TH3D* bbc_east_rate_v_pt_v_m = new TH3D("bbc_east_rate_v_pt_v_m","",70,0,7e6,ptbins,ptlow,pthigh,14,0,14); //luminosity dependence
+  TH3D* bbc_east_sum_v_pt_v_m = new TH3D("bbc_east_sum_v_pt_v_m","",100,0,6.5e4,ptbins,ptlow,pthigh,14,0,14); //centrality dependence
+  
   //angularities
   TH2D* tau0_v_pt = new TH2D("tau0_v_pt","",30,-8,0,ptbins,ptlow,pthigh);
   TH2D* tau05_v_pt = new TH2D("tau05_v_pt","",30,-8,0,ptbins,ptlow,pthigh);
@@ -202,12 +214,13 @@ int main (int argc, const char ** argv) {
   //putting them in a vector to more easily shuttle them back and forth in the function. Drawback: have to know their order.
   vector<TH1D*> h1Ds = {pt_var_bin,pt,eta,phi,e,m,ch_e_frac,zg,rg,mg,ptg,ratio_ptg_pt,mcd,n_jets};
   vector<TH2D*> h2Ds = {m_v_pt,ch_frac_v_pt,zg_v_pt,rg_v_pt,mg_v_pt,ptg_v_pt,ratio_ptgpt_v_pt,mcd_v_pt,phi_v_pt,eta_v_pt,m_v_pt_counts,mg_v_pt_counts,tau0_v_pt,tau05_v_pt,tau_05_v_pt,tau_1_v_pt,tau0_g_v_pt,tau05_g_v_pt,tau_05_g_v_pt,tau_1_g_v_pt};
-
+  vector<TH3D*> h3Ds = {bbc_east_rate_v_pt_v_m, bbc_east_sum_v_pt_v_m};
+  
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
   //calling analysis function(s)! "event" here is the internal name of the tree in "fin"  
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-  TreetoHist (fin, "event", h1Ds, h2Ds, 1); //last argument (bool) tells the function this is data, so no weighting necessary
+  TreetoHist (fin, "event", h1Ds, h2Ds, h3Ds, 1); //last argument (bool) tells the function this is data, so no weighting necessary
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
   //outro
@@ -223,6 +236,9 @@ int main (int argc, const char ** argv) {
   }
   for (unsigned i = 0; i < h2Ds.size(); ++ i) {
     h2Ds[i]->Write();
+  }
+  for (unsigned i = 0; i < h3Ds.size(); ++ i) {
+    h3Ds[i]->Write();
   }
   cout << "Wrote to " << fout->GetName() << endl;
   

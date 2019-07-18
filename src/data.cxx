@@ -2,7 +2,7 @@
 //This file will run the initial analysis on data for the jet mass project.
 //It takes in the Picos, performs selections, clusters particles, performs selections on the resulting jets,
 //applies the Soft Drop grooming procedure to a copy of the jet population, fills jet trees, and writes to files.
-//It will eventually be capable of doing this for pp, pA, and AA.
+//It is currently capable of doing this for pp or pA and should be easily extendable to AA when I start working on it.
 
 #include <TH1.h>
 #include <TH2.h>

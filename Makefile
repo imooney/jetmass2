@@ -63,10 +63,11 @@ $(BDIR)/%  : $(ODIR)/%.o
 ###############################################################################
 ############################# Main Targets ####################################
 ###############################################################################
-all : $(BDIR)/QA $(BDIR)/data
+all : $(BDIR)/QA $(BDIR)/data $(BDIR)/sim
 
 QA : $(BDIR)/QA
 data : $(BDIR)/data
+sim : $(BDIR)/sim
 
 #$(SDIR)/dict.cxx                : $(SDIR)/ktTrackEff.hh
 #	cd ${SDIR}; rootcint -f dict.cxx -c -I. ./ktTrackEff.hh
@@ -77,10 +78,12 @@ data : $(BDIR)/data
 $(ODIR)/funcs.o		: $(SDIR)/funcs.cxx $(SDIR)/funcs.hh
 $(ODIR)/QA.o		: $(SDIR)/QA.cxx
 $(ODIR)/data.o		: $(SDIR)/data.cxx
+$(ODIR)/sim.o		: $(SDIR)/sim.cxx
 
 #data analysis
 $(BDIR)/QA		: $(ODIR)/QA.o $(ODIR)/funcs.o #$(ODIR)/ktTrackEff.o $(ODIR)/dict.o
 $(BDIR)/data		: $(ODIR)/data.o $(ODIR)/funcs.o
+$(BDIR)/sim		: $(ODIR)/sim.o $(ODIR)/funcs.o
 ###############################################################################
 ##################################### MISC ####################################
 ###############################################################################

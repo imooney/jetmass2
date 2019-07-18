@@ -1,13 +1,14 @@
 #!/bin/csh
 #Isaac Mooney, WSU - June 2019
 #This script will expand as I add in more of the analyses: pp, pA, AA
-#It currently handles just the QA (for all three systems). Next it will be expanded to handle the data.
+#It currently handles the QA and data (for all three systems). Next it will be expanded to handle the Pythia6 and Pythia6+Geant simulation on disk.
 
 #args:
-#1: the analysis type. Current options: QA, data
+#1: the analysis type. Current options: QA, data, sim
 #2: the trigger. Current options for pp: JP2, VPDMB(-nobsmd); for pA: JP2, BBCMB
 #3: the species. Current options: pp, pA, AA
-#4: an analysis-specific wildcard (not required). Currently being used in data to take either full or charged jets.
+#4: an analysis-specific wildcard (not required). Currently being used in data to take either full (full) or charged (ch) jets.
+#5: second analysis-specific wildcard (not required). Currently being used in sim to either require matching (matched) - for responses - or not (unmatched) - for normal spectra
 
 # Arguments       
 if ( $# < "3") then
@@ -31,32 +32,43 @@ else if ($1 == 'data') then
     # Create the folder name for output
     set outFile = data
     echo 'Running in data mode!'
+else if ($1 == 'sim') then
+    make bin/sim || exit
+    set execute = './bin/sim'
+    # Create the folder name for output
+    set outFile = sim
+    echo 'Running in sim mode!'
 else
     echo 'Error: unrecognized analysis type option'
     exit
 endif
 
-if ($2 == 'JP2' && $3 == 'pp') then
-    set trigger = "ppJP2"
-    set base = /nfs/rhi/STAR/Data/ppJP2Run12/sum	
-    echo "Running on the ppJP2-triggered data!"
-else if ($2 == 'VPDMB' && $3 == 'pp') then #NOTE: for data mode, a request for anything but JP2 for pp is ignored!!!
-    set trigger = "ppVPDMB"
-    set base = /nfs/rhi/STAR/Data/ppMBRun12/sum
-    echo "Running on the ppMB-triggered data, if this is QA mode! Otherwise, reverting back to ppJP2!"
-else if ($2 == 'JP2' && $3 == 'pA') then
-    set trigger = "pAuJP2"
-    set base = /nfs/rhi/STAR/Data/P16id/production_pAu200_2015/HT/pAu_2015_200_HT_1
-    echo "Running on the pAuJP2-triggered data!"
-else if ($2 == 'BBCMB' && $3 == 'pA') then #NOTE: for data mode, a request for anything but JP2 for pA is ignored!!!
-    set trigger = "pAuBBCMB"
-    set base = /nfs/rhi/STAR/Data/P16id/production_pAu200_2015/MB/pAu_2015_200_MB_1
-    echo "Running on the pAuBBCMB-triggered data, if this is QA mode! Otherwise, reverting back to pAuJP2!"
-else if ($3 == 'AA' || $3 == 'AuAu') then
-    echo "AA is not ready yet - be patient!"
+if ($1 != 'sim') then
+    if ($2 == 'JP2' && $3 == 'pp') then
+	set trigger = "ppJP2"
+	set base = /nfs/rhi/STAR/Data/ppJP2Run12/sum	
+	echo "Running on the ppJP2-triggered data!"
+    else if ($2 == 'VPDMB' && $3 == 'pp') then #NOTE: for data mode, a request for anything but JP2 for pp is ignored!!!
+	set trigger = "ppVPDMB"
+	set base = /nfs/rhi/STAR/Data/ppMBRun12/sum
+	echo "Running on the ppMB-triggered data, if this is QA mode! Otherwise, reverting back to ppJP2!"
+    else if ($2 == 'JP2' && $3 == 'pA') then
+	set trigger = "pAuJP2"
+	set base = /nfs/rhi/STAR/Data/P16id/production_pAu200_2015/HT/pAu_2015_200_HT_1
+	echo "Running on the pAuJP2-triggered data!"
+    else if ($2 == 'BBCMB' && $3 == 'pA') then #NOTE: for data mode, a request for anything but JP2 for pA is ignored!!!
+	set trigger = "pAuBBCMB"
+	set base = /nfs/rhi/STAR/Data/P16id/production_pAu200_2015/MB/pAu_2015_200_MB_1
+	echo "Running on the pAuBBCMB-triggered data, if this is QA mode! Otherwise, reverting back to pAuJP2!"
+    else if ($3 == 'AA' || $3 == 'AuAu') then
+	echo "AA is not ready yet - be patient!"
+    else
+	echo "Error: unrecognized trigger and/or species option!"
+	exit
+    endif
 else
-    echo "Error: unrecognized trigger and/or species option!"
-    exit
+    set base = /nfs/rhi/STAR/Data/AddedEmbedPythiaRun12pp200/Cleanpp12Pico_
+    echo "Running on the Pythia6 and Pythia6+Geant simulation!"
 endif
 
 # Make output directories if they don't already exist            
@@ -76,8 +88,11 @@ foreach input ( ${base}* )
     #synthesize the output file base name from the input file base name and the options passed
     set OutBase = `basename $input | sed 's/.root//g'`
     set uscore = "_" #useful for chaining variables together
-    set OutBase = "$OutBase$uscore$trigger$uscore$4" #need to test that the last appendage works even if $4 doesn't exist
-    
+    if ($1 != 'sim') then
+	set OutBase = "$OutBase$uscore$trigger$uscore$4"
+    else
+	set OutBase = "$OutBase$uscore$4$uscore$5"
+    endif
     #make the output path and names
     set outLocation = out/${outFile}/
     set outName = ${OutBase}.root
@@ -99,12 +114,14 @@ foreach input ( ${base}* )
 	set arg = "$outLocation $outName $trigger $dummy $Files"
     else if ($1 == 'data') then
 	set arg = "$outLocation $outName $3 $4 $Files"
+    else if ($1 == 'sim') then
+	set arg = "$outLocation $outName $4 $5 $Files"
     endif
 
     echo "now submitting this script: "
     echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
-    qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg   
+    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg   
     #add back in a second: -q erhiq
 
 end

@@ -92,7 +92,7 @@ namespace Analysis {
   const double truth_FitOverMaxPts = -1; //still don't really understand this cut
 
   //detector: event, track, tower cuts
-  const std::string det_triggerString = "ppJP2"; //these trigger strings are not really used - it's done by hand with the triggerIDs
+  const std::string det_triggerString = "ppJP2"; //these trigger strings are not really used!! It's done by hand with the triggerIDs
   const double det_absMaxVz = 30.0;//cm //|Vz|<=30 cm
   const double det_vZDiff = 9999;//cm //max diff btwn selected TPC vertex & most probable VPD vertex (in ppRun6 VPD vz = 0, so vZDiff should be > absMaxVz)
   const double det_evEtMin = -1;//GeV

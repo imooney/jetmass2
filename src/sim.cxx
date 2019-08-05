@@ -86,7 +86,7 @@ int main (int argc, const char ** argv) {
     
     //initialize both readers
     InitReader(P6Reader, P6Chain, nEvents, "All", truth_absMaxVz, truth_vZDiff, truth_evPtMax, truth_evEtMax, truth_evEtMin, truth_DCA, truth_NFitPts, truth_FitOverMaxPts, sim_maxEtTow, 0.9999, false, sim_badTowers, sim_bad_run_list);
-    InitReader(GEANTReader, GEANTChain, nEvents, det_triggerString, det_absMaxVz, det_vZDiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, sim_maxEtTow, 0.9999, false, det_badTowers, dat_bad_run_list);
+    InitReader(GEANTReader, GEANTChain, nEvents, det_triggerString, det_absMaxVz, det_vZDiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, sim_maxEtTow, 0.9999, false, /*sim_badTowers, sim_bad_run_list);*/det_badTowers, dat_bad_run_list);
 
     //define relevant data structures
     TString pythiaFilename;
@@ -166,6 +166,36 @@ int main (int argc, const char ** argv) {
     TH2D* sampleB_mg_pt_gen = new TH2D("sampleB_mg_pt_gen","",14,0,14,15,5,80);
     TH2D* sampleB_mg_pt_det = new TH2D("sampleB_mg_pt_det","",14,0,14,9,15,60);
 
+    //~~~counts histograms for bin_drop, later~~~//
+    
+    //1D hists for closure test
+    TH1D* sampleA_pt_gen_counts = new TH1D("sampleA_pt_gen_counts","",15,5,80);
+    TH1D* sampleA_pt_det_counts = new TH1D("sampleA_pt_det_counts","",9,15,60);
+    TH1D* sampleA_m_gen_counts = new TH1D("sampleA_m_gen_counts","",14,0,14);
+    TH1D* sampleA_m_det_counts = new TH1D("sampleA_m_det_counts","",14,0,14);
+    TH1D* sampleA_mg_gen_counts = new TH1D("sampleA_mg_gen_counts","",14,0,14);
+    TH1D* sampleA_mg_det_counts = new TH1D("sampleA_mg_det_counts","",14,0,14);
+
+    TH1D* sampleB_pt_gen_counts = new TH1D("sampleB_pt_gen_counts","",15,5,80);
+    TH1D* sampleB_pt_det_counts = new TH1D("sampleB_pt_det_counts","",9,15,60);
+    TH1D* sampleB_m_gen_counts = new TH1D("sampleB_m_gen_counts","",14,0,14);
+    TH1D* sampleB_m_det_counts = new TH1D("sampleB_m_det_counts","",14,0,14);
+    TH1D* sampleB_mg_gen_counts = new TH1D("sampleB_mg_gen_counts","",14,0,14);
+    TH1D* sampleB_mg_det_counts = new TH1D("sampleB_mg_det_counts","",14,0,14);
+
+    //2D hists for closure test
+    TH2D* sampleA_m_pt_gen_counts = new TH2D("sampleA_m_pt_gen_counts","",14,0,14,15,5,80);
+    TH2D* sampleA_m_pt_det_counts = new TH2D("sampleA_m_pt_det_counts","",14,0,14,9,15,60);
+    TH2D* sampleA_mg_pt_gen_counts = new TH2D("sampleA_mg_pt_gen_counts","",14,0,14,15,5,80);
+    TH2D* sampleA_mg_pt_det_counts = new TH2D("sampleA_mg_pt_det_counts","",14,0,14,9,15,60);
+    
+    TH2D* sampleB_m_pt_gen_counts = new TH2D("sampleB_m_pt_gen_counts","",14,0,14,15,5,80);
+    TH2D* sampleB_m_pt_det_counts = new TH2D("sampleB_m_pt_det_counts","",14,0,14,9,15,60);
+    TH2D* sampleB_mg_pt_gen_counts = new TH2D("sampleB_mg_pt_gen_counts","",14,0,14,15,5,80);
+    TH2D* sampleB_mg_pt_det_counts = new TH2D("sampleB_mg_pt_det_counts","",14,0,14,9,15,60);
+
+    //~~~~~~//
+    
     //hists for use in responses
     TH2D *pyMvPt = new TH2D("pyMvPt",";M [GeV/c^{2}];p_{T} [GeV/c]",14,0,14,15,5,80);
     TH2D *geMvPt = new TH2D("geMvPt",";M [GeV/c^{2}];p_{T} [GeV/c]",14,0,14,9,15,60);
@@ -247,10 +277,10 @@ int main (int argc, const char ** argv) {
     
     std::vector<RooUnfoldResponse*> sampleB_res = {sampleB_pt_response,sampleB_m_response,sampleB_zg_response,sampleB_rg_response,sampleB_ptg_response,sampleB_mg_response,sampleB_m_pt_response,sampleB_m_pt_response_counts,sampleB_zg_pt_response,sampleB_rg_pt_response,sampleB_ptg_pt_response,sampleB_mg_pt_response,sampleB_mg_pt_response_counts};
     
-    std::vector<TH1D*> sampleA_h1Ds = {sampleA_pt_gen,sampleA_pt_det,sampleA_m_gen,sampleA_m_det,sampleA_mg_gen,sampleA_mg_det};
-    std::vector<TH2D*> sampleA_h2Ds = {sampleA_m_pt_gen,sampleA_m_pt_det,sampleA_mg_pt_gen,sampleA_mg_pt_det};
-    std::vector<TH1D*> sampleB_h1Ds = {sampleB_pt_gen,sampleB_pt_det,sampleB_m_gen,sampleB_m_det,sampleB_mg_gen,sampleB_mg_det};
-    std::vector<TH2D*> sampleB_h2Ds = {sampleB_m_pt_gen,sampleB_m_pt_det,sampleB_mg_pt_gen,sampleB_mg_pt_det};
+    std::vector<TH1D*> sampleA_h1Ds = {sampleA_pt_gen,sampleA_pt_det,sampleA_m_gen,sampleA_m_det,sampleA_mg_gen,sampleA_mg_det,sampleA_pt_gen_counts,sampleA_pt_det_counts,sampleA_m_gen_counts,sampleA_m_det_counts,sampleA_mg_gen_counts,sampleA_mg_det_counts};
+    std::vector<TH2D*> sampleA_h2Ds = {sampleA_m_pt_gen,sampleA_m_pt_det,sampleA_mg_pt_gen,sampleA_mg_pt_det,sampleA_m_pt_gen_counts,sampleA_m_pt_det_counts,sampleA_mg_pt_gen_counts,sampleA_mg_pt_det_counts};
+    std::vector<TH1D*> sampleB_h1Ds = {sampleB_pt_gen,sampleB_pt_det,sampleB_m_gen,sampleB_m_det,sampleB_mg_gen,sampleB_mg_det,sampleB_pt_gen_counts,sampleB_pt_det_counts,sampleB_m_gen_counts,sampleB_m_det_counts,sampleB_mg_gen_counts,sampleB_mg_det_counts};
+    std::vector<TH2D*> sampleB_h2Ds = {sampleB_m_pt_gen,sampleB_m_pt_det,sampleB_mg_pt_gen,sampleB_mg_pt_det,sampleB_m_pt_gen_counts,sampleB_m_pt_det_counts,sampleB_mg_pt_gen_counts,sampleB_mg_pt_det_counts};
     
     
     //defining the algorithm and radius parameter for clustering jets
@@ -404,6 +434,12 @@ int main (int argc, const char ** argv) {
 	      sampleA_mg_gen->Fill(p_GroomedJets[i].m(),mc_weight);
 	      sampleA_m_pt_gen->Fill(p_Jets[i].m(),p_Jets[i].pt(),mc_weight);
 	      sampleA_mg_pt_gen->Fill(p_GroomedJets[i].m(),p_Jets[i].pt(),mc_weight);
+	      
+	      sampleA_pt_gen_counts->Fill(p_Jets[i].pt());
+	      sampleA_m_gen_counts->Fill(p_Jets[i].m());
+	      sampleA_mg_gen_counts->Fill(p_GroomedJets[i].m());
+	      sampleA_m_pt_gen_counts->Fill(p_Jets[i].m(),p_Jets[i].pt());
+	      sampleA_mg_pt_gen_counts->Fill(p_GroomedJets[i].m(),p_Jets[i].pt());
 	    }
 	    for (int i = 0; i < g_Jets.size(); ++ i) {
 	      sampleA_pt_det->Fill(g_Jets[i].pt(),mc_weight);
@@ -411,6 +447,12 @@ int main (int argc, const char ** argv) {
 	      sampleA_mg_det->Fill(g_GroomedJets[i].m(),mc_weight);
 	      sampleA_m_pt_det->Fill(g_Jets[i].m(),g_Jets[i].pt(),mc_weight);
 	      sampleA_mg_pt_det->Fill(g_GroomedJets[i].m(),g_Jets[i].pt(),mc_weight);
+
+	      sampleA_pt_det_counts->Fill(g_Jets[i].pt());
+	      sampleA_m_det_counts->Fill(g_Jets[i].m());
+	      sampleA_mg_det_counts->Fill(g_GroomedJets[i].m());
+	      sampleA_m_pt_det_counts->Fill(g_Jets[i].m(),g_Jets[i].pt());
+	      sampleA_mg_pt_det_counts->Fill(g_GroomedJets[i].m(),g_Jets[i].pt());
 	    }
 	  }//end sampleA pseudo-data filling
 	  if (p_EventID % 2 != 0) { //odd events are sampleB
@@ -420,6 +462,12 @@ int main (int argc, const char ** argv) {
 	      sampleB_mg_gen->Fill(p_GroomedJets[i].m(),mc_weight);
 	      sampleB_m_pt_gen->Fill(p_Jets[i].m(),p_Jets[i].pt(),mc_weight);
 	      sampleB_mg_pt_gen->Fill(p_GroomedJets[i].m(),p_Jets[i].pt(),mc_weight);
+
+	      sampleB_pt_gen_counts->Fill(p_Jets[i].pt());
+	      sampleB_m_gen_counts->Fill(p_Jets[i].m());
+	      sampleB_mg_gen_counts->Fill(p_GroomedJets[i].m());
+	      sampleB_m_pt_gen_counts->Fill(p_Jets[i].m(),p_Jets[i].pt());
+	      sampleB_mg_pt_gen_counts->Fill(p_GroomedJets[i].m(),p_Jets[i].pt());
 	    }
 	    for (int i = 0; i < g_Jets.size(); ++ i) {
 	      sampleB_pt_det->Fill(g_Jets[i].pt(),mc_weight);
@@ -427,6 +475,12 @@ int main (int argc, const char ** argv) {
 	      sampleB_mg_det->Fill(g_GroomedJets[i].m(),mc_weight);
 	      sampleB_m_pt_det->Fill(g_Jets[i].m(),g_Jets[i].pt(),mc_weight);
 	      sampleB_mg_pt_det->Fill(g_GroomedJets[i].m(),g_Jets[i].pt(),mc_weight);
+
+	      sampleB_pt_det_counts->Fill(g_Jets[i].pt());
+	      sampleB_m_det_counts->Fill(g_Jets[i].m());
+	      sampleB_mg_det_counts->Fill(g_GroomedJets[i].m());
+	      sampleB_m_pt_det_counts->Fill(g_Jets[i].m(),g_Jets[i].pt());
+	      sampleB_mg_pt_det_counts->Fill(g_GroomedJets[i].m(),g_Jets[i].pt());
 	    }
 	  }//end sampleB pseudo-data filling
             //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~MATCHING~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -595,7 +649,7 @@ int main (int argc, const char ** argv) {
 	    double m2 = (p_Jets[i].m())*(p_Jets[i].m()); double gm2 = (p_GroomedJets[i].m())*(p_GroomedJets[i].m());
 	    double m_cd = (double) sqrt(m2 - gm2); if ((m2 - gm2) < 1e-11) {m_cd = 0;}
 	    p_mcd.push_back(m_cd);
-	  }
+	  }//end pythia jet loop
 	  for (int i = 0; i < g_Jets.size(); ++ i) {
 	    //ungroomed
 	    g_Pt.push_back(g_Jets[i].pt());
@@ -628,7 +682,7 @@ int main (int argc, const char ** argv) {
 	    double m2 = (g_Jets[i].m())*(g_Jets[i].m()); double gm2 = (g_GroomedJets[i].m())*(g_GroomedJets[i].m());
 	    double m_cd = (double) sqrt(m2 - gm2); if ((m2 - gm2) < 1e-11) {m_cd = 0;}
 	    g_mcd.push_back(m_cd);
-	  }
+	  }//end geant jet loop
 	  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
         }//matching-not-required conditional
 	

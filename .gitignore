@@ -67,3 +67,4 @@ core.*
 
 # old code [careful if you use e.g. the word "gold"...]
 old_*
+*_old

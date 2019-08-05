@@ -60,6 +60,7 @@ namespace Analysis {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~triggerIDs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
   
   const int tppJP2 = 370621; //ppY12 JP2
+  const int tppHTa = 370521, tppHTb = 370522, tppHTc = 370531; //ppY12 BHT2*BBCMB, BHT2*BBCMB, BHT2
   const int tppVPDMB_nobsmd = 370011; //ppY12 VPDMB-nobsmd
   const int tpAuJP2a = 500401, tpAuJP2b = 500411; //pAuY15 JP2
   const int tpAuBBCMBa = 500008, tpAuBBCMBb = 500018; //pAuY15 BBCMB
@@ -135,6 +136,7 @@ namespace Analysis {
   
   //event, track, tower cuts
   const double pAu_vZDiff = 3.0; //this may be too tight of a cut - to be revisited
+  const double pAu_BBCE_ADC_sum_max = 64000.0; //tower multiplicity in event explodes above this number. Detectors probably saturated.
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 }

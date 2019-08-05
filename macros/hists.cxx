@@ -147,6 +147,7 @@ int main (int argc, const char ** argv) {
   TH1D* n_jets = new TH1D("n_jets","",20,-0.5,19.5);
   
   //pT range for particle-level is different from detector-level so define it here for ease of change later if necessary:
+  //CHANGE IF RUNNING OVER PARTICLE-LEVEL!
   const int ptbins = 9;
   const double ptlow = 15; const double pthigh = 60;
   

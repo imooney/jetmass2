@@ -140,33 +140,7 @@ int main (int argc, const char ** argv) {
     eventTree->Branch("g_mcd",&g_mcd);
     eventTree->Branch("g_weight", &g_wt); eventTree->Branch("g_EventID", &g_EventID);
 
-    //1D hists for closure test
-    TH1D* sampleA_pt_gen = new TH1D("sampleA_pt_gen","",15,5,80);
-    TH1D* sampleA_pt_det = new TH1D("sampleA_pt_det","",9,15,60);
-    TH1D* sampleA_m_gen = new TH1D("sampleA_m_gen","",14,0,14);
-    TH1D* sampleA_m_det = new TH1D("sampleA_m_det","",14,0,14);
-    TH1D* sampleA_mg_gen = new TH1D("sampleA_mg_gen","",14,0,14);
-    TH1D* sampleA_mg_det = new TH1D("sampleA_mg_det","",14,0,14);
-
-    TH1D* sampleB_pt_gen = new TH1D("sampleB_pt_gen","",15,5,80);
-    TH1D* sampleB_pt_det = new TH1D("sampleB_pt_det","",9,15,60);
-    TH1D* sampleB_m_gen = new TH1D("sampleB_m_gen","",14,0,14);
-    TH1D* sampleB_m_det = new TH1D("sampleB_m_det","",14,0,14);
-    TH1D* sampleB_mg_gen = new TH1D("sampleB_mg_gen","",14,0,14);
-    TH1D* sampleB_mg_det = new TH1D("sampleB_mg_det","",14,0,14);
-
-    //2D hists for closure test
-    TH2D* sampleA_m_pt_gen = new TH2D("sampleA_m_pt_gen","",14,0,14,15,5,80);
-    TH2D* sampleA_m_pt_det = new TH2D("sampleA_m_pt_det","",14,0,14,9,15,60);
-    TH2D* sampleA_mg_pt_gen = new TH2D("sampleA_mg_pt_gen","",14,0,14,15,5,80);
-    TH2D* sampleA_mg_pt_det = new TH2D("sampleA_mg_pt_det","",14,0,14,9,15,60);
-    
-    TH2D* sampleB_m_pt_gen = new TH2D("sampleB_m_pt_gen","",14,0,14,15,5,80);
-    TH2D* sampleB_m_pt_det = new TH2D("sampleB_m_pt_det","",14,0,14,9,15,60);
-    TH2D* sampleB_mg_pt_gen = new TH2D("sampleB_mg_pt_gen","",14,0,14,15,5,80);
-    TH2D* sampleB_mg_pt_det = new TH2D("sampleB_mg_pt_det","",14,0,14,9,15,60);
-
-    //hists for use in responses
+    //Hists for use in responses
     TH2D *pyMvPt = new TH2D("pyMvPt",";M [GeV/c^{2}];p_{T} [GeV/c]",14,0,14,15,5,80);
     TH2D *geMvPt = new TH2D("geMvPt",";M [GeV/c^{2}];p_{T} [GeV/c]",14,0,14,9,15,60);
     TH2D *pyMvPt_counts = new TH2D("pyMvPt_counts",";M [GeV/c^{2}];p_{T} [GeV/c]",14,0,14,15,5,80);
@@ -182,7 +156,7 @@ int main (int argc, const char ** argv) {
     TH2D *pyMgvPt_counts = new TH2D("pyMgvPt_counts",";M_{g} [GeV/c^{2}];p_{T} [GeV/c]",14,0,14,15,5,80);
     TH2D *geMgvPt_counts = new TH2D("geMgvPt_counts",";M_{g} [GeV/c^{2}];p_{T} [GeV/c]",14,0,14,9,15,60);
     
-    // 1D responses
+    // Responses
     RooUnfoldResponse *pt_response = new RooUnfoldResponse(9,15,60,15,5,80,"pt_response","");
     RooUnfoldResponse *m_response = new RooUnfoldResponse(14,0,14,14,0,14,"m_response","");
     RooUnfoldResponse *zg_response = new RooUnfoldResponse(20,0,1,20,0,1, "zg_response","");
@@ -190,49 +164,13 @@ int main (int argc, const char ** argv) {
     RooUnfoldResponse *ptg_response = new RooUnfoldResponse(9,15,60,15,5,80, "ptg_response","");
     RooUnfoldResponse *mg_response = new RooUnfoldResponse(14,0,14,14,0,14, "mg_response","");
     
-    //responses for training in the closure test
-    RooUnfoldResponse *sampleA_pt_response = new RooUnfoldResponse(9,15,60,15,5,80,"sampleA_pt_response","");
-    RooUnfoldResponse *sampleA_m_response = new RooUnfoldResponse(14,0,14,14,0,14,"sampleA_m_response","");
-    RooUnfoldResponse *sampleA_zg_response = new RooUnfoldResponse(20,0,1,20,0,1, "sampleA_zg_response","");
-    RooUnfoldResponse *sampleA_rg_response = new RooUnfoldResponse(20,0,1,20,0,1, "sampleA_rg_response","");
-    RooUnfoldResponse *sampleA_ptg_response = new RooUnfoldResponse(9,15,60,15,5,80, "sampleA_ptg_response","");
-    RooUnfoldResponse *sampleA_mg_response = new RooUnfoldResponse(14,0,14,14,0,14, "sampleA_mg_response","");
-
-    //responses for validation in the closure test (unfolding pseudo-data with response constructed from same sample)
-    RooUnfoldResponse *sampleB_pt_response = new RooUnfoldResponse(9,15,60,15,5,80,"sampleB_pt_response","");
-    RooUnfoldResponse *sampleB_m_response = new RooUnfoldResponse(14,0,14,14,0,14,"sampleB_m_response","");
-    RooUnfoldResponse *sampleB_zg_response = new RooUnfoldResponse(20,0,1,20,0,1, "sampleB_zg_response","");
-    RooUnfoldResponse *sampleB_rg_response = new RooUnfoldResponse(20,0,1,20,0,1, "sampleB_rg_response","");
-    RooUnfoldResponse *sampleB_ptg_response = new RooUnfoldResponse(9,15,60,15,5,80, "sampleB_ptg_response","");
-    RooUnfoldResponse *sampleB_mg_response = new RooUnfoldResponse(14,0,14,14,0,14, "sampleB_mg_response","");
-    
-    // 2D responses
-    RooUnfoldResponse *m_pt_response = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_response");
-    RooUnfoldResponse *m_pt_response_counts = new RooUnfoldResponse(geMvPt_counts, pyMvPt_counts, "m_pt_response_counts");
-    RooUnfoldResponse *zg_pt_response = new RooUnfoldResponse(geZgvPt, pyZgvPt, "zg_pt_response");
-    RooUnfoldResponse *rg_pt_response = new RooUnfoldResponse(geRgvPt, pyRgvPt, "rg_pt_response");
-    RooUnfoldResponse *ptg_pt_response = new RooUnfoldResponse(gePtgvPt, pyPtgvPt, "ptg_pt_response");
-    RooUnfoldResponse *mg_pt_response = new RooUnfoldResponse(geMgvPt, pyMgvPt, "mg_pt_response");
-    RooUnfoldResponse *mg_pt_response_counts = new RooUnfoldResponse(geMgvPt_counts, pyMgvPt_counts, "mg_pt_response_counts");
-    
-    //responses for training in the closure test
-    RooUnfoldResponse *sampleA_m_pt_response = new RooUnfoldResponse(geMvPt, pyMvPt, "sampleA_m_pt_response");
-    RooUnfoldResponse *sampleA_m_pt_response_counts = new RooUnfoldResponse(geMvPt_counts, pyMvPt_counts, "sampleA_m_pt_response_counts");
-    RooUnfoldResponse *sampleA_zg_pt_response = new RooUnfoldResponse(geZgvPt, pyZgvPt, "sampleA_zg_pt_response");
-    RooUnfoldResponse *sampleA_rg_pt_response = new RooUnfoldResponse(geRgvPt, pyRgvPt, "sampleA_rg_pt_response");
-    RooUnfoldResponse *sampleA_ptg_pt_response = new RooUnfoldResponse(gePtgvPt, pyPtgvPt, "sampleA_ptg_pt_response");
-    RooUnfoldResponse *sampleA_mg_pt_response = new RooUnfoldResponse(geMgvPt, pyMgvPt, "sampleA_mg_pt_response");
-    RooUnfoldResponse *sampleA_mg_pt_response_counts = new RooUnfoldResponse(geMgvPt_counts, pyMgvPt_counts, "sampleA_mg_pt_response_counts");
-    
-    //responses for validation in the closure test (unfolding pseudo-data with response constructed from same sample)
-    RooUnfoldResponse *sampleB_m_pt_response = new RooUnfoldResponse(geMvPt, pyMvPt, "sampleB_m_pt_response");
-    RooUnfoldResponse *sampleB_m_pt_response_counts = new RooUnfoldResponse(geMvPt_counts, pyMvPt_counts, "sampleB_m_pt_response_counts");
-    RooUnfoldResponse *sampleB_zg_pt_response = new RooUnfoldResponse(geZgvPt, pyZgvPt, "sampleB_zg_pt_response");
-    RooUnfoldResponse *sampleB_rg_pt_response = new RooUnfoldResponse(geRgvPt, pyRgvPt, "sampleB_rg_pt_response");
-    RooUnfoldResponse *sampleB_ptg_pt_response = new RooUnfoldResponse(gePtgvPt, pyPtgvPt, "sampleB_ptg_pt_response");
-    RooUnfoldResponse *sampleB_mg_pt_response = new RooUnfoldResponse(geMgvPt, pyMgvPt, "sampleB_mg_pt_response");
-    RooUnfoldResponse *sampleB_mg_pt_response_counts = new RooUnfoldResponse(geMgvPt_counts, pyMgvPt_counts, "sampleB_mg_pt_response_counts");
-    
+    RooUnfoldResponse *pt_m_response = new RooUnfoldResponse(geMvPt, pyMvPt, "pt_m_response");
+    RooUnfoldResponse *pt_m_response_counts = new RooUnfoldResponse(geMvPt_counts, pyMvPt_counts, "pt_m_response_counts");
+    RooUnfoldResponse *pt_zg_response = new RooUnfoldResponse(geZgvPt, pyZgvPt, "pt_zg_response");
+    RooUnfoldResponse *pt_rg_response = new RooUnfoldResponse(geRgvPt, pyRgvPt, "pt_rg_response");
+    RooUnfoldResponse *pt_ptg_response = new RooUnfoldResponse(gePtgvPt, pyPtgvPt, "pt_ptg_response");
+    RooUnfoldResponse *pt_mg_response = new RooUnfoldResponse(geMgvPt, pyMgvPt, "pt_mg_response");
+    RooUnfoldResponse *pt_mg_response_counts = new RooUnfoldResponse(geMgvPt_counts, pyMgvPt_counts, "pt_mg_response_counts");
     
     RooUnfoldResponse *m_response1520 = new RooUnfoldResponse(14,0,14,14,0,14,"m_response1520","");
     RooUnfoldResponse *m_response2025 = new RooUnfoldResponse(14,0,14,14,0,14,"m_response2025","");
@@ -240,18 +178,10 @@ int main (int argc, const char ** argv) {
     RooUnfoldResponse *m_response3040 = new RooUnfoldResponse(14,0,14,14,0,14,"m_response3040","");
     RooUnfoldResponse *m_response4060 = new RooUnfoldResponse(14,0,14,14,0,14,"m_response4060","");
     
-    //vectors of responses & hists for easy writing to file later
-    std::vector<RooUnfoldResponse*> res = {pt_response,m_response,zg_response,rg_response,ptg_response,mg_response,m_pt_response,m_pt_response_counts,zg_pt_response,rg_pt_response,ptg_pt_response,mg_pt_response,mg_pt_response_counts,m_response1520,m_response2025,m_response2530,m_response3040,m_response4060};
-    
-    std::vector<RooUnfoldResponse*> sampleA_res = {sampleA_pt_response,sampleA_m_response,sampleA_zg_response,sampleA_rg_response,sampleA_ptg_response,sampleA_mg_response,sampleA_m_pt_response,sampleA_m_pt_response_counts,sampleA_zg_pt_response,sampleA_rg_pt_response,sampleA_ptg_pt_response,sampleA_mg_pt_response,sampleA_mg_pt_response_counts};
-    
-    std::vector<RooUnfoldResponse*> sampleB_res = {sampleB_pt_response,sampleB_m_response,sampleB_zg_response,sampleB_rg_response,sampleB_ptg_response,sampleB_mg_response,sampleB_m_pt_response,sampleB_m_pt_response_counts,sampleB_zg_pt_response,sampleB_rg_pt_response,sampleB_ptg_pt_response,sampleB_mg_pt_response,sampleB_mg_pt_response_counts};
-    
-    std::vector<TH1D*> sampleA_h1Ds = {sampleA_pt_gen,sampleA_pt_det,sampleA_m_gen,sampleA_m_det,sampleA_mg_gen,sampleA_mg_det};
-    std::vector<TH2D*> sampleA_h2Ds = {sampleA_m_pt_gen,sampleA_m_pt_det,sampleA_mg_pt_gen,sampleA_mg_pt_det};
-    std::vector<TH1D*> sampleB_h1Ds = {sampleB_pt_gen,sampleB_pt_det,sampleB_m_gen,sampleB_m_det,sampleB_mg_gen,sampleB_mg_det};
-    std::vector<TH2D*> sampleB_h2Ds = {sampleB_m_pt_gen,sampleB_m_pt_det,sampleB_mg_pt_gen,sampleB_mg_pt_det};
-    
+    //vector of responses for easy writing to file later
+    std::vector<RooUnfoldResponse*> res = {pt_response,m_response,zg_response,rg_response,ptg_response,mg_response,
+        pt_m_response,pt_m_response_counts,pt_zg_response,pt_rg_response,pt_ptg_response,pt_mg_response,pt_mg_response_counts,
+        m_response1520,m_response2025,m_response2530,m_response3040,m_response4060};
     
     //defining the algorithm and radius parameter for clustering jets
     JetDefinition jet_def(antikt_algorithm, R);
@@ -296,7 +226,6 @@ int main (int argc, const char ** argv) {
         
         g_EventID = GEANTReader->GetNOfCurrentEvent();
         p_EventID = P6Reader->GetNOfCurrentEvent();
-	//NOTE: even # events will be used for training (response), odd will be used for validation (pseudo-data)
         
         //clearing vectors; initializing variables to -9999
         mc_weight = -9999;
@@ -395,40 +324,6 @@ int main (int argc, const char ** argv) {
         //FakesandMisses returns a vector of indices (i) corresponding to the indices of misses or fakes from the original candidate vector.
         
         if (match) {
-	  //before the actual matching, fill the spectra for validation in the closure test
-	  //(we only require there to be a matching Geant & Pythia event so our event reconstruction efficiency isn't folded unnecessarily into the closure)
-	  if (p_EventID % 2 == 0) { //even events are sampleA
-	    for (int i = 0; i < p_Jets.size(); ++ i) {
-	      sampleA_pt_gen->Fill(p_Jets[i].pt(),mc_weight);
-	      sampleA_m_gen->Fill(p_Jets[i].m(),mc_weight);
-	      sampleA_mg_gen->Fill(p_GroomedJets[i].m(),mc_weight);
-	      sampleA_m_pt_gen->Fill(p_Jets[i].m(),p_Jets[i].pt(),mc_weight);
-	      sampleA_mg_pt_gen->Fill(p_GroomedJets[i].m(),p_Jets[i].pt(),mc_weight);
-	    }
-	    for (int i = 0; i < g_Jets.size(); ++ i) {
-	      sampleA_pt_det->Fill(g_Jets[i].pt(),mc_weight);
-	      sampleA_m_det->Fill(g_Jets[i].m(),mc_weight);
-	      sampleA_mg_det->Fill(g_GroomedJets[i].m(),mc_weight);
-	      sampleA_m_pt_det->Fill(g_Jets[i].m(),g_Jets[i].pt(),mc_weight);
-	      sampleA_mg_pt_det->Fill(g_GroomedJets[i].m(),g_Jets[i].pt(),mc_weight);
-	    }
-	  }//end sampleA pseudo-data filling
-	  if (p_EventID % 2 != 0) { //odd events are sampleB
-	    for (int i = 0; i < p_Jets.size(); ++ i) {
-	      sampleB_pt_gen->Fill(p_Jets[i].pt(),mc_weight);
-	      sampleB_m_gen->Fill(p_Jets[i].m(),mc_weight);
-	      sampleB_mg_gen->Fill(p_GroomedJets[i].m(),mc_weight);
-	      sampleB_m_pt_gen->Fill(p_Jets[i].m(),p_Jets[i].pt(),mc_weight);
-	      sampleB_mg_pt_gen->Fill(p_GroomedJets[i].m(),p_Jets[i].pt(),mc_weight);
-	    }
-	    for (int i = 0; i < g_Jets.size(); ++ i) {
-	      sampleB_pt_det->Fill(g_Jets[i].pt(),mc_weight);
-	      sampleB_m_det->Fill(g_Jets[i].m(),mc_weight);
-	      sampleB_mg_det->Fill(g_GroomedJets[i].m(),mc_weight);
-	      sampleB_m_pt_det->Fill(g_Jets[i].m(),g_Jets[i].pt(),mc_weight);
-	      sampleB_mg_pt_det->Fill(g_GroomedJets[i].m(),g_Jets[i].pt(),mc_weight);
-	    }
-	  }//end sampleB pseudo-data filling
             //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~MATCHING~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
             std::vector<fastjet::PseudoJet> g_matches; std::vector<fastjet::PseudoJet> p_matches;
 	    std::vector<fastjet::PseudoJet> g_matches_for_fakes; std::vector<fastjet::PseudoJet> p_matches_for_fakes; //only used to determine fakes
@@ -473,47 +368,16 @@ int main (int argc, const char ** argv) {
             //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FILL RESPONSES/HISTS/TREES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
             
             for (int i = 0; i < misses.size(); ++ i) {
-                m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
-                mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
-		//closure sampleA responses
-		if (match && p_EventID % 2 == 0) { //throughout this section, checking if (match) is unnecessary because of the overall conditional, but I'll leave it.
-		  sampleA_pt_response->Miss(misses[i].pt(), mc_weight);
-		  sampleA_m_response->Miss(misses[i].m(), mc_weight);
-		  sampleA_m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
-		  sampleA_mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
-		}
-		//closure sampleB responses
-		if (match && p_EventID % 2 != 0) {
-		  sampleB_pt_response->Miss(misses[i].pt(), mc_weight);
-		  sampleB_m_response->Miss(misses[i].m(), mc_weight);
-		  sampleB_m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
-		  sampleB_mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
-		}
+                pt_m_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
+                pt_mg_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
             }//for loop over misses
             
             for (int i = 0; i < g_matches.size(); ++ i) { //g_matches.size == p_matches.size == match_indices.size()
                 //matches should be at same index in respective vectors
                 //RESPONSES:
-                m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
-                mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
+                pt_m_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
+                pt_mg_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
                                      p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt());
-		//closure sampleA responses
-		if (match && p_EventID % 2 == 0) {
-		  sampleA_pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
-		  sampleA_m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
-		  sampleA_m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
-		  sampleA_mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
-				       p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt());
-		}
-		//closure sampleB responses
-		if (match && p_EventID % 2 != 0) {
-		  sampleB_pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
-		  sampleB_m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
-		  sampleB_m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
-		  sampleB_mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
-				       p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt());
-		}
-		
                 
                 //(matched) TREES:
                 //ungroomed
@@ -538,23 +402,8 @@ int main (int argc, const char ** argv) {
             }//for loop over matches
             
             for (int i = 0; i < fakes.size(); ++ i) {
-                m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
-                mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
-		//closure sampleA responses
-		if (match && p_EventID % 2 == 0) {
-		  sampleA_pt_response->Fake(fakes[i].pt(), mc_weight);
-		  sampleA_m_response->Fake(fakes[i].m(), mc_weight);
-		  sampleA_m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
-		  sampleA_mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
-		}
-		//closure sampleB responses
-		if (match && p_EventID % 2 != 0) {
-		  sampleB_pt_response->Fake(fakes[i].pt(), mc_weight);
-		  sampleB_m_response->Fake(fakes[i].m(), mc_weight);
-		  sampleB_m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
-		  sampleB_mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
-		}
-
+                pt_m_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
+                pt_mg_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
             }//for loop over fakes
             
             //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -652,33 +501,12 @@ int main (int argc, const char ** argv) {
     //trees
     eventTree->Write();
     
+    //responses
     if (match) {
-      //hists
-      for (int i = 0; i < sampleA_h1Ds.size(); ++ i) {
-	sampleA_h1Ds[i]->Write();
-      }
-      for (int i = 0; i < sampleA_h2Ds.size(); ++ i) {
-	sampleA_h2Ds[i]->Write();
-      }
-      for (int i = 0; i < sampleB_h1Ds.size(); ++ i) {
-	sampleB_h1Ds[i]->Write();
-      }
-      for (int i = 0; i < sampleB_h2Ds.size(); ++ i) {
-	sampleB_h2Ds[i]->Write();
-      } 
-      
-      //responses
-      for (int i = 0; i < res.size(); ++ i) {
-	res[i]->Write();
-      }
-      for (int i = 0; i < sampleA_res.size(); ++ i) {
-	sampleA_res[i]->Write();
-      }
-      for (int i = 0; i < sampleB_res.size(); ++ i) {
-	sampleB_res[i]->Write();
-      }
-      
-    }//match conditional
+        for (int i = 0; i < res.size(); ++ i) {
+            res[i]->Write();
+        }
+    }
     
     fout->Close();
 

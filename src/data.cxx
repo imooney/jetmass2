@@ -127,9 +127,11 @@ int main ( int argc, const char** argv) {
   if (species == "pA") {badtows = pAu_badTowers; badruns = pAu_bad_run_list; vzdiff = pAu_vZDiff;}
   if (species == "AA") {badtows = ""; badruns = ""; vzdiff = -1;} //TBD
   //in place for now; will encapsulate in a function if it gets much more involved. Hardcodes the trigger IDs.
-  int tID1 = -9999, tID2 = -9999;
-  if (species == "pp") {tID1 = tppJP2; tID2 = -8888;} //ppJP2 trigger; -8888 just ensures it won't accidentally match a trigger
-  if (species == "pA") {tID1 = tpAuJP2a; tID2 = tpAuJP2b;} //pAuJP2 trigger
+  int tID1 = -9999, tID2 = -9999, tID3 = -9999;
+  //switching temporarily to HT for the pp for comparison
+  if (species == "pp") {tID1 = tppHTa; tID2 = tppHTb; tID3 = tppHTc;} //UNCOMMENT THE NEXT LINE AND COMMENT THIS ONE WHEN RUNNING OVER JP!!!
+  //if (species == "pp") {tID1 = tppJP2; tID2 = -8888; tID3 = -8888;} //ppJP2 trigger; -8888 just ensures it won't accidentally match a trigger
+  if (species == "pA") {tID1 = tpAuJP2a; tID2 = tpAuJP2b; tID3 = -8888;} //pAuJP2 trigger
 
   // Build our input now
   // --------------------
@@ -265,7 +267,7 @@ int main ( int argc, const char** argv) {
 
       //if the event lacks the desired trigger, skip it                                                                                                        
       //see function "SetTriggers()" for assignment of tID1, tID2 (or above until I write it)                                                                  
-      if (!(header->HasTriggerId(tID1) || header->HasTriggerId(tID2))) {//cout << "DEBUG: skipping this event because it lacks appropriate triggers. Does it have trigger ID " << tID1 << "? " << header->HasTriggerId(tID1) << endl;
+      if ( ! (header->HasTriggerId(tID1) || header->HasTriggerId(tID2) || header->HasTriggerId(tID3) ) ) {//cout << "DEBUG: skipping this event because it lacks appropriate triggers. Does it have trigger ID " << tID1 << "? " << header->HasTriggerId(tID1) << endl;
 	continue;
       }
       if (species == "pA") {//removing some runs by hand in pA until we have bad run/tower lists
@@ -273,8 +275,10 @@ int main ( int argc, const char** argv) {
         if (header->GetRunId() >= 16142059 && header->GetRunId() <= 16149001) {cout << "DEBUG: should never see this for pp!" << endl; continue;}
         //something weird happened to the towers in run 16135032 (and it looks like it started at the end of run 16135031), so excluding both                  
         if (header->GetRunId() == 16135031 || header->GetRunId() == 16135032) {cout << "DEBUG: should never see this for pp!" << endl; continue;}
-	//the event cuts don't check if the vzdiff is acceptable, so I have to hardcode it here.
-	if (!EventCuts->IsVertexZDiffOK(event)) {cout << "DEBUG: shouldn't see this now!" << endl; continue;}
+	//the event cuts don't check if the vzdiff is acceptable, so I have to hardcode it here. UPDATE: I believe Nick updated the eventstructuredAu to check this condition, so this line should be redundant now
+	//	if (!EventCuts->IsVertexZDiffOK(event)) {cout << "DEBUG: shouldn't see this now!" << endl; continue;}
+	//Above 64000 seems like detectors saturate (tower multiplicity explodes).                                                                             
+        if (header->GetBbcAdcSumEast() >= pAu_BBCE_ADC_sum_max) {continue;}
       }
       
       //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~// 

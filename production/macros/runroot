@@ -1,0 +1,4 @@
+set -x
+g++ -O3 -std=c++17 -pipe -Wall -W -Woverloaded-virtual -fPIC -Iinclude -pthread -I $ROOTSYS/include -o obj/$1.o -c $1.cxx
+
+g++ -O3 obj/$1.o -L$ROOTSYS/lib -lCore -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -pthread -lm -ldl -rdynamic -o bin/$1

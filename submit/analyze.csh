@@ -5,7 +5,7 @@
 
 #args:
 #1: the analysis type. Current options: QA, data, sim
-#2: the trigger. Current options for pp: JP2, VPDMB(-nobsmd); for pA: JP2, BBCMB
+#2: the trigger. Current options for pp: JP2, HT, VPDMB(-nobsmd); for pA: JP2, BBCMB
 #3: the species. Current options: pp, pA, AA
 #4: an analysis-specific wildcard (not required). Currently being used in data to take either full (full) or charged (ch) jets.
 #5: second analysis-specific wildcard (not required). Currently being used in sim to either require matching (matched) - for responses - or not (unmatched) - for normal spectra
@@ -48,6 +48,10 @@ if ($1 != 'sim') then
 	set trigger = "ppJP2"
 	set base = /nfs/rhi/STAR/Data/ppJP2Run12/sum	
 	echo "Running on the ppJP2-triggered data!"
+    else if ($2 == 'HT' && $3 == 'pp') then
+	set trigger = "ppHT"
+	set base = /nfs/rhi/STAR/Data/ppHT2Run12/pp12Pico
+	echo "Running on the ppHT-triggered data, if this is QA mode! Otherwise, reverting back to ppJP2!"
     else if ($2 == 'VPDMB' && $3 == 'pp') then #NOTE: for data mode, a request for anything but JP2 for pp is ignored!!!
 	set trigger = "ppVPDMB"
 	set base = /nfs/rhi/STAR/Data/ppMBRun12/sum

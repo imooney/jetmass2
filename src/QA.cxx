@@ -125,11 +125,12 @@ int main ( int argc, const char** argv) {
   if (trigger.find("pA") != string::npos) {badtows = pAu_badTowers; badruns = pAu_bad_run_list; vzdiff = pAu_vZDiff;}
   if (trigger.find("AA") != string::npos) {badtows = ""; badruns = ""; vzdiff = -1;} //TBD
   //in place for now; will encapsulate in a function if it gets much more involved. Hardcodes the trigger IDs.
-  int tID1 = -9999, tID2 = -9999;
-  if (trigger == "ppJP2") {tID1 = tppJP2; tID2 = -8888;} //-8888 just ensures it won't accidentally match a trigger
-  if (trigger == "ppVPDMB") {tID1 = tppVPDMB_nobsmd; tID2 = -8888;}
-  if (trigger == "pAuJP2") {tID1 = tpAuJP2a; tID2 = tpAuJP2b;}
-  if (trigger == "pAuBBCMB") {tID1 = tpAuBBCMBa; tID2 = tpAuBBCMBb;}
+  int tID1 = -9999, tID2 = -9999, tID3 = -9999;
+  if (trigger == "ppJP2") {tID1 = tppJP2; tID2 = -8888; tID3 = -8888;} //-8888 just ensures it won't accidentally match a trigger
+  if (trigger == "ppHT") {tID1 = tppHTa; tID2 = tppHTb; tID3 = tppHTc;}
+  if (trigger == "ppVPDMB") {tID1 = tppVPDMB_nobsmd; tID2 = -8888; tID3 = -8888;}
+  if (trigger == "pAuJP2") {tID1 = tpAuJP2a; tID2 = tpAuJP2b; tID3 = -8888;}
+  if (trigger == "pAuBBCMB") {tID1 = tpAuBBCMBa; tID2 = tpAuBBCMBb; tID3 = -8888;}
   //using the collision species, sets the run period range (would need to be done differently if using the same species from a different run period).
   double run_period_start = 0, run_period_end = 0;
   if (trigger.find("pp") != string::npos) {run_period_start = 13015000; run_period_end = 13075000;}
@@ -217,7 +218,9 @@ int main ( int argc, const char** argv) {
   //3D event, track, tower observables
   TH3D* htrackPt_Eta_Phi = new TH3D("htrackPt_Eta_Phi",";#p^{trk}_{T};#eta_{trk};#phi_{trk}",200,0,40,40,-1,1,120,-M_PI,M_PI);
   TH3D* htowerEt_Eta_Phi = new TH3D("htowerEt_Eta_Phi",";#E^{tow}_{T};#eta_{tow};#phi_{tow}",200,0,40,40,-1,1,120,-M_PI,M_PI);
-
+  TH3D* hbbcEsum_n_trks_n_tows = new TH3D("hbbcEsum_n_trks_n_tows",";BBCE ADC sum;N_{trk};N_{tow}",100,0,6.5e4,150,0,150,250,0,500);//centrality
+  TH3D* hbbcErate_n_trks_n_tows = new TH3D("hbbcErate_n_trks_n_tows",";BBCE rate [Hz];N_{trk};N_{tow}",70,0,7e6,150,0,150,250,0,500);//lumi
+  
   //2D BBC coincidence rate dependence of event observables
   TH2D* hbbc_coinc_evt_vtx = new TH2D("hbbc_coinc_evt_vtx",";BBC coincidence;v_{z} [cm]",200,0,2600000,100,-35,35);
   TH2D* hbbc_coinc_n_trks = new TH2D("hbbc_coinc_n_trks",";BBC coincidence;N_{trk}",200,0,2600000,150,0,150);
@@ -255,7 +258,7 @@ int main ( int argc, const char** argv) {
 			    hbbc_coinc_trackDCA,hbbc_coinc_trackPt,hbbc_coinc_towerEt,hrunId_evt_vtx,hrunId_bbc_coinc,hn_globals_n_primaries};
   vector<TH2D*> tracks2D = {htrackEta_Phi,htrackDCA_n_trks,hrunId_trackPt,hrunId_trackDCA};
   vector<TH2D*> towers2D = {htowerEta_Phi,htowerId_Et,hrunId_towerEt,hrunId_towerId};
-  vector<TH3D*> events3D = {};
+  vector<TH3D*> events3D = {hbbcEsum_n_trks_n_tows,hbbcErate_n_trks_n_tows};
   vector<TH3D*> tracks3D = {htrackPt_Eta_Phi,hrunId_trackEta_Phi,hvpdvz_trackNhits_Nhitsposs,hvpdvz_trackDCA_Eta};
   vector<TH3D*> towers3D = {htowerEt_Eta_Phi,hrunId_towerEta_Phi};
 
@@ -333,7 +336,7 @@ int main ( int argc, const char** argv) {
       
       //if the event lacks the desired trigger, skip it
       //see function "SetTriggers()" for assignment of tID1, tID2 (or above until I write it)
-      if (!(header->HasTriggerId(tID1) || header->HasTriggerId(tID2))) {continue;}
+      if ( ! (header->HasTriggerId(tID1) || header->HasTriggerId(tID2) || header->HasTriggerId(tID3) ) ) {continue;}
       //the event cuts don't check if the vzdiff is acceptable, so I have to hardcode it here.
       //      if (!EventCuts->IsVertexZDiffOK(event)) {continue;}
       if (trigger.find("pA") != string::npos) {//removing some runs by hand in pA until we have bad run/tower lists
@@ -341,6 +344,8 @@ int main ( int argc, const char** argv) {
 	if (header->GetRunId() >= 16142059 && header->GetRunId() <= 16149001) {continue;}
 	//something weird happened to the towers in run 16135032 (and it looks like it started at the end of run 16135031), so excluding both
 	if (header->GetRunId() == 16135031 || header->GetRunId() == 16135032) {continue;}
+	//Above 64000 seems like detectors saturate (tower multiplicity explodes).
+	if (header->GetBbcAdcSumEast() >= pAu_BBCE_ADC_sum_max) {continue;}
       }
       //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
       
@@ -352,6 +357,8 @@ int main ( int argc, const char** argv) {
       double n_primaries = header->GetNOfPrimaryTracks(); //!this would be before cuts - see later for actual assignment
       //first, assigning some info to variables for ease of repeated use later
       double bbc = header->GetBbcCoincidenceRate();
+      double bbc_east_rate = header->GetBbcEastRate();
+      double bbc_east_sum = header->GetBbcAdcSumEast();
       double runId = header->GetRunId();
       hbbc_coinc->Fill(bbc); //BBC coincidence rate
       hn_vertices->Fill(header->GetNumberOfVertices()); //vertex multiplicity
@@ -413,7 +420,8 @@ int main ( int argc, const char** argv) {
 	++n_trks_in_evt; //same as above but reset to zero for each event for a per-event count
       }//end track loop
       hn_trks->Fill(n_trks_in_evt); //trk multiplicity
-
+      hbbc_coinc_n_trks->Fill(bbc, n_trks_in_evt);
+      
       //~~~applying selection criteria~~~//
       TList *tows = reader->GetListOfSelectedTowers();
       TIter nxt_tow(tows);
@@ -447,6 +455,10 @@ int main ( int argc, const char** argv) {
 	++n_tows_in_evt;
       }//tower loop
       hn_tows->Fill(n_tows_in_evt); //tow multiplicity
+      hbbcEsum_n_trks_n_tows->Fill(bbc_east_sum, n_trks_in_evt, n_tows_in_evt);
+      hbbcErate_n_trks_n_tows->Fill(bbc_east_rate, n_trks_in_evt, n_tows_in_evt);
+      hbbc_coinc_n_tows->Fill(bbc, n_tows_in_evt);
+      
     }//event loop
   }catch ( std::exception& e) {
     std::cerr << "Caught " << e.what() << std::endl;

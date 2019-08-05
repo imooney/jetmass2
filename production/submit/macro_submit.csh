@@ -6,12 +6,12 @@
 #and writes each output to a similarly named file, to be hadded afterward
 
 # command line arguments
-    #1: the executable; this also doubles as the "analysisTag", i.e. the generic action taken on the files, e.g. "unfolded", or "closure"
-    #2: the input type, e.g. 'data', or 'QA'
-    #3: the collision species: pp, pA, or AA
-    #4: an analysis-specific wildcard (not required). Currently being used in data to take either full or charged jets.
+    #1: the executable; this also doubles as the "analysisTag", i.e. the generic action taken on the files, e.g. "hists"
+    #2: the input type, e.g. 'pythia', or 'herwig'
+    #3: the hadronic/partonic option given during production of the input files, i.e. undecayed, decayed, or partonicFS
+    #4: the radius parameter for the jets, e.g. 04 for R = 0.4.
 
-if ( $# < "1") then
+if ( $# < "4") then
     echo 'Error: illegal number of parameters'
     exit #need a filename, so have to have at least one argument
 endif
@@ -23,24 +23,23 @@ cd .. #back to the top-level directory
 
 set base = ""
 
-set analysisTag = $1 #this could be e.g. "unfolded" or "bin_drop"
-set inputType = $2 #this could be e.g. "data" or "sim"
-set species = $3 #i.e. pp, pA, AA
-set tag = $4 #analysis-specific tag (currently for full v. charged jets)
+set analysisTag = $1 #this could be e.g. "hists"
+set inputType = $2 #this could be e.g. "pythia" or "herwig"
+set finalstate = $3 #i.e. undecayed, decayed, partonicFS
+set radius = $4 #radius parameter
 
 #this block of conditionals will become more complicated when I have more macros than just hists.cxx. Will need to add in an "if $1 == x" capability 
 
-echo 'Pulling files from out/$2!'
-echo 'Species is $3!'
+echo 'Pulling files from out/!'
+echo 'MC is '$2
+echo 'Final state is '$3
+echo 'Jet radius is '$4
+
 #setting input files based on command-line arguments
-if (${species} == 'pp') then 
-    set base = out/${inputType}/pp12Pico_pass #this is for HT! Comment this out and uncomment the next line for ppJP2 instead!
-    #set base = out/${inputType}/sum #Be careful! This also catches charged jets in its net, if the files exist. Need to think of how to distinguish...
-else if (${species} == 'pA') then
-    set base = out/${inputType}/pAu_2015_200_HT_ #Be careful! This also catches charged jets in its net, if the files exist. Need to think of how to distinguish...
-else if (${species} == 'AA') then
-    echo 'Error: AA is not ready yet! Be patient!'
-    exit
+if (${inputType} == 'pythia') then 
+    set base = out/star_mass_pythia8_IsaacsHepmcs_
+else if (${inputType} == 'herwig') then
+    set base = out/star_mass_herwig7_IsaacsHepmcs_
 else
     echo 'Error: unrecognized collision species!'
     exit
@@ -59,12 +58,12 @@ if ( ! -d log/${inputType}/${analysisTag}) then
 mkdir -p log/${inputType}/${analysisTag} #making log directory
 endif
  
-foreach input ( ${base}*_${tag}* )
+foreach input ( ${base}*R${radius}_${finalstate}.root )
 
     set OutBase = `basename $input | sed 's/.root//g'` #this removes the filetype so we can append to the filename
     set OutBase = `basename $OutBase | sed 's:out/::g'` #this removes the out/ from the input since it is unnecessary
     echo $OutBase #should just be "sum1", "sum2", etc.
-    set OutBase = "$OutBase$uscore$analysisTag" #appending what we did to produce this file, e.g. "unfolded"
+#    set OutBase = "$OutBase$uscore$tag" #appending what we did to produce this file, e.g. "unfolded"
 
     set outLocation = out/${inputType}/${analysisTag}/ #producing a separate folder for output of different steps of the analysis
     set outName = ${OutBase}.root

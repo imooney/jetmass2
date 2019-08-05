@@ -65,6 +65,6 @@ CondorFile
 # not sure what these files are but they're large...
 core.*
 
-# old code [careful if you use e.g. the word "gold"...]
+# old code
 old_*
-*_old
+*_old*

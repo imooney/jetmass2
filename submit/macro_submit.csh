@@ -7,9 +7,9 @@
 
 # command line arguments
     #1: the executable; this also doubles as the "analysisTag", i.e. the generic action taken on the files, e.g. "unfolded", or "closure"
-    #2: the input type, e.g. 'data', or 'QA'
+    #2: the input type, e.g. 'data', 'QA', 'sim'
     #3: the collision species: pp, pA, or AA
-    #4: an analysis-specific wildcard (not required). Currently being used in data to take either full or charged jets.
+    #4: an analysis-specific wildcard (not required)
 
 if ( $# < "1") then
     echo 'Error: illegal number of parameters'
@@ -26,7 +26,7 @@ set base = ""
 set analysisTag = $1 #this could be e.g. "unfolded" or "bin_drop"
 set inputType = $2 #this could be e.g. "data" or "sim"
 set species = $3 #i.e. pp, pA, AA
-set tag = $4 #analysis-specific tag (currently for full v. charged jets)
+set tag = $4 #analysis-specific tag (currently for full v. charged jets in data or matched v. unmatched in simulation)
 
 #this block of conditionals will become more complicated when I have more macros than just hists.cxx. Will need to add in an "if $1 == x" capability 
 
@@ -34,8 +34,12 @@ echo 'Pulling files from out/$2!'
 echo 'Species is $3!'
 #setting input files based on command-line arguments
 if (${species} == 'pp') then 
-    set base = out/${inputType}/pp12Pico_pass #this is for HT! Comment this out and uncomment the next line for ppJP2 instead!
-    #set base = out/${inputType}/sum #Be careful! This also catches charged jets in its net, if the files exist. Need to think of how to distinguish...
+    if (${inputType} == 'data') then
+	#set base = out/${inputType}/pp12Pico_pass #this is for HT! Comment this out and uncomment the next line for ppJP2 instead!
+	set base = out/${inputType}/sum #Be careful! This also catches charged jets in its net, if the files exist. Need to think of how to distinguish...
+    else if (${inputType} == 'sim') then
+	set base = out/${inputType}/Cleanpp12Pico
+    endif
 else if (${species} == 'pA') then
     set base = out/${inputType}/pAu_2015_200_HT_ #Be careful! This also catches charged jets in its net, if the files exist. Need to think of how to distinguish...
 else if (${species} == 'AA') then
@@ -77,12 +81,12 @@ foreach input ( ${base}*_${tag}* )
     echo "Logging output to " $LogFile
     echo "Logging errors to " $ErrFile
 
-    set arg = "$outLocation $outName $inFiles" 
+    set arg = "$outLocation $outName $inFiles $inputType" 
 
     #./macros/bin/root_macro out/root_macro/ file1_root_macro.root out/file1.root <- this is a (currently) working execution line on which to model the qsub
 
     echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
-    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
-
+    qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+    #-q erhiq
 end #end of loop over input files

@@ -104,7 +104,7 @@ int main ( int argc, const char** argv) {
     // output and file names
     outputDir         = arguments[0];
     outFileName       = arguments[1];
-    species           = arguments[2]; //pp, pA, or AA
+    species           = arguments[2]; //ppJP2, ppHT, ppVPDMB, pAJP2, pABBCMB, or AA [TBD]
     if (arguments[3] == "ch") {full = 0;} else {full = 1;} //either ch+ne jets (default) or ch jets (if "ch")
     chainList         = arguments[4];
             
@@ -129,8 +129,8 @@ int main ( int argc, const char** argv) {
   //in place for now; will encapsulate in a function if it gets much more involved. Hardcodes the trigger IDs.
   int tID1 = -9999, tID2 = -9999, tID3 = -9999;
   //switching temporarily to HT for the pp for comparison
-  if (species == "pp") {tID1 = tppHTa; tID2 = tppHTb; tID3 = tppHTc;} //UNCOMMENT THE NEXT LINE AND COMMENT THIS ONE WHEN RUNNING OVER JP!!!
-  //if (species == "pp") {tID1 = tppJP2; tID2 = -8888; tID3 = -8888;} //ppJP2 trigger; -8888 just ensures it won't accidentally match a trigger
+  //if (species == "pp") {tID1 = tppHTa; tID2 = tppHTb; tID3 = tppHTc;} //UNCOMMENT THE NEXT LINE AND COMMENT THIS ONE WHEN RUNNING OVER JP!!!
+  if (species == "pp") {tID1 = tppJP2; tID2 = -8888; tID3 = -8888;} //ppJP2 trigger; -8888 just ensures it won't accidentally match a trigger
   if (species == "pA") {tID1 = tpAuJP2a; tID2 = tpAuJP2b; tID3 = -8888;} //pAuJP2 trigger
 
   // Build our input now

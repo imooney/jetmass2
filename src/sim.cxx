@@ -412,13 +412,52 @@ int main (int argc, const char ** argv) {
         
         //SD grooming doesn't drop jets failing the criteria, so size of ungroomed = size of groomed
         for (int i = 0; i < p_Jets.size(); ++ i) {
-            p_GroomedJets.push_back(sd(p_Jets[i]));
+	  p_GroomedJets.push_back(sd(p_Jets[i]));
         }
         for (int i = 0; i < g_Jets.size(); ++ i) {
-            g_GroomedJets.push_back(sd(g_Jets[i]));
+	  g_GroomedJets.push_back(sd(g_Jets[i]));
         }
         
         if (DiscardEvent(pythiaFilename, p_Jets, g_Jets)) { counter_debug ++; continue; }
+	
+	//for calculating charged energy fraction of the jets
+	vector<double> pch_e_frac, gch_e_frac;
+	for (int i = 0; i < p_Jets.size(); ++ i) {
+	  //looping over constituents
+	  double ch_e = 0; double tot_e = 0;//names are misnomers here since we use pT, not E.
+	  vector<PseudoJet> cons = p_Jets[i].constituents();
+	  for (int j = 0; j < cons.size(); ++ j) {
+	    if (cons[j].user_index() != 0) {ch_e += cons[j].pt();}
+	    tot_e += cons[j].pt();
+	  }
+	  pch_e_frac.push_back(ch_e/(double)tot_e);
+	}
+	for (int i = 0; i < g_Jets.size(); ++ i) {
+	  //looping over constituents
+	  double ch_e = 0; double tot_e = 0;//names are misnomers here since we use pT, not E.
+	  vector<PseudoJet> cons = g_Jets[i].constituents();
+	  for (int j = 0; j < cons.size(); ++ j) {
+	    if (cons[j].user_index() != 0) {ch_e += cons[j].pt();}
+	    tot_e += cons[j].pt();
+	  }
+	  gch_e_frac.push_back(ch_e/(double)tot_e);
+	}
+	
+
+	//for calculating collinear dropped mass - i.e. how much mass we lost to grooming
+	vector<double> pmcd, gmcd;
+	for (int i = 0; i < p_Jets.size(); ++ i) {
+	  double m2 = (p_Jets[i].m())*(p_Jets[i].m()); double gm2 = (p_GroomedJets[i].m())*(p_GroomedJets[i].m());
+	  double m_cd = (double) sqrt(m2 - gm2); if ((m2 - gm2) < 1e-11) {m_cd = 0;}
+	  pmcd.push_back(m_cd);
+	}
+	for (int i = 0; i < g_Jets.size(); ++ i) {
+	  double m2 = (g_Jets[i].m())*(g_Jets[i].m()); double gm2 = (g_GroomedJets[i].m())*(g_GroomedJets[i].m());
+	  double m_cd = (double) sqrt(m2 - gm2); if ((m2 - gm2) < 1e-11) {m_cd = 0;}
+	  gmcd.push_back(m_cd);
+	}
+	if (pmcd.size() != p_Jets.size()) {cerr << "DEBUG: shouldn't have that size of M_cd vector is different than n_jets!" << endl; exit(1);}
+	if (gmcd.size() != g_Jets.size()) {cerr << "DEBUG: shouldn't have that size of M_cd vector is different than n_jets!" << endl; exit(1);}
 
         //We have two vectors to be filled with matched jets. If they aren't, when looping over pythia jets, we have misses. Same goes when looping over geant jets with fakes. And for matches, we just fill with however many entries there are in the matched vectors.
         //MatchJets returns a vector of pairs of indices (i,j). The first entry is the position of the jet to match, the second its match's position, the third the position of the next jet to match, the fourth its match's position, etc.
@@ -527,88 +566,99 @@ int main (int argc, const char ** argv) {
             //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FILL RESPONSES/HISTS/TREES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
             
             for (int i = 0; i < misses.size(); ++ i) {
-                m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
-                mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
-		//closure sampleA responses
-		if (match && p_EventID % 2 == 0) { //throughout this section, checking if (match) is unnecessary because of the overall conditional, but I'll leave it.
-		  sampleA_pt_response->Miss(misses[i].pt(), mc_weight);
-		  sampleA_m_response->Miss(misses[i].m(), mc_weight);
-		  sampleA_m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
-		  sampleA_mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
-		}
-		//closure sampleB responses
-		if (match && p_EventID % 2 != 0) {
-		  sampleB_pt_response->Miss(misses[i].pt(), mc_weight);
-		  sampleB_m_response->Miss(misses[i].m(), mc_weight);
-		  sampleB_m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
-		  sampleB_mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
-		}
+	      m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
+	      mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
+	      //closure sampleA responses
+	      if (match && p_EventID % 2 == 0) { //throughout this section, checking if (match) is unnecessary because of the overall conditional, but I'll leave it.
+		sampleA_pt_response->Miss(misses[i].pt(), mc_weight);
+		sampleA_m_response->Miss(misses[i].m(), mc_weight);
+		sampleA_m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
+		sampleA_mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
+	      }
+	      //closure sampleB responses
+	      if (match && p_EventID % 2 != 0) {
+		sampleB_pt_response->Miss(misses[i].pt(), mc_weight);
+		sampleB_m_response->Miss(misses[i].m(), mc_weight);
+		sampleB_m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
+		sampleB_mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
+	      }
             }//for loop over misses
             
             for (int i = 0; i < g_matches.size(); ++ i) { //g_matches.size == p_matches.size == match_indices.size()
-                //matches should be at same index in respective vectors
-                //RESPONSES:
-                m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
-                mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
-                                     p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt());
-		//closure sampleA responses
-		if (match && p_EventID % 2 == 0) {
-		  sampleA_pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
-		  sampleA_m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
-		  sampleA_m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
-		  sampleA_mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
-				       p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt());
-		}
-		//closure sampleB responses
-		if (match && p_EventID % 2 != 0) {
-		  sampleB_pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
-		  sampleB_m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
-		  sampleB_m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
-		  sampleB_mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
-				       p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt());
-		}
-		
-                
-                //(matched) TREES:
-                //ungroomed
-                p_Pt.push_back(p_matches[i].pt());
-                p_M.push_back(p_matches[i].m());
-		p_Eta.push_back(p_matches[i].eta());
-                //groomed
-                p_mg.push_back(p_GroomedJets[match_indices[i]].m());
-		p_ptg.push_back(p_GroomedJets[match_indices[i]].pt());
-		p_zg.push_back(p_GroomedJets[match_indices[i]].structure_of<SD>().symmetry());
-		p_rg.push_back(p_GroomedJets[match_indices[i]].structure_of<SD>().delta_R());
-                //ungroomed
-                g_Pt.push_back(g_matches[i].pt());
-                g_M.push_back(g_matches[i].m());
-		g_Eta.push_back(g_matches[i].eta());
-                //groomed
-                g_mg.push_back(g_GroomedJets[match_indices[i]].m());
-		g_ptg.push_back(g_GroomedJets[match_indices[i]].pt());
-		g_zg.push_back(g_GroomedJets[match_indices[i]].structure_of<SD>().symmetry());
-		g_rg.push_back(g_GroomedJets[match_indices[i]].structure_of<SD>().delta_R());
-                
+	      //matches should be at same index in respective vectors
+	      //RESPONSES:
+	      m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
+	      mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
+				   p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt());
+	      //closure sampleA responses
+	      if (match && p_EventID % 2 == 0) {
+		sampleA_pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
+		sampleA_m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
+		sampleA_m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
+		sampleA_mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
+					     p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt());
+	      }
+	      //closure sampleB responses
+	      if (match && p_EventID % 2 != 0) {
+		sampleB_pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
+		sampleB_m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
+		sampleB_m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
+		sampleB_mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
+					     p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt());
+	      }
+	      
+              
+	      //(matched) TREES:
+	      //ungroomed
+	      p_Pt.push_back(p_matches[i].pt());
+	      p_M.push_back(p_matches[i].m());
+	      p_Eta.push_back(p_matches[i].eta());
+	      p_Phi.push_back(p_matches[i].phi());
+	      p_E.push_back(p_matches[i].e());
+	      //groomed
+	      p_mg.push_back(p_GroomedJets[match_indices[i]].m());
+	      p_ptg.push_back(p_GroomedJets[match_indices[i]].pt());
+	      p_zg.push_back(p_GroomedJets[match_indices[i]].structure_of<SD>().symmetry());
+	      p_rg.push_back(p_GroomedJets[match_indices[i]].structure_of<SD>().delta_R());
+	      //ungroomed
+	      g_Pt.push_back(g_matches[i].pt());
+	      g_M.push_back(g_matches[i].m());
+	      g_Eta.push_back(g_matches[i].eta());
+	      g_Phi.push_back(g_matches[i].phi());
+	      g_E.push_back(g_matches[i].e());
+	      //groomed
+	      g_mg.push_back(g_GroomedJets[match_indices[i]].m());
+	      g_ptg.push_back(g_GroomedJets[match_indices[i]].pt());
+	      g_zg.push_back(g_GroomedJets[match_indices[i]].structure_of<SD>().symmetry());
+	      g_rg.push_back(g_GroomedJets[match_indices[i]].structure_of<SD>().delta_R());
+	      
+	      //assigning vectors of values we calculated earlier to the tree
+	      p_mcd.push_back(pmcd[match_indices[i]]);
+	      g_mcd.push_back(gmcd[match_indices[i]]);
+	      
+	      p_ch_e_frac.push_back(pch_e_frac[match_indices[i]]);
+	      g_ch_e_frac.push_back(gch_e_frac[match_indices[i]]);
+	      
             }//for loop over matches
             
             for (int i = 0; i < fakes.size(); ++ i) {
-                m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
-                mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
-		//closure sampleA responses
-		if (match && p_EventID % 2 == 0) {
-		  sampleA_pt_response->Fake(fakes[i].pt(), mc_weight);
-		  sampleA_m_response->Fake(fakes[i].m(), mc_weight);
-		  sampleA_m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
-		  sampleA_mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
-		}
-		//closure sampleB responses
-		if (match && p_EventID % 2 != 0) {
-		  sampleB_pt_response->Fake(fakes[i].pt(), mc_weight);
-		  sampleB_m_response->Fake(fakes[i].m(), mc_weight);
-		  sampleB_m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
-		  sampleB_mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
-		}
-
+	      m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
+	      mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
+	      //closure sampleA responses
+	      if (match && p_EventID % 2 == 0) {
+		sampleA_pt_response->Fake(fakes[i].pt(), mc_weight);
+		sampleA_m_response->Fake(fakes[i].m(), mc_weight);
+		sampleA_m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
+		sampleA_mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
+	      }
+	      //closure sampleB responses
+	      if (match && p_EventID % 2 != 0) {
+		sampleB_pt_response->Fake(fakes[i].pt(), mc_weight);
+		sampleB_m_response->Fake(fakes[i].m(), mc_weight);
+		sampleB_m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
+		sampleB_mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
+	      }
+	      
             }//for loop over fakes
             
             //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -627,29 +677,24 @@ int main (int argc, const char ** argv) {
 	    
 	    //looping over constituents
 	    vector<double> cons_pt;
-	    double ch_e = 0; double tot_e = 0;//names are misnomers here since we use pT, not E.
 	    vector<PseudoJet> cons = p_Jets[i].constituents();
 	    int p_jet_size = cons.size();
 	    p_jetMult.push_back(p_jet_size);
 	    for (int j = 0; j < p_jet_size; ++ j) {
 	      cons_pt.push_back(cons[j].pt());
-	      
-	      if (cons[j].user_index() != 0) {ch_e += cons[j].pt();}
-	      tot_e += cons[j].pt();
 	    }
 	    p_conspT.push_back(cons_pt);
-	    p_ch_e_frac.push_back(ch_e/(double)tot_e);
 
 	    //groomed
 	    p_mg.push_back(p_GroomedJets[i].m());
 	    p_ptg.push_back(p_GroomedJets[i].pt());
 	    p_zg.push_back(p_GroomedJets[i].structure_of<SD>().symmetry());
-	    p_rg.push_back(p_GroomedJets[i].structure_of<SD>().delta_R());
-	    //for calculating collinear dropped mass
-	    double m2 = (p_Jets[i].m())*(p_Jets[i].m()); double gm2 = (p_GroomedJets[i].m())*(p_GroomedJets[i].m());
-	    double m_cd = (double) sqrt(m2 - gm2); if ((m2 - gm2) < 1e-11) {m_cd = 0;}
-	    p_mcd.push_back(m_cd);
+	    p_rg.push_back(p_GroomedJets[i].structure_of<SD>().delta_R());  
 	  }//end pythia jet loop
+	  //assigning vectors of values calculated earlier to the tree
+	  p_mcd = pmcd;
+	  p_ch_e_frac = pch_e_frac;
+	  
 	  for (int i = 0; i < g_Jets.size(); ++ i) {
 	    //ungroomed
 	    g_Pt.push_back(g_Jets[i].pt());
@@ -660,29 +705,23 @@ int main (int argc, const char ** argv) {
 	    
 	    //looping over constituents
 	    vector<double> cons_pt;
-	    double ch_e = 0; double tot_e = 0;//names are misnomers here since we use pT, not E.
 	    vector<PseudoJet> cons = g_Jets[i].constituents();
 	    int g_jet_size = cons.size();
 	    g_jetMult.push_back(g_jet_size);
 	    for (int j = 0; j < g_jet_size; ++ j) {
 	      cons_pt.push_back(cons[j].pt());
-	      
-	      if (cons[j].user_index() != 0) {ch_e += cons[j].pt();}
-	      tot_e += cons[j].pt();
 	    }
 	    g_conspT.push_back(cons_pt);
-	    g_ch_e_frac.push_back(ch_e/(double)tot_e);
 
 	    //groomed
 	    g_mg.push_back(g_GroomedJets[i].m());
 	    g_ptg.push_back(g_GroomedJets[i].pt());
 	    g_zg.push_back(g_GroomedJets[i].structure_of<SD>().symmetry());
 	    g_rg.push_back(g_GroomedJets[i].structure_of<SD>().delta_R());
-	    //for calculating collinear dropped mass
-	    double m2 = (g_Jets[i].m())*(g_Jets[i].m()); double gm2 = (g_GroomedJets[i].m())*(g_GroomedJets[i].m());
-	    double m_cd = (double) sqrt(m2 - gm2); if ((m2 - gm2) < 1e-11) {m_cd = 0;}
-	    g_mcd.push_back(m_cd);
 	  }//end geant jet loop
+	  //assigning vectors of values calculated earlier to the tree
+	  g_mcd = gmcd;
+	  g_ch_e_frac = gch_e_frac;
 	  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
         }//matching-not-required conditional
 	

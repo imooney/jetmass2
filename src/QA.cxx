@@ -101,7 +101,7 @@ int main ( int argc, const char** argv) {
     // output and file names
     outputDir         = arguments[0];
     outFileName       = arguments[1];
-    trigger           = arguments[2];
+    trigger           = arguments[2]; //ppJP2, ppHT, ppVPDMB, pAJP2, pABBCMB, or AA [TBD] 
     dummy             = arguments[3]; //can be replaced by another flag if I want to add it in later
     chainList         = arguments[4];
     

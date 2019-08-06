@@ -5,7 +5,7 @@
 
 #args:
 #1: the analysis type. Current options: QA, data, sim
-#2: the trigger. Current options for pp: JP2, HT, VPDMB(-nobsmd); for pA: JP2, BBCMB. CAREFUL: for now, data.cxx cannot be run with a different trigger than JP2 without changing it by hand in the source file. This will be improved on soon.
+#2: the trigger. Current options for pp: JP2, HT, VPDMB(-nobsmd); for pA: JP2, BBCMB. For MC analysis, only JP2 is allowed at the moment.
 #3: the species. Current options: pp, pA, AA
 #4: an analysis-specific wildcard (not required). Currently being used in data to take either full (full) or charged (ch) jets.
 #5: second analysis-specific wildcard (not required). Currently being used in sim to either require matching (matched) - for responses - or not (unmatched) - for normal spectra
@@ -19,7 +19,6 @@ endif
 set ExecPath = `pwd`
 set arg = '' 
 
-#will hopefully extend this later to be capable of running QA for any system: pp, pA, AA [shouldn't be too hard - "if $3 == 'pp' set base = ..." etc.]
 if ($1 == 'QA') then
     make bin/QA || exit
     set execute = './bin/QA'
@@ -47,23 +46,23 @@ if ($1 != 'sim') then
     if ($2 == 'JP2' && $3 == 'pp') then
 	set trigger = "ppJP2"
 	set base = /nfs/rhi/STAR/Data/ppJP2Run12/sum	
-	echo "Running on the ppJP2-triggered data! Make sure the trigger strings are correct in src/data.cxx!"
+	echo "Running on the ppJP2-triggered data!"
     else if ($2 == 'HT' && $3 == 'pp') then
 	set trigger = "ppHT"
 	set base = /nfs/rhi/STAR/Data/ppHT2Run12/pp12Pico
-	echo "Running on the ppHT-triggered data! Make sure the trigger strings are correct in src/data.cxx!"
-    else if ($2 == 'VPDMB' && $3 == 'pp') then #NOTE: for data mode, trigger strings must be correctly specified in src/data.cxx for a given trigger selection!
+	echo "Running on the ppHT-triggered data!"
+    else if ($2 == 'VPDMB' && $3 == 'pp') then
 	set trigger = "ppVPDMB"
 	set base = /nfs/rhi/STAR/Data/ppMBRun12/sum
-	echo "Running on the ppMB-triggered data! Make sure the trigger strings are correct in src/data.cxx!"
+	echo "Running on the ppMB-triggered data!"
     else if ($2 == 'JP2' && $3 == 'pA') then
 	set trigger = "pAuJP2"
 	set base = /nfs/rhi/STAR/Data/P16id/production_pAu200_2015/HT/pAu_2015_200_HT_1
-	echo "Running on the pAuJP2-triggered data! Make sure the trigger strings are correct in src/data.cxx!"
-    else if ($2 == 'BBCMB' && $3 == 'pA') then #NOTE: for data mode, JP2 is default. Trigger strings need to be changed in src/data.cxx to run other triggers
+	echo "Running on the pAuJP2-triggered data!"
+    else if ($2 == 'BBCMB' && $3 == 'pA') then
 	set trigger = "pAuBBCMB"
 	set base = /nfs/rhi/STAR/Data/P16id/production_pAu200_2015/MB/pAu_2015_200_MB_1
-	echo "Running on the pAuBBCMB-triggered data! Make sure the trigger strings are correct in src/data.cxx!"
+	echo "Running on the pAuBBCMB-triggered data!"
     else if ($3 == 'AA' || $3 == 'AuAu') then
 	echo "AA is not ready yet - be patient!"
     else
@@ -72,7 +71,7 @@ if ($1 != 'sim') then
     endif
 else
     set base = /nfs/rhi/STAR/Data/AddedEmbedPythiaRun12pp200/Cleanpp12Pico_
-    echo "Running on the Pythia6 and Pythia6+Geant simulation!"
+    echo "Running on the Pythia6 and Pythia6+Geant (JP2-triggered) simulation!"
 endif
 
 # Make output directories if they don't already exist            
@@ -117,7 +116,7 @@ foreach input ( ${base}* )
     if ($1 == 'QA') then
 	set arg = "$outLocation $outName $trigger $dummy $Files"
     else if ($1 == 'data') then
-	set arg = "$outLocation $outName $3 $4 $Files"
+	set arg = "$outLocation $outName $trigger $4 $Files"
     else if ($1 == 'sim') then
 	set arg = "$outLocation $outName $4 $5 $Files"
     endif

@@ -109,7 +109,7 @@ void TreetoHist (TFile *f, string treestr, vector<TH1D*> h1Ds, vector<TH2D*> h2D
 	h1Ds[8]->Fill(rg->at(j), weight);
 	h1Ds[9]->Fill(mg->at(j), weight);
  	h1Ds[10]->Fill(ptg->at(j), weight);
-	h1Ds[11]->Fill(ptg->at(j) / (double) Pt->at(j));
+	h1Ds[11]->Fill(ptg->at(j) / (double) Pt->at(j), weight);
       }
       h1Ds[12]->Fill(mcd->at(j), weight); //collinear dropped mass is filled whether or not the jet passes the SD criterion. Can be changed if necessary.
       //2Ds!                                                                                                                                           
@@ -300,7 +300,7 @@ int main (int argc, const char ** argv) {
   TH2D* tau_05_g_v_pt = new TH2D("tau_05_g_v_pt","",30,-8,0,ptbins,ptlow,pthigh);
   TH2D* tau_1_g_v_pt = new TH2D("tau_1_g_v_pt","",30,-8,0,ptbins,ptlow,pthigh);
 
-  
+  //raw counts histograms for later dropping of low statistics bins
   TH2D* PL_m_v_pt_counts = new TH2D("PL_m_v_pt_counts","",14,0,14,PL_ptbins,PL_ptlow,PL_pthigh);
   TH2D* PL_mg_v_pt_counts = new TH2D("PL_mg_v_pt_counts","",14,0,14,PL_ptbins,PL_ptlow,PL_pthigh);
 

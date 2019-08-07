@@ -155,7 +155,7 @@ int main (int argc, const char ** argv) {
   //basic argument checking.
   if (argc != 5) {
     cerr << "Should be four arguments: output location, output name, input name, input type (e.g. data/sim). Received "
-	 << argc << ". Exiting." << endl;
+	 << argc-1 << ". Exiting." << endl;
     exit(1);
   }
 

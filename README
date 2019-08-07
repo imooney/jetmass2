@@ -29,5 +29,6 @@ To use this code:
    5) Step 4) will have produced some output root files in "out/QA". You can 'hadd -f all_files.root individual_file*.root" to combine all events into one file.
    6) Perform the data/simulation analysis by running "csh submit/analyze.csh data JP2 pp full"/"csh submit/analyze.csh sim JP2 pp full matched" e.g. for ch+ne jets output. [The "matched" flag would construct responses, requiring matches between Pythia6 and Pythia6+Geant events/jets]
    7) To transform the jet trees into histograms, see the instructions in the README in the "CompileRoot" directory of my "fundamentals" repo, and use this method to run the file "macros/hists.cxx" with the submit script "submit/macro_submit.csh". It will take in each root file, and write as many root files as output, all of which can then be post facto 'hadd'ed.
-   8) Eventually there will be a nice plotting macro to run to take in these histograms, beautify them, plot them, and save them as pdfs. 
+   8) The histograms should have their low-statistics bins (< 20 jets) dropped using the macros/bin_drop.cxx procedure: "csh submit/macro_submit.csh bin_drop". They write to equivalent paths/files but with "_bindropped" appended to the filename.
+   9) Eventually there will be a nice plotting macro to run to take in these histograms, beautify them, plot them, and save them as pdfs. 
  

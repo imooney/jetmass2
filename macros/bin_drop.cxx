@@ -1,6 +1,9 @@
 //Isaac Mooney, WSU, August 2019                                                                                                         
 //This file takes in all output of the main analysis to this point, drops low statistics bins, and outputs the results to similarly named files
 
+//First, we drop data spectra and closure pseudo-data spectra with fewer than 20 jets.
+//Next, we drop the bins in all responses corresponding to the bins dropped in the closure pseudo-data spectra
+
 #include <ctime>
 #include <iostream>
 #include <iomanip>
@@ -21,7 +24,7 @@
 
 using namespace std;
 
-//loops over the 2D spectra to find bins with bin content 0 (low-stats bins should already have been dropped in the spectra before this function is called). These bins are passed to the response, to be dropped there as well.
+//loops over the 2D spectra to find bins with bin content < 20. These bins are passed to the response, to be dropped there as well.
 //PS this assumes mass (or whatever observable) is on the x-axis!
 vector<int> DropLowStatsBins(RooUnfoldResponse* weighted, TH2D* det_unweighted) {//, TH2D* gen) {
   //TH2D* unweighted_res = (TH2D*) unweighted->Hresponse();
@@ -48,15 +51,19 @@ vector<int> DropLowStatsBins(RooUnfoldResponse* weighted, TH2D* det_unweighted) 
 
 
 //loops over the unweighted 1D histogram and finds any bins where there are fewer than 20 counts. These statistics-limited bins are dropped from the corresponding weighted histogram.
-void DropLowStatsBins(TH1D* weighted, TH1D* unweighted) {                                                                         
+vector<int> DropLowStatsBins(TH1D* weighted, TH1D* unweighted) {     
+  
+  vector<int> bins_to_drop;
+  
   for (int i = 1; i <= unweighted->GetXaxis()->GetNbins(); ++ i) {                                                         
     if (unweighted->GetBinContent(i) < 20) {                                                                                  
+      bins_to_drop.push_back(i);
       weighted->SetBinContent(i,0);                                                                                          
       weighted->SetBinError(i,0);                                                                                             
     }                                                                                                                            
   }                                                                                                                               
 
-  return;                                                                                                                                                 
+  return bins_to_drop;
 }                                                                                                                                                         
                                                                                                                                                             
 //loops over the unweighted 2D histogram and finds any bins where there are fewer than 20 counts. These statistics-limited bins are dropped from the corresponding weighted histogram.
@@ -163,51 +170,9 @@ int main () {
   TH2D *sampleB_mg_pt_gen_counts = (TH2D*) clos_in->Get("sampleB_mg_pt_gen_counts");
   TH2D *sampleB_mg_pt_det_counts = (TH2D*) clos_in->Get("sampleB_mg_pt_det_counts");
 
-  //pt                                                        
-  DropLowStatsBins(sampleA_pt_gen, sampleA_pt_gen_counts);                                                                                
-  DropLowStatsBins(sampleA_pt_det, sampleA_pt_det_counts);                                                                                
-  DropLowStatsBins(sampleB_pt_gen, sampleB_pt_gen_counts);                                                                              
-  DropLowStatsBins(sampleB_pt_det, sampleB_pt_det_counts);        
-  //m
-  DropLowStatsBins(sampleA_m_gen, sampleA_m_gen_counts);                                                                                
-  DropLowStatsBins(sampleA_m_det, sampleA_m_det_counts);                                                                                
-  DropLowStatsBins(sampleB_m_gen, sampleB_m_gen_counts);                                                                              
-  DropLowStatsBins(sampleB_m_det, sampleB_m_det_counts);        
-  //m
-  DropLowStatsBins(sampleA_mg_gen, sampleA_mg_gen_counts);                                                                                
-  DropLowStatsBins(sampleA_mg_det, sampleA_mg_det_counts);                                                                                
-  DropLowStatsBins(sampleB_mg_gen, sampleB_mg_gen_counts);                                                                              
-  DropLowStatsBins(sampleB_mg_det, sampleB_mg_det_counts);        
-  //m-pt
-  DropLowStatsBins(sampleA_m_pt_gen, sampleA_m_pt_gen_counts);                                                                            
-  DropLowStatsBins(sampleA_m_pt_det, sampleA_m_pt_det_counts);                                                                            
-  DropLowStatsBins(sampleB_m_pt_gen, sampleB_m_pt_gen_counts);                                                                         
-  DropLowStatsBins(sampleB_m_pt_det, sampleB_m_pt_det_counts); 
-  //mg-pt
-  DropLowStatsBins(sampleA_mg_pt_gen, sampleA_mg_pt_gen_counts);                                                                            
-  DropLowStatsBins(sampleA_mg_pt_det, sampleA_mg_pt_det_counts);                                                                            
-  DropLowStatsBins(sampleB_mg_pt_gen, sampleB_mg_pt_gen_counts);                                                                          
-  DropLowStatsBins(sampleB_mg_pt_det, sampleB_mg_pt_det_counts); 
-
-  vector<int> to_drop_m; vector<int> to_drop_mg;
-  
-  //remember to call this block of after spectra have been pruned already
-  to_drop_m = DropLowStatsBins(sampleA_m_pt_response, sampleA_m_pt_det_counts);
-  to_drop_mg = DropLowStatsBins(sampleA_mg_pt_response, sampleA_mg_pt_det_counts);
-  //we determined the bins to drop using sampleA, now we drop the same bins from sampleB (should be roughly the same statistics)
-  DropBins(sampleB_m_pt_response, to_drop_m);
-  DropBins(sampleB_mg_pt_response, to_drop_mg);
-  //~~~
-  
   //~~~matched MC
   RooUnfoldResponse *m_pt_response = (RooUnfoldResponse*) match_in->Get("m_pt_response");
   RooUnfoldResponse *mg_pt_response = (RooUnfoldResponse*) match_in->Get("mg_pt_response");
-  
-  DropBins(m_pt_response, to_drop_m);   
-  DropBins(mg_pt_response, to_drop_mg);   
-  
-  //~~~
-
   /*
   //~~~systematics
   RooUnfoldResponse *pt_m_res_nom = (RooUnfoldResponse*) syst_in->Get("pt_m_res_nom");
@@ -242,32 +207,7 @@ int main () {
   RooUnfoldResponse *pt_mg_res_DS_counts = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_DS_counts");
   RooUnfoldResponse *pt_mg_res_GS_counts = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_GS_counts");
   RooUnfoldResponse *pt_mg_res_MS_counts = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_MS_counts");
-  cout << "C" << endl;
-  DropBins(pt_m_res_nom,to_drop_m);// pt_m_res_nom_counts);
-  cout<< "i" <<endl;
-  DropBins(pt_mg_res_nom,to_drop_mg);// pt_mg_res_nom_counts);
-  DropBins(pt_m_res_TS,to_drop_m);// pt_m_res_TS_counts);
-  DropBins(pt_mg_res_TS,to_drop_mg);// pt_mg_res_TS_counts);
-  DropBins(pt_m_res_TU,to_drop_m);// pt_m_res_TU_counts);
-  DropBins(pt_mg_res_TU,to_drop_mg);// pt_mg_res_TU_counts); 
-  DropBins(pt_m_res_HC50,to_drop_m);// pt_m_res_HC50_counts);
-  DropBins(pt_mg_res_HC50,to_drop_mg);// pt_mg_res_HC50_counts);
-  DropBins(pt_m_res_HC0,to_drop_m);// pt_m_res_HC0_counts);
-  DropBins(pt_mg_res_HC0,to_drop_mg);// pt_mg_res_HC0_counts);
-  DropBins(pt_m_res_DS,to_drop_m);// pt_m_res_DS_counts);
-  DropBins(pt_mg_res_DS,to_drop_mg);// pt_mg_res_DS_counts);
-  cout << "ii" <<endl;
-  DropBins(pt_m_res_GS,to_drop_m);// pt_m_res_GS_counts);
-  cout << "iia" << endl;
-  DropBins(pt_mg_res_GS,to_drop_mg);// pt_mg_res_GS_counts);   
-  cout << "iii" << endl;
-  DropBins(pt_m_res_MS,to_drop_m);// pt_m_res_MS_counts);
-  cout << "iv" << endl;
-  DropBins(pt_mg_res_MS,to_drop_mg);// pt_mg_res_MS_counts);   
-
-  cout <<"D"<<endl;
   */
-  //~~~
 
   //~~~data
   TH2D *m_v_pt_d = (TH2D*) data_in->Get("m_v_pt");
@@ -282,7 +222,41 @@ int main () {
   TH2D *mg_v_pt_d_counts = (TH2D*) data_in->Get("mg_v_pt_counts");
   TH2D *mg_v_pt_g_counts = (TH2D*) sim_in->Get("mg_v_pt_counts");
   TH2D *mg_v_pt_p_counts = (TH2D*) sim_in->Get("PL_mg_v_pt_counts");
+
   
+  vector<int> to_drop_m; vector<int> to_drop_mg;
+  vector<int> to_drop_m1D; vector<int> to_drop_mg1D; vector<int> to_drop_pt1D;
+  
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//  
+  //dropping low-stats closure spectra bins
+  //pt                                                        
+  DropLowStatsBins(sampleA_pt_gen, sampleA_pt_gen_counts);                                                                                
+  to_drop_pt1D = DropLowStatsBins(sampleA_pt_det, sampleA_pt_det_counts);                                                                                
+  DropLowStatsBins(sampleB_pt_gen, sampleB_pt_gen_counts);                                                                              
+  DropLowStatsBins(sampleB_pt_det, sampleB_pt_det_counts);        
+  //m
+  DropLowStatsBins(sampleA_m_gen, sampleA_m_gen_counts);                                                                                
+  to_drop_m1D = DropLowStatsBins(sampleA_m_det, sampleA_m_det_counts);                                                                                
+  DropLowStatsBins(sampleB_m_gen, sampleB_m_gen_counts);                                                                              
+  DropLowStatsBins(sampleB_m_det, sampleB_m_det_counts);        
+  //m
+  DropLowStatsBins(sampleA_mg_gen, sampleA_mg_gen_counts);                                                                                
+  to_drop_mg1D = DropLowStatsBins(sampleA_mg_det, sampleA_mg_det_counts);                                                                                
+  DropLowStatsBins(sampleB_mg_gen, sampleB_mg_gen_counts);                                                                              
+  DropLowStatsBins(sampleB_mg_det, sampleB_mg_det_counts);        
+  //m-pt
+  DropLowStatsBins(sampleA_m_pt_gen, sampleA_m_pt_gen_counts);                                                                            
+  DropLowStatsBins(sampleA_m_pt_det, sampleA_m_pt_det_counts);                                                                            
+  DropLowStatsBins(sampleB_m_pt_gen, sampleB_m_pt_gen_counts);                                                                         
+  DropLowStatsBins(sampleB_m_pt_det, sampleB_m_pt_det_counts); 
+  //mg-pt
+  DropLowStatsBins(sampleA_mg_pt_gen, sampleA_mg_pt_gen_counts);                                                                            
+  DropLowStatsBins(sampleA_mg_pt_det, sampleA_mg_pt_det_counts);                                                                            
+  DropLowStatsBins(sampleB_mg_pt_gen, sampleB_mg_pt_gen_counts);                                                                          
+  DropLowStatsBins(sampleB_mg_pt_det, sampleB_mg_pt_det_counts); 
+  //~~~
+  
+  //dropping low-stats spectra bins
   DropLowStatsBins(m_v_pt_d, m_v_pt_d_counts);                                                                             
   DropLowStatsBins(m_v_pt_g, m_v_pt_g_counts);                                                                             
   DropLowStatsBins(m_v_pt_p, m_v_pt_p_counts);
@@ -290,6 +264,50 @@ int main () {
   DropLowStatsBins(mg_v_pt_g, mg_v_pt_g_counts);                                                                             
   DropLowStatsBins(mg_v_pt_p, mg_v_pt_p_counts);
   //~~~
+
+
+  //dropping bins from the closure responses using the closure spectra
+  //remember to call this block of after spectra have been pruned already
+  to_drop_m = DropLowStatsBins(sampleA_m_pt_response, sampleA_m_pt_det_counts);
+  to_drop_mg = DropLowStatsBins(sampleA_mg_pt_response, sampleA_mg_pt_det_counts);
+  //we determined the bins to drop using sampleA, now we drop the same bins from sampleB (should be roughly the same statistics)
+  DropBins(sampleB_m_pt_response, to_drop_m);
+  DropBins(sampleB_mg_pt_response, to_drop_mg);  
+  //1Ds:
+  DropBins(sampleA_pt_response, to_drop_pt1D);
+  DropBins(sampleA_m_response, to_drop_m1D);
+  DropBins(sampleA_mg_response, to_drop_mg1D);
+  DropBins(sampleB_pt_response, to_drop_pt1D);
+  DropBins(sampleB_m_response, to_drop_m1D);
+  DropBins(sampleB_mg_response, to_drop_mg1D);
+  //~~~
+
+  //dropping bins from the responses using the closure spectra
+  DropBins(m_pt_response, to_drop_m);   
+  DropBins(mg_pt_response, to_drop_mg);
+  //~~~
+
+  /*
+  DropBins(m_pt_res_nom,to_drop_m);
+  DropBins(mg_pt_res_nom,to_drop_mg);
+  DropBins(m_pt_res_TS,to_drop_m);
+  DropBins(mg_pt_res_TS,to_drop_mg);
+  DropBins(m_pt_res_TU,to_drop_m);
+  DropBins(mg_pt_res_TU,to_drop_mg); 
+  DropBins(m_pt_res_HC50,to_drop_m);
+  DropBins(mg_pt_res_HC50,to_drop_mg);
+  DropBins(m_pt_res_HC0,to_drop_m);
+  DropBins(mg_pt_res_HC0,to_drop_mg);
+  DropBins(m_pt_res_DS,to_drop_m);
+  DropBins(mg_pt_res_DS,to_drop_mg);
+  DropBins(m_pt_res_GS,to_drop_m);
+  DropBins(mg_pt_res_GS,to_drop_mg);
+  DropBins(m_pt_res_MS,to_drop_m);
+  DropBins(mg_pt_res_MS,to_drop_mg);   
+  */
+  //~~~
+
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
   TFile *match_out = new TFile((sim_path+"matched_hists_bindropped.root").c_str(),"RECREATE");
   //TFile *syst_out = new TFile((syst_path+"").c_str(),"RECREATE");
@@ -308,18 +326,20 @@ int main () {
   sampleA_m_pt_response->Write(); sampleA_mg_pt_response->Write();
   sampleB_m_pt_response->Write(); sampleB_mg_pt_response->Write();
   sampleA_pt_gen->Write(); sampleB_pt_gen->Write(); sampleA_pt_det->Write(); sampleB_pt_det->Write();
+  sampleA_m_gen->Write(); sampleB_m_gen->Write(); sampleA_m_det->Write(); sampleB_m_det->Write();
+  sampleA_mg_gen->Write(); sampleB_mg_gen->Write(); sampleA_mg_det->Write(); sampleB_mg_det->Write();
   sampleA_m_pt_gen->Write(); sampleB_m_pt_gen->Write(); sampleA_m_pt_det->Write(); sampleB_m_pt_det->Write();
   sampleA_mg_pt_gen->Write(); sampleB_mg_pt_gen->Write(); sampleA_mg_pt_det->Write(); sampleB_mg_pt_det->Write();
   /*
   syst_out->cd();
-  pt_m_res_nom->Write(); pt_mg_res_nom->Write();
-  pt_m_res_TS->Write(); pt_mg_res_TS->Write();
-  pt_m_res_TU->Write(); pt_mg_res_TU->Write();
-  pt_m_res_HC50->Write(); pt_mg_res_HC50->Write();
-  pt_m_res_HC0->Write(); pt_mg_res_HC0->Write();
-  pt_m_res_DS->Write(); pt_mg_res_DS->Write();
-  pt_m_res_GS->Write(); pt_mg_res_GS->Write();
-  pt_m_res_MS->Write(); pt_mg_res_MS->Write();
+  m_pt_res_nom->Write(); mg_pt_res_nom->Write();
+  m_pt_res_TS->Write(); mg_pt_res_TS->Write();
+  m_pt_res_TU->Write(); mg_pt_res_TU->Write();
+  m_pt_res_HC50->Write(); mg_pt_res_HC50->Write();
+  m_pt_res_HC0->Write(); mg_pt_res_HC0->Write();
+  m_pt_res_DS->Write(); mg_pt_res_DS->Write();
+  m_pt_res_GS->Write(); mg_pt_res_GS->Write();
+  m_pt_res_MS->Write(); mg_pt_res_MS->Write();
 */
   data_out->cd();
   m_v_pt_d->Write();

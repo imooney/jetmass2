@@ -86,7 +86,7 @@ int main (int argc, const char ** argv) {
     
     //initialize both readers
     InitReader(P6Reader, P6Chain, nEvents, "All", truth_absMaxVz, truth_vZDiff, truth_evPtMax, truth_evEtMax, truth_evEtMin, truth_DCA, truth_NFitPts, truth_FitOverMaxPts, sim_maxEtTow, 0.9999, false, sim_badTowers, sim_bad_run_list);
-    InitReader(GEANTReader, GEANTChain, nEvents, det_triggerString, det_absMaxVz, det_vZDiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, sim_maxEtTow, 0.9999, false, /*sim_badTowers, sim_bad_run_list);*/det_badTowers, dat_bad_run_list);
+    InitReader(GEANTReader, GEANTChain, nEvents, det_triggerString, det_absMaxVz, det_vZDiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, sim_maxEtTow, 0.9999, false, sim_badTowers, sim_bad_run_list);//det_badTowers, dat_bad_run_list);
 
     //define relevant data structures
     TString pythiaFilename;
@@ -140,6 +140,9 @@ int main (int argc, const char ** argv) {
     eventTree->Branch("g_mcd",&g_mcd);
     eventTree->Branch("g_weight", &g_wt); eventTree->Branch("g_EventID", &g_EventID);
 
+    //hist for statistical error correction - for matched events, but unmatched jets
+    TH1D* pt_gen_match_plus_miss = new TH1D("pt_gen_match_plus_miss","",15,5,80);
+    
     //1D hists for closure test
     TH1D* sampleA_pt_gen = new TH1D("sampleA_pt_gen","",15,5,80);
     TH1D* sampleA_pt_det = new TH1D("sampleA_pt_det","",9,15,60);
@@ -464,6 +467,10 @@ int main (int argc, const char ** argv) {
         //FakesandMisses returns a vector of indices (i) corresponding to the indices of misses or fakes from the original candidate vector.
         
         if (match) {
+	  //before the actual matching, fill the spectrum that will be used for statistical error correction later
+	  for (int i = 0; i < p_Jets.size(); ++ i) {
+	    pt_gen_match_plus_miss->Fill(p_Jets[i].pt(), mc_weight);
+	  }
 	  //before the actual matching, fill the spectra for validation in the closure test
 	  //(we only require there to be a matching Geant & Pythia event so our event reconstruction efficiency isn't folded unnecessarily into the closure)
 	  if (p_EventID % 2 == 0) { //even events are sampleA
@@ -566,6 +573,9 @@ int main (int argc, const char ** argv) {
             //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FILL RESPONSES/HISTS/TREES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
             
             for (int i = 0; i < misses.size(); ++ i) {
+	      pt_response->Miss(misses[i].pt(), mc_weight);
+	      m_response->Miss(misses[i].m(), mc_weight);
+	      mg_response->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight);
 	      m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
 	      mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
 	      //closure sampleA responses
@@ -587,16 +597,19 @@ int main (int argc, const char ** argv) {
             for (int i = 0; i < g_matches.size(); ++ i) { //g_matches.size == p_matches.size == match_indices.size()
 	      //matches should be at same index in respective vectors
 	      //RESPONSES:
+	      pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
+	      m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
+	      mg_response->Fill(g_GroomedJets[match_indices[i]].m(), p_GroomedJets[match_indices[i]].m(), mc_weight);
 	      m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
 	      mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
-				   p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt());
+				   p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt(), mc_weight);
 	      //closure sampleA responses
 	      if (match && p_EventID % 2 == 0) {
 		sampleA_pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
 		sampleA_m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
 		sampleA_m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
 		sampleA_mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
-					     p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt());
+					     p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt(), mc_weight);
 	      }
 	      //closure sampleB responses
 	      if (match && p_EventID % 2 != 0) {
@@ -604,7 +617,7 @@ int main (int argc, const char ** argv) {
 		sampleB_m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
 		sampleB_m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
 		sampleB_mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
-					     p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt());
+					     p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt(), mc_weight);
 	      }
 	      
               
@@ -642,21 +655,24 @@ int main (int argc, const char ** argv) {
             }//for loop over matches
             
             for (int i = 0; i < fakes.size(); ++ i) {
+	      pt_response->Fake(fakes[i].pt(), mc_weight);
+	      m_response->Fake(fakes[i].m(), mc_weight);
+	      mg_response->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
 	      m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
-	      mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
+	      mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt(), mc_weight);
 	      //closure sampleA responses
 	      if (match && p_EventID % 2 == 0) {
 		sampleA_pt_response->Fake(fakes[i].pt(), mc_weight);
 		sampleA_m_response->Fake(fakes[i].m(), mc_weight);
 		sampleA_m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
-		sampleA_mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
+		sampleA_mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt(), mc_weight);
 	      }
 	      //closure sampleB responses
 	      if (match && p_EventID % 2 != 0) {
 		sampleB_pt_response->Fake(fakes[i].pt(), mc_weight);
 		sampleB_m_response->Fake(fakes[i].m(), mc_weight);
 		sampleB_m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
-		sampleB_mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt());
+		sampleB_mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt(), mc_weight);
 	      }
 	      
             }//for loop over fakes
@@ -747,6 +763,8 @@ int main (int argc, const char ** argv) {
     
     if (match) {
       //hists
+      pt_gen_match_plus_miss->Write();
+      
       for (int i = 0; i < sampleA_h1Ds.size(); ++ i) {
 	sampleA_h1Ds[i]->Write();
       }

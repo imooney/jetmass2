@@ -46,7 +46,7 @@ else if (${species} == 'AA') then
     echo 'Error: AA is not ready yet! Be patient!'
     exit
 else
-    if (${analysisTag} != 'bin_drop') then
+    if (${analysisTag} != 'bin_drop' && ${analysisTag} != 'stat_err_scaling') then
 	echo 'Error: unrecognized collision species!'
 	exit
     endif
@@ -57,19 +57,19 @@ set ExecPath = `pwd`
 set uscore = "_" #for easy concatenation of variables later
 set execute = "./macros/bin/$1" #or 'root macros/bin/$1.cxx+' on the command line for root compiling via ACLiC
 
-if (${analysisTag} == 'bin_drop') then
+if (${analysisTag} == 'bin_drop' || ${analysisTag} == 'stat_err_scaling') then
 
-    if (! -d log/bin_drop) then
-	mkdir -p log/bin_drop
+    if (! -d log/${analysisTag}) then
+	mkdir -p log/${analysisTag}
     endif
     
-    set LogFile = log/bin_drop/bin_drop.log
-    set ErrFile = log/bin_drop/bin_drop.err	    
+    set LogFile = log/${analysisTag}/${analysisTag}.log
+    set ErrFile = log/${analysisTag}/${analysisTag}.err	    
     
-    echo qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute
-    qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute
+    echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute
+    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute
 
-else #anything but the bin_drop procedure (which doesn't need any args or input/output help)
+else #anything but procedures which don't need any args or input/output help
     
     if ( ! -d out/${inputType}/${analysisTag}) then #e.g. out/data/hists. Beautiful!
 	mkdir -p out/${inputType}/${analysisTag} #making output directory
@@ -101,9 +101,9 @@ else #anything but the bin_drop procedure (which doesn't need any args or input/
 	
 	#./macros/bin/root_macro out/root_macro/ file1_root_macro.root out/file1.root <- this is a (currently) working execution line on which to model the qsub
 	
-	echo qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+	echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 	
-	qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+	qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
        
     end #end of loop over input files
 

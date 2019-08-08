@@ -1,23 +1,28 @@
 Jetmass2.0 is the next iteration of the jetmass analysis codebase. I don't plan to add any programming wizardry or bells and whistles; jetmass1.0 was simply getting too clunky, scattered, and chaotic as I heaped things haphazardly onto the disorganized pile of code. The goals for 2.0 are flexibility, streamlining, speed, organization, and clarity. And I hope it will be much easier after this to integrate the AA analysis once that is started.
 
-Currently, the project handles QA and the main data and simulation (Pythia6, Pythia6+Geant, and Pythia8/Herwig7) analysis [reading in picos/HepMCs -> writing jet trees], but it will (hopefully) match 1.0's capabilities within the next week or two. A few tests of the QA and data analysis have been done and it seems the pp JP2 of 1.0 has been perfectly replicated in 2.0 (exact same number of accepted events, etc.).
+PROGRESS:
+This project handles QA and the main data and simulation (Pythia6, Pythia6+Geant, and Pythia8/Herwig7) analysis [reading in picos/HepMCs -> writing jet trees]. Tests of the QA and data/sim analysis have been done and it seems the pp JP2 of 1.0 has been perfectly replicated in 2.0 (exact same number of accepted events, jets, etc.).
 Mid-July, 2019: finished up the rewriting of the code (in jetmass2/production/) to analyze HepMC files (e.g. Pythia8, Herwig7) using Rivet. The submit script will now take in command line arguments and write them to a text file to be read in at runtime since the Rivet build generates a shared library, not an executable. Note: I found in the process of rewriting this code that the HepMC format assigns mass to partons in a way that is tuned to some non-physical value, when hadronization is turned off. So the twin methods of: (a) generating HepMCs with hadronization off and clustering jets as normal and (b) generating HepMCs with hadronization on and projecting onto final state partons using Rivet are slightly different in their mass assignments. Just something to keep in mind - no a priori correct way to do it, in my opinion.
      NOTE for running Rivet: Rivet and ROOT don't play well together so you'll need to source the Rivet environment separately each time you switch from running ROOT to Rivet. E.g. "source /nfs/rhi/STAR/software/RIVET/local/rivetenv.sh" (or wherever it's located for you).
 Early August, 2019: closure.cxx from 1.0 has been merged into sim.cxx so output of running sim.cxx also contains histograms for performing a closure test.
+August 7, 2019: We officially have 100% agreement between the unfolded preliminary mass plot of 2.0 and 1.0, before introducing the bug-fixes listed below!
 
 Next steps:
      *fiddle with (all) submit scripts to be more careful at selecting input (and output) files based on the passed trigger, ion species, etc., so we don't start mixing streams by accident as we look at more datasets with this code.
-     *start rewriting the analysis (e.g. unfolding, systematics, etc.) of the simulation on disk; debug!
+     *rewrite the systematics code; debug!
+     *introduce the bug-fixes listed below into the new code to see how badly it changes the mass result.
 
 NEW features, not included in jetmass1.0:
     *Wrote a (very general) procedure ("macros/find_bad_towers.cxx") for determining bad towers. Have applied it so far to the 2015 pA dataset. To apply it to any other dataset, simply give the appropriate output location, output name, and input name, respectively when running the macro a la step 7) below. See comments throughout find_bad_towers.cxx for more details.
+    *Wrote a quick macro for determining the statistical error scaling. Before, I did it on the fly and used the calculated scalings as magic numbers in my unfolding code (oof). Everything is now general, so that if any plots are updated, the new scalings can be immediately obtained by running macros/stat_err_scaling.cxx.
 
 RUNNING LIST OF BUGS FOUND IN JETMASS1.0 [will all be left alone until I've exactly reproduced the unfolded mass plots, then fixed to see if anything changes]:
     *In plotting macros, I call ProjectionX incorrectly. It should be ProjectionX("",low_bin_left_edge,high_bin_left_edge) rather than ProjectionX("",low_bin_left_edge,high_bin_right_edge), so that e.g. a projection of pT from 15 to 20 when this is a single bin (say, bin 1) is "ProjectionX("",15,15)". When this is done incorrectly, it causes bleeding between projected bins.
     *It appears that in filling certain Soft Dropped histograms, I don't require zg > 0.1, which is typically done. This can have an influence on the groomed mass result since such jets can occur for any pT and groomed mass ranges.
     *There was a bug in my geometrical jet matching function (and its cousin, the MissesandFakes function) which caused the selection of jets in delta_R < 0.4 not to take place, so all jets that were input were considered potential matches. We then take the highest pT match, so this could occasionally be a jet which had nothing to do with the jet to which we match it. This will obviously have an unpredictable effect on the unfolding, but obviously it will increase the fake rate.
     *Not quite a bug, but something I'll need to contend with when this is done: in obtaining my MC spectra and closure in 1.0, I do not use the ppRun12 bad run & bad tower lists for Geant (only the bad tower list should affect things). But in obtaining the matched spectra & responses in 1.0, I DO use the bad run & tower lists. This is an inconsistency that should be considered. Having the closure use one setting and the matching/response construction use another is problematic because the closure indirectly affects the unfolding as well via the bin_drop procedure. Will need to bring this up.
-
+    *Not a bug that affects the unfolded result, but in my bin dropping procedure when I dropped low-statistics bins from the 1D closure spectra, I was neglecting to drop them in the 1D responses as well, which caused the non-unity in the same-side closure test.
+    
 For more details on the jetmass project, see the 'jetmass' repo also on my GitHub.
 
 To use this code:
@@ -30,5 +35,6 @@ To use this code:
    6) Perform the data/simulation analysis by running "csh submit/analyze.csh data JP2 pp full"/"csh submit/analyze.csh sim JP2 pp full matched" e.g. for ch+ne jets output. [The "matched" flag would construct responses, requiring matches between Pythia6 and Pythia6+Geant events/jets]
    7) To transform the jet trees into histograms, see the instructions in the README in the "CompileRoot" directory of my "fundamentals" repo, and use this method to run the file "macros/hists.cxx" with the submit script "submit/macro_submit.csh". It will take in each root file, and write as many root files as output, all of which can then be post facto 'hadd'ed.
    8) The histograms should have their low-statistics bins (< 20 jets) dropped using the macros/bin_drop.cxx procedure: "csh submit/macro_submit.csh bin_drop". They write to equivalent paths/files but with "_bindropped" appended to the filename.
-   9) Eventually there will be a nice plotting macro to run to take in these histograms, beautify them, plot them, and save them as pdfs. 
+   9) After unfolding (still have to write a nice macro for this - right now I'm using a temporary stand-in), the errors should be scaled since RooUnfold doesn't really handle statistical errors properly. To determine the scaling factors, run macros/stat_err_scaling.cxx (see comments at beginning of file for explanation), and scale the errors by the factors in the ratio histogram. An example of this is in the temporary unfolding file macros/temp_unfolding.C. [This will be updated to point to a better file once one exists.]
+   10) Eventually there will be a nice plotting macro to run to take in these histograms, beautify them, plot them, and save them as pdfs. 
  

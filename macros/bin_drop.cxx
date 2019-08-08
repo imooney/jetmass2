@@ -106,7 +106,7 @@ int main () {
   const string file_out = "full_R04.root";
   const string data_file_out = "hists_R04.root";
   
-  TFile *match_in = new TFile((clos_path+"sim_matched.root").c_str(),"READ");
+  TFile *match_in = new TFile((clos_path+"sim_matched_closureconsistency.root").c_str(),"READ");
   //TFile *syst_in = new TFile((syst_path+"").c_str(),"READ");
   TFile *clos_in = new TFile((clos_path+"sim_matched_closureconsistency.root").c_str(),"READ");
   TFile *data_in = new TFile((data_path+"data_hists_ppJP2.root").c_str(),"READ");

@@ -310,7 +310,7 @@ namespace Analysis {
 	      //  std::cout << "Bprime" << std::endl;
 	      //  std::cout << "DEBUG: matchedToJet != candidates_copy!" << std::endl;
 	      //}
-		std::cout << "B" << std::endl;
+	      //std::cout << "B" << std::endl;
                 match_indices.push_back(i); //push back the toMatch match position
                 t_matches.push_back(toMatch[i]);
                 c_matches.push_back(candidates_copy/*matchedToJet*/[0]); //highest pT match

@@ -4,12 +4,13 @@ PROGRESS:
 This project handles QA and the main data and simulation (Pythia6, Pythia6+Geant, and Pythia8/Herwig7) analysis [reading in picos/HepMCs -> writing jet trees]. Tests of the QA and data/sim analysis have been done and it seems the pp JP2 of 1.0 has been perfectly replicated in 2.0 (exact same number of accepted events, jets, etc.).
 Mid-July, 2019: finished up the rewriting of the code (in jetmass2/production/) to analyze HepMC files (e.g. Pythia8, Herwig7) using Rivet. The submit script will now take in command line arguments and write them to a text file to be read in at runtime since the Rivet build generates a shared library, not an executable. Note: I found in the process of rewriting this code that the HepMC format assigns mass to partons in a way that is tuned to some non-physical value, when hadronization is turned off. So the twin methods of: (a) generating HepMCs with hadronization off and clustering jets as normal and (b) generating HepMCs with hadronization on and projecting onto final state partons using Rivet are slightly different in their mass assignments. Just something to keep in mind - no a priori correct way to do it, in my opinion.
      NOTE for running Rivet: Rivet and ROOT don't play well together so you'll need to source the Rivet environment separately each time you switch from running ROOT to Rivet. E.g. "source /nfs/rhi/STAR/software/RIVET/local/rivetenv.sh" (or wherever it's located for you).
-Early August, 2019: closure.cxx from 1.0 has been merged into sim.cxx so output of running sim.cxx also contains histograms for performing a closure test.
+Early August, 2019: closure.cxx from 1.0 has been merged into sim.cxx so output of running sim.cxx also contains responses/histograms for performing a closure test.
 August 7, 2019: We officially have 100% agreement between the unfolded preliminary mass plot of 2.0 and 1.0, before introducing the bug-fixes listed below!
+Early August, 2019: systematics.cxx from 1.0 has been merged into sim.cxx so output of running sim.cxx also contains responses for systematic uncertainty variation. 
 
 Next steps:
      *fiddle with (all) submit scripts to be more careful at selecting input (and output) files based on the passed trigger, ion species, etc., so we don't start mixing streams by accident as we look at more datasets with this code.
-     *rewrite the systematics code; debug!
+     *Debug the systematics code.
      *introduce the bug-fixes listed below into the new code to see how badly it changes the mass result.
 
 NEW features, not included in jetmass1.0:

@@ -97,117 +97,94 @@ int main () {
   TH2::SetDefaultSumw2();
   TH3::SetDefaultSumw2();
   
-  const string syst_path = "~/jetmass2/out/systematics/";
   const string sim_path = "~/jetmass2/out/sim/hists/";
-  const string clos_path = "~/jetmass2/out/sim/";
+  const string match_path = "~/jetmass2/out/sim/";
   const string data_path = "~/jetmass2/out/data/hists/";
-  //const string file_in = ".root";
-  //const string data_file_in = "hists_w_o_bin_drop_R04.root";
-  const string file_out = "full_R04.root";
-  const string data_file_out = "hists_R04.root";
+  const string match_file = "sim_matched_closureconsistency";
+  const string data_file = "data_hists_ppJP2";
+  const string sim_file = "unmatched_hists";
   
-  TFile *match_in = new TFile((clos_path+"sim_matched_closureconsistency.root").c_str(),"READ");
-  //TFile *syst_in = new TFile((syst_path+"").c_str(),"READ");
-  TFile *clos_in = new TFile((clos_path+"sim_matched_closureconsistency.root").c_str(),"READ");
-  TFile *data_in = new TFile((data_path+"data_hists_ppJP2.root").c_str(),"READ");
-  TFile *sim_in = new TFile((sim_path+"unmatched_hists.root").c_str(),"READ");
+  TFile *match_in = new TFile((match_path+match_file+".root").c_str(),"READ");
+  TFile *data_in = new TFile((data_path+data_file+".root").c_str(),"READ");
+  TFile *sim_in = new TFile((sim_path+sim_file+".root").c_str(),"READ");
   
   //~~~closure - must be done first
-  RooUnfoldResponse *sampleA_m_pt_response = (RooUnfoldResponse*) clos_in->Get("sampleA_m_pt_response");
-  RooUnfoldResponse *sampleA_mg_pt_response = (RooUnfoldResponse*) clos_in->Get("sampleA_mg_pt_response");
-  RooUnfoldResponse *sampleB_m_pt_response = (RooUnfoldResponse*) clos_in->Get("sampleB_m_pt_response");
-  RooUnfoldResponse *sampleB_mg_pt_response = (RooUnfoldResponse*) clos_in->Get("sampleB_mg_pt_response");
-  RooUnfoldResponse *sampleA_pt_response = (RooUnfoldResponse*) clos_in->Get("sampleA_pt_response");
-  RooUnfoldResponse *sampleB_pt_response = (RooUnfoldResponse*) clos_in->Get("sampleB_pt_response");
-  RooUnfoldResponse *sampleA_m_response = (RooUnfoldResponse*) clos_in->Get("sampleA_m_response");
-  RooUnfoldResponse *sampleB_m_response = (RooUnfoldResponse*) clos_in->Get("sampleB_m_response");
-  RooUnfoldResponse *sampleA_mg_response = (RooUnfoldResponse*) clos_in->Get("sampleA_mg_response");
-  RooUnfoldResponse *sampleB_mg_response = (RooUnfoldResponse*) clos_in->Get("sampleB_mg_response");
+  RooUnfoldResponse *sampleA_m_pt_response = (RooUnfoldResponse*) match_in->Get("sampleA_m_pt_response");
+  RooUnfoldResponse *sampleA_mg_pt_response = (RooUnfoldResponse*) match_in->Get("sampleA_mg_pt_response");
+  RooUnfoldResponse *sampleB_m_pt_response = (RooUnfoldResponse*) match_in->Get("sampleB_m_pt_response");
+  RooUnfoldResponse *sampleB_mg_pt_response = (RooUnfoldResponse*) match_in->Get("sampleB_mg_pt_response");
+  RooUnfoldResponse *sampleA_pt_response = (RooUnfoldResponse*) match_in->Get("sampleA_pt_response");
+  RooUnfoldResponse *sampleB_pt_response = (RooUnfoldResponse*) match_in->Get("sampleB_pt_response");
+  RooUnfoldResponse *sampleA_m_response = (RooUnfoldResponse*) match_in->Get("sampleA_m_response");
+  RooUnfoldResponse *sampleB_m_response = (RooUnfoldResponse*) match_in->Get("sampleB_m_response");
+  RooUnfoldResponse *sampleA_mg_response = (RooUnfoldResponse*) match_in->Get("sampleA_mg_response");
+  RooUnfoldResponse *sampleB_mg_response = (RooUnfoldResponse*) match_in->Get("sampleB_mg_response");
  
   //1D closure spectra to be pruned and to be used to prune responses
-  TH1D *sampleA_pt_gen = (TH1D*) clos_in->Get("sampleA_pt_gen");
-  TH1D *sampleA_pt_det = (TH1D*) clos_in->Get("sampleA_pt_det");
-  TH1D *sampleB_pt_gen = (TH1D*) clos_in->Get("sampleB_pt_gen");
-  TH1D *sampleB_pt_det = (TH1D*) clos_in->Get("sampleB_pt_det");
-  TH1D *sampleA_pt_gen_counts = (TH1D*) clos_in->Get("sampleA_pt_gen_counts");
-  TH1D *sampleA_pt_det_counts = (TH1D*) clos_in->Get("sampleA_pt_det_counts");
-  TH1D *sampleB_pt_gen_counts = (TH1D*) clos_in->Get("sampleB_pt_gen_counts");
-  TH1D *sampleB_pt_det_counts = (TH1D*) clos_in->Get("sampleB_pt_det_counts");
+  TH1D *sampleA_pt_gen = (TH1D*) match_in->Get("sampleA_pt_gen");
+  TH1D *sampleA_pt_det = (TH1D*) match_in->Get("sampleA_pt_det");
+  TH1D *sampleB_pt_gen = (TH1D*) match_in->Get("sampleB_pt_gen");
+  TH1D *sampleB_pt_det = (TH1D*) match_in->Get("sampleB_pt_det");
+  TH1D *sampleA_pt_gen_counts = (TH1D*) match_in->Get("sampleA_pt_gen_counts");
+  TH1D *sampleA_pt_det_counts = (TH1D*) match_in->Get("sampleA_pt_det_counts");
+  TH1D *sampleB_pt_gen_counts = (TH1D*) match_in->Get("sampleB_pt_gen_counts");
+  TH1D *sampleB_pt_det_counts = (TH1D*) match_in->Get("sampleB_pt_det_counts");
   
-  TH1D *sampleA_m_gen = (TH1D*) clos_in->Get("sampleA_m_gen");
-  TH1D *sampleA_m_det = (TH1D*) clos_in->Get("sampleA_m_det");
-  TH1D *sampleB_m_gen = (TH1D*) clos_in->Get("sampleB_m_gen");
-  TH1D *sampleB_m_det = (TH1D*) clos_in->Get("sampleB_m_det");
-  TH1D *sampleA_m_gen_counts = (TH1D*) clos_in->Get("sampleA_m_gen_counts");
-  TH1D *sampleA_m_det_counts = (TH1D*) clos_in->Get("sampleA_m_det_counts");
-  TH1D *sampleB_m_gen_counts = (TH1D*) clos_in->Get("sampleB_m_gen_counts");
-  TH1D *sampleB_m_det_counts = (TH1D*) clos_in->Get("sampleB_m_det_counts");
+  TH1D *sampleA_m_gen = (TH1D*) match_in->Get("sampleA_m_gen");
+  TH1D *sampleA_m_det = (TH1D*) match_in->Get("sampleA_m_det");
+  TH1D *sampleB_m_gen = (TH1D*) match_in->Get("sampleB_m_gen");
+  TH1D *sampleB_m_det = (TH1D*) match_in->Get("sampleB_m_det");
+  TH1D *sampleA_m_gen_counts = (TH1D*) match_in->Get("sampleA_m_gen_counts");
+  TH1D *sampleA_m_det_counts = (TH1D*) match_in->Get("sampleA_m_det_counts");
+  TH1D *sampleB_m_gen_counts = (TH1D*) match_in->Get("sampleB_m_gen_counts");
+  TH1D *sampleB_m_det_counts = (TH1D*) match_in->Get("sampleB_m_det_counts");
 
-  TH1D *sampleA_mg_gen = (TH1D*) clos_in->Get("sampleA_mg_gen");
-  TH1D *sampleA_mg_det = (TH1D*) clos_in->Get("sampleA_mg_det");
-  TH1D *sampleB_mg_gen = (TH1D*) clos_in->Get("sampleB_mg_gen");
-  TH1D *sampleB_mg_det = (TH1D*) clos_in->Get("sampleB_mg_det");
-  TH1D *sampleA_mg_gen_counts = (TH1D*) clos_in->Get("sampleA_mg_gen_counts");
-  TH1D *sampleA_mg_det_counts = (TH1D*) clos_in->Get("sampleA_mg_det_counts");
-  TH1D *sampleB_mg_gen_counts = (TH1D*) clos_in->Get("sampleB_mg_gen_counts");
-  TH1D *sampleB_mg_det_counts = (TH1D*) clos_in->Get("sampleB_mg_det_counts");
+  TH1D *sampleA_mg_gen = (TH1D*) match_in->Get("sampleA_mg_gen");
+  TH1D *sampleA_mg_det = (TH1D*) match_in->Get("sampleA_mg_det");
+  TH1D *sampleB_mg_gen = (TH1D*) match_in->Get("sampleB_mg_gen");
+  TH1D *sampleB_mg_det = (TH1D*) match_in->Get("sampleB_mg_det");
+  TH1D *sampleA_mg_gen_counts = (TH1D*) match_in->Get("sampleA_mg_gen_counts");
+  TH1D *sampleA_mg_det_counts = (TH1D*) match_in->Get("sampleA_mg_det_counts");
+  TH1D *sampleB_mg_gen_counts = (TH1D*) match_in->Get("sampleB_mg_gen_counts");
+  TH1D *sampleB_mg_det_counts = (TH1D*) match_in->Get("sampleB_mg_det_counts");
 
   //2D closure spectra to be pruned and to be used to prune responses
-  TH2D *sampleA_m_pt_gen = (TH2D*) clos_in->Get("sampleA_m_pt_gen");
-  TH2D *sampleA_m_pt_det = (TH2D*) clos_in->Get("sampleA_m_pt_det");
-  TH2D *sampleB_m_pt_gen = (TH2D*) clos_in->Get("sampleB_m_pt_gen");
-  TH2D *sampleB_m_pt_det = (TH2D*) clos_in->Get("sampleB_m_pt_det");
-  TH2D *sampleA_m_pt_gen_counts = (TH2D*) clos_in->Get("sampleA_m_pt_gen_counts");
-  TH2D *sampleA_m_pt_det_counts = (TH2D*) clos_in->Get("sampleA_m_pt_det_counts");
-  TH2D *sampleB_m_pt_gen_counts = (TH2D*) clos_in->Get("sampleB_m_pt_gen_counts");
-  TH2D *sampleB_m_pt_det_counts = (TH2D*) clos_in->Get("sampleB_m_pt_det_counts");
-  TH2D *sampleA_mg_pt_gen = (TH2D*) clos_in->Get("sampleA_mg_pt_gen");
-  TH2D *sampleA_mg_pt_det = (TH2D*) clos_in->Get("sampleA_mg_pt_det");
-  TH2D *sampleB_mg_pt_gen = (TH2D*) clos_in->Get("sampleB_mg_pt_gen");
-  TH2D *sampleB_mg_pt_det = (TH2D*) clos_in->Get("sampleB_mg_pt_det");
-  TH2D *sampleA_mg_pt_gen_counts = (TH2D*) clos_in->Get("sampleA_mg_pt_gen_counts");
-  TH2D *sampleA_mg_pt_det_counts = (TH2D*) clos_in->Get("sampleA_mg_pt_det_counts");
-  TH2D *sampleB_mg_pt_gen_counts = (TH2D*) clos_in->Get("sampleB_mg_pt_gen_counts");
-  TH2D *sampleB_mg_pt_det_counts = (TH2D*) clos_in->Get("sampleB_mg_pt_det_counts");
+  TH2D *sampleA_m_pt_gen = (TH2D*) match_in->Get("sampleA_m_pt_gen");
+  TH2D *sampleA_m_pt_det = (TH2D*) match_in->Get("sampleA_m_pt_det");
+  TH2D *sampleB_m_pt_gen = (TH2D*) match_in->Get("sampleB_m_pt_gen");
+  TH2D *sampleB_m_pt_det = (TH2D*) match_in->Get("sampleB_m_pt_det");
+  TH2D *sampleA_m_pt_gen_counts = (TH2D*) match_in->Get("sampleA_m_pt_gen_counts");
+  TH2D *sampleA_m_pt_det_counts = (TH2D*) match_in->Get("sampleA_m_pt_det_counts");
+  TH2D *sampleB_m_pt_gen_counts = (TH2D*) match_in->Get("sampleB_m_pt_gen_counts");
+  TH2D *sampleB_m_pt_det_counts = (TH2D*) match_in->Get("sampleB_m_pt_det_counts");
+  TH2D *sampleA_mg_pt_gen = (TH2D*) match_in->Get("sampleA_mg_pt_gen");
+  TH2D *sampleA_mg_pt_det = (TH2D*) match_in->Get("sampleA_mg_pt_det");
+  TH2D *sampleB_mg_pt_gen = (TH2D*) match_in->Get("sampleB_mg_pt_gen");
+  TH2D *sampleB_mg_pt_det = (TH2D*) match_in->Get("sampleB_mg_pt_det");
+  TH2D *sampleA_mg_pt_gen_counts = (TH2D*) match_in->Get("sampleA_mg_pt_gen_counts");
+  TH2D *sampleA_mg_pt_det_counts = (TH2D*) match_in->Get("sampleA_mg_pt_det_counts");
+  TH2D *sampleB_mg_pt_gen_counts = (TH2D*) match_in->Get("sampleB_mg_pt_gen_counts");
+  TH2D *sampleB_mg_pt_det_counts = (TH2D*) match_in->Get("sampleB_mg_pt_det_counts");
 
   //~~~matched MC
   RooUnfoldResponse *m_pt_response = (RooUnfoldResponse*) match_in->Get("m_pt_response");
   RooUnfoldResponse *mg_pt_response = (RooUnfoldResponse*) match_in->Get("mg_pt_response");
-  /*
+  
   //~~~systematics
-  RooUnfoldResponse *pt_m_res_nom = (RooUnfoldResponse*) syst_in->Get("pt_m_res_nom");
-  RooUnfoldResponse *pt_m_res_TS = (RooUnfoldResponse*) syst_in->Get("pt_m_res_TS");
-  RooUnfoldResponse *pt_m_res_TU = (RooUnfoldResponse*) syst_in->Get("pt_m_res_TU");
-  RooUnfoldResponse *pt_m_res_HC50 = (RooUnfoldResponse*) syst_in->Get("pt_m_res_HC50");
-  RooUnfoldResponse *pt_m_res_HC0 = (RooUnfoldResponse*) syst_in->Get("pt_m_res_HC0");
-  RooUnfoldResponse *pt_m_res_DS = (RooUnfoldResponse*) syst_in->Get("pt_m_res_DS");
-  RooUnfoldResponse *pt_m_res_GS = (RooUnfoldResponse*) syst_in->Get("pt_m_res_GS");
-  RooUnfoldResponse *pt_m_res_MS = (RooUnfoldResponse*) syst_in->Get("pt_m_res_MS");
-  RooUnfoldResponse *pt_mg_res_nom = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_nom");
-  RooUnfoldResponse *pt_mg_res_TS = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_TS");
-  RooUnfoldResponse *pt_mg_res_TU = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_TU");
-  RooUnfoldResponse *pt_mg_res_HC50 = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_HC50");
-  RooUnfoldResponse *pt_mg_res_HC0 = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_HC0");
-  RooUnfoldResponse *pt_mg_res_DS = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_DS");
-  RooUnfoldResponse *pt_mg_res_GS = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_GS");
-  RooUnfoldResponse *pt_mg_res_MS = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_MS");
-  RooUnfoldResponse *pt_m_res_nom_counts = (RooUnfoldResponse*) syst_in->Get("pt_m_res_nom_counts");
-  RooUnfoldResponse *pt_m_res_TS_counts = (RooUnfoldResponse*) syst_in->Get("pt_m_res_TS_counts");
-  RooUnfoldResponse *pt_m_res_TU_counts = (RooUnfoldResponse*) syst_in->Get("pt_m_res_TU_counts");
-  RooUnfoldResponse *pt_m_res_HC50_counts = (RooUnfoldResponse*) syst_in->Get("pt_m_res_HC50_counts");
-  RooUnfoldResponse *pt_m_res_HC0_counts = (RooUnfoldResponse*) syst_in->Get("pt_m_res_HC0_counts");
-  RooUnfoldResponse *pt_m_res_DS_counts = (RooUnfoldResponse*) syst_in->Get("pt_m_res_DS_counts");
-  RooUnfoldResponse *pt_m_res_GS_counts = (RooUnfoldResponse*) syst_in->Get("pt_m_res_GS_counts");
-  RooUnfoldResponse *pt_m_res_MS_counts = (RooUnfoldResponse*) syst_in->Get("pt_m_res_MS_counts");
-  RooUnfoldResponse *pt_mg_res_nom_counts = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_nom_counts");
-  RooUnfoldResponse *pt_mg_res_TS_counts = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_TS_counts");
-  RooUnfoldResponse *pt_mg_res_TU_counts = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_TU_counts");
-  RooUnfoldResponse *pt_mg_res_HC50_counts = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_HC50_counts");
-  RooUnfoldResponse *pt_mg_res_HC0_counts = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_HC0_counts");
-  RooUnfoldResponse *pt_mg_res_DS_counts = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_DS_counts");
-  RooUnfoldResponse *pt_mg_res_GS_counts = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_GS_counts");
-  RooUnfoldResponse *pt_mg_res_MS_counts = (RooUnfoldResponse*) syst_in->Get("pt_mg_res_MS_counts");
-  */
+  RooUnfoldResponse *m_pt_res_nom = (RooUnfoldResponse*) match_in->Get("m_pt_res_nom");
+  RooUnfoldResponse *m_pt_res_TS = (RooUnfoldResponse*) match_in->Get("m_pt_res_TS");
+  RooUnfoldResponse *m_pt_res_TU = (RooUnfoldResponse*) match_in->Get("m_pt_res_TU");
+  RooUnfoldResponse *m_pt_res_HC50 = (RooUnfoldResponse*) match_in->Get("m_pt_res_HC50");
+  RooUnfoldResponse *m_pt_res_DS = (RooUnfoldResponse*) match_in->Get("m_pt_res_DS");
+  RooUnfoldResponse *m_pt_res_GS = (RooUnfoldResponse*) match_in->Get("m_pt_res_GS");
+  RooUnfoldResponse *m_pt_res_MS = (RooUnfoldResponse*) match_in->Get("m_pt_res_MS");
+  RooUnfoldResponse *mg_pt_res_nom = (RooUnfoldResponse*) match_in->Get("mg_pt_res_nom");
+  RooUnfoldResponse *mg_pt_res_TS = (RooUnfoldResponse*) match_in->Get("mg_pt_res_TS");
+  RooUnfoldResponse *mg_pt_res_TU = (RooUnfoldResponse*) match_in->Get("mg_pt_res_TU");
+  RooUnfoldResponse *mg_pt_res_HC50 = (RooUnfoldResponse*) match_in->Get("mg_pt_res_HC50");
+  RooUnfoldResponse *mg_pt_res_DS = (RooUnfoldResponse*) match_in->Get("mg_pt_res_DS");
+  RooUnfoldResponse *mg_pt_res_GS = (RooUnfoldResponse*) match_in->Get("mg_pt_res_GS");
+  RooUnfoldResponse *mg_pt_res_MS = (RooUnfoldResponse*) match_in->Get("mg_pt_res_MS");
 
   //~~~data
   TH2D *m_v_pt_d = (TH2D*) data_in->Get("m_v_pt");
@@ -287,7 +264,7 @@ int main () {
   DropBins(mg_pt_response, to_drop_mg);
   //~~~
 
-  /*
+  //dropping bins from the systematics responses using the closure spectra
   DropBins(m_pt_res_nom,to_drop_m);
   DropBins(mg_pt_res_nom,to_drop_mg);
   DropBins(m_pt_res_TS,to_drop_m);
@@ -296,30 +273,26 @@ int main () {
   DropBins(mg_pt_res_TU,to_drop_mg); 
   DropBins(m_pt_res_HC50,to_drop_m);
   DropBins(mg_pt_res_HC50,to_drop_mg);
-  DropBins(m_pt_res_HC0,to_drop_m);
-  DropBins(mg_pt_res_HC0,to_drop_mg);
   DropBins(m_pt_res_DS,to_drop_m);
   DropBins(mg_pt_res_DS,to_drop_mg);
   DropBins(m_pt_res_GS,to_drop_m);
   DropBins(mg_pt_res_GS,to_drop_mg);
   DropBins(m_pt_res_MS,to_drop_m);
   DropBins(mg_pt_res_MS,to_drop_mg);   
-  */
+  
   //~~~
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-  TFile *match_out = new TFile((sim_path+"matched_hists_bindropped.root").c_str(),"RECREATE");
-  //TFile *syst_out = new TFile((syst_path+"").c_str(),"RECREATE");
-  TFile *clos_out = new TFile((clos_path+"sim_matched_closureconsistency_bindropped.root").c_str(),"RECREATE");
-  TFile *data_out = new TFile((data_path+"data_hists_ppJP2_bindropped.root").c_str(),"RECREATE");
-  TFile *sim_out = new TFile((sim_path+"unmatched_hists_bindropped.root").c_str(),"RECREATE");
-  
+  //output files - same as inputs but with "_bindropped" appended.
+  TFile *match_out = new TFile((match_path+match_file+"_bindropped.root").c_str(),"RECREATE");
+  TFile *data_out = new TFile((data_path+data_file+"_bindropped.root").c_str(),"RECREATE");
+  TFile *sim_out = new TFile((sim_path+sim_file+"_bindropped.root").c_str(),"RECREATE");
 
   match_out->cd();
+  //nominal responses
   m_pt_response->Write(); mg_pt_response->Write();
-  
-  clos_out->cd();
+  //responses for closure test
   sampleA_pt_response->Write(); sampleB_pt_response->Write();
   sampleA_m_response->Write(); sampleB_m_response->Write();
   sampleA_mg_response->Write(); sampleB_mg_response->Write();
@@ -330,22 +303,22 @@ int main () {
   sampleA_mg_gen->Write(); sampleB_mg_gen->Write(); sampleA_mg_det->Write(); sampleB_mg_det->Write();
   sampleA_m_pt_gen->Write(); sampleB_m_pt_gen->Write(); sampleA_m_pt_det->Write(); sampleB_m_pt_det->Write();
   sampleA_mg_pt_gen->Write(); sampleB_mg_pt_gen->Write(); sampleA_mg_pt_det->Write(); sampleB_mg_pt_det->Write();
-  /*
-  syst_out->cd();
+  //responses for systematic uncertainty variation
   m_pt_res_nom->Write(); mg_pt_res_nom->Write();
   m_pt_res_TS->Write(); mg_pt_res_TS->Write();
   m_pt_res_TU->Write(); mg_pt_res_TU->Write();
   m_pt_res_HC50->Write(); mg_pt_res_HC50->Write();
-  m_pt_res_HC0->Write(); mg_pt_res_HC0->Write();
   m_pt_res_DS->Write(); mg_pt_res_DS->Write();
   m_pt_res_GS->Write(); mg_pt_res_GS->Write();
   m_pt_res_MS->Write(); mg_pt_res_MS->Write();
-*/
+
   data_out->cd();
+  //data spectra
   m_v_pt_d->Write();
   mg_v_pt_d->Write();
 
   sim_out->cd();
+  //(unmatched) simulation spectra
   m_v_pt_g->Write(); m_v_pt_p->Write();
   mg_v_pt_g->Write(); mg_v_pt_p->Write();
   
@@ -353,8 +326,8 @@ int main () {
        << "Wrote data to " << data_out->GetName() << endl
        << "Wrote sim spectra to " << sim_out->GetName() << endl
        << "Wrote sim responses to " << match_out->GetName() << endl
-       << "Wrote closure to " << clos_out->GetName() << endl;
-  //cout << "Wrote systematics responses to " << syst_out->GetName() << endl;
+       << "Wrote closure to " << match_out->GetName() << endl
+       << "Wrote systematics responses to " << match_out->GetName() << endl;
 
   
   cout << endl << "Dropped mass bins: " << endl;
@@ -371,9 +344,9 @@ int main () {
 
 
   //closing files
-  data_out->Close(); sim_out->Close(); match_out->Close(); clos_out->Close(); //syst_out->Close();
+  data_out->Close(); sim_out->Close(); match_out->Close();
   cout << endl << "Closed \t" << data_out->GetName() << ",\n\t" << sim_out->GetName() 
-       << ",\n\t" << match_out->GetName() << ",\n\t" << clos_out->GetName() << /*",\n\t" << syst_out->GetName() <<*/ endl;
+       << ",\n\t" << match_out->GetName() << endl;
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//      
   

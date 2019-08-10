@@ -7,6 +7,7 @@ Mid-July, 2019: finished up the rewriting of the code (in jetmass2/production/) 
 Early August, 2019: closure.cxx from 1.0 has been merged into sim.cxx so output of running sim.cxx also contains responses/histograms for performing a closure test.
 August 7, 2019: We officially have 100% agreement between the unfolded preliminary mass plot of 2.0 and 1.0, before introducing the bug-fixes listed below!
 Early August, 2019: systematics.cxx from 1.0 has been merged into sim.cxx so output of running sim.cxx also contains responses for systematic uncertainty variation. 
+Early August, 2019: We have 100% agreement between unfolded systematics of 2.0 and 1.0 before introducing bug-fixes!
 
 Next steps:
      *fiddle with (all) submit scripts to be more careful at selecting input (and output) files based on the passed trigger, ion species, etc., so we don't start mixing streams by accident as we look at more datasets with this code.

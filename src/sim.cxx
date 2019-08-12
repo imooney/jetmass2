@@ -334,6 +334,8 @@ int main (int argc, const char ** argv) {
   //for later use looking up PDG masses using particle PID
   TDatabasePDG *pdg = new TDatabasePDG();
   
+  //  gRandom->SetSeed(1);//for consistency check with v1. Not needed otherwise.
+  
   //SELECTORS
   // Constituent selectors
   // ---------------------
@@ -371,18 +373,18 @@ int main (int argc, const char ** argv) {
     if (iSyst == 5) {cout << endl << "RUNNING WITH SMEARED GENERATOR SPECTRUM!" << endl << endl;}
     if (iSyst == 6) {cout << endl << "RUNNING WITH SMEARED GENERATOR ~MASS~ SPECTRUM!" << endl << endl;}
     
-    p_NJets = 0; g_NJets = 0; p_n_accepted = 0; g_n_accepted = 0;
+    p_NJets = 0; g_NJets = 0; p_n_accepted = 0; g_n_accepted = 0; counter_debug = 0;
     //set parameters back to their nominal values after the previous iteration changed them.
     hc = 0.9999;
     
     //change the nominal values
     if (iSyst == 3) { //this means the systematic we're examining is the hadronic correction. Set it to 50%
-            hc = 0.5;
+      hc = 0.5;
     }
     
     //initialize both readers
-    InitReader(P6Reader, P6Chain, nEvents, "All", truth_absMaxVz, truth_vZDiff, truth_evPtMax, truth_evEtMax, truth_evEtMin, truth_DCA, truth_NFitPts, truth_FitOverMaxPts, sim_maxEtTow, 0.9999, false, sim_badTowers, sim_bad_run_list);
-    InitReader(GEANTReader, GEANTChain, nEvents, det_triggerString, det_absMaxVz, det_vZDiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, sim_maxEtTow, 0.9999, false, sim_badTowers, sim_bad_run_list);//det_badTowers, dat_bad_run_list);
+    InitReader(P6Reader, P6Chain, nEvents, "All", truth_absMaxVz, truth_vZDiff, truth_evPtMax, truth_evEtMax, truth_evEtMin, truth_DCA, truth_NFitPts, truth_FitOverMaxPts, sim_maxEtTow, hc, false, sim_badTowers, sim_bad_run_list);
+    InitReader(GEANTReader, GEANTChain, nEvents, det_triggerString, det_absMaxVz, det_vZDiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, sim_maxEtTow, hc, false, sim_badTowers, sim_bad_run_list);//det_badTowers, dat_bad_run_list);
     
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~  BEGIN EVENT LOOP!  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
     
@@ -451,12 +453,12 @@ int main (int argc, const char ** argv) {
 	for (int i = 0; i < g_container->GetEntries(); ++ i) {
 	  g_sv = g_container->Get(i);
 	  if (!(g_sv->IsCharged())) {
-	    //        cout << "Pre-change: " << g_sv->E() << " " << g_sv->Eta() << " " << g_sv->Phi() << " " << g_sv->M() << endl;
+	    //cout << "DEBUG: Pre-change: " << g_sv->E() << " " << g_sv->Eta() << " " << g_sv->Phi() << " " << g_sv->M() << endl;
 	    double Enew = 1.038*g_sv->E();
 	    g_sv->SetE(Enew);
-	    //        g_sv->SetPtEtaPhiM(sqrt(Etnew*Etnew - g_sv->M()*g_sv->M()), g_sv->Eta(), g_sv->Phi(), g_sv->M());
-	    //cout << "Post-change: " << g_sv->E() << " " << g_sv->Eta() << " " << g_sv->Phi() << " " << g_sv->M() << endl;
-	    //cout << "Percent diff: " << ((g_sv->E()/(double)(Enew/(double)1.038)) - 1)*100 << "%" << endl;
+	    //g_sv->SetPtEtaPhiM(sqrt(Etnew*Etnew - g_sv->M()*g_sv->M()), g_sv->Eta(), g_sv->Phi(), g_sv->M());
+	    //cout << "DEBUG: Post-change: " << g_sv->E() << " " << g_sv->Eta() << " " << g_sv->Phi() << " " << g_sv->M() << endl;
+	    //cout << "DEBUG: Percent diff: " << ((g_sv->E()/(double)(Enew/(double)1.038)) - 1)*100 << "%" << endl;
 	  }
 	}
       }

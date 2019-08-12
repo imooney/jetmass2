@@ -94,7 +94,7 @@ void TreetoHist (TFile *f, string treestr, vector<TH1D*> h1Ds, vector<TH2D*> h2D
     t->GetEntry(i);
     //filling "event" observables
     h1Ds[13]->Fill(n_jets, weight);
-    //looping over "tracks" and filling histograms
+    //looping over jets and filling histograms
     for (unsigned j = 0; j < Pt->size(); ++ j) { //all vectors of doubles in the branches should have the same size 
       //inclusive plots (1D)                                                                                                                                   
       h1Ds[0]->Fill(Pt->at(j), weight);
@@ -148,6 +148,70 @@ void TreetoHist (TFile *f, string treestr, vector<TH1D*> h1Ds, vector<TH2D*> h2D
   t->ResetBranchAddresses();
   return;
 }
+
+//self explanatory: takes branches in a tree, "treestr", in file f, and fills histograms with them
+//this time, requires matches so we can see differences between pythia & geant
+void MatchedTreetoHist (TFile *f, string treestr, vector<TH2D*> h2Ds) {
+
+  //initializing the variables that will be filled by the values in the branches later
+  vector<double> *p_Pt = 0;
+  vector<double> *p_M = 0;
+  vector<double> *p_mg = 0;
+  vector<double> *p_zg = 0;
+  vector<double> *g_Pt = 0;
+  vector<double> *g_M = 0;
+  vector<double> *g_mg = 0;
+  vector<double> *g_zg = 0;
+ 
+  double weight = 1, n_jets = -1;
+  
+  //getting the tree and linking the branches with the variables
+  TTree *t = (TTree*) f->Get(treestr.c_str());
+  //pythia
+  t->SetBranchAddress("p_n_jets",&n_jets);
+  t->SetBranchAddress("p_Pt",&p_Pt);
+  t->SetBranchAddress("p_M",&p_M);
+  t->SetBranchAddress("p_mg",&p_mg); 
+  t->SetBranchAddress("p_zg",&p_zg);
+  //simulation needs to be x-section weighted
+  t->SetBranchAddress("p_weight", &weight);
+  //geant
+  t->SetBranchAddress("g_n_jets",&n_jets);
+  t->SetBranchAddress("g_Pt",&g_Pt);
+  t->SetBranchAddress("g_M",&g_M);
+  t->SetBranchAddress("g_mg",&g_mg);
+  t->SetBranchAddress("g_zg",&g_zg);
+  
+
+  cout << ("RUNNING OVER TREE "+treestr+"! Entries: ").c_str() << t->GetEntries() << endl;
+  const clock_t begin_time = clock(); //timing - for debugging and for fun
+  for (unsigned i = 0; i < t->GetEntries(); ++ i) { //"event" loop
+    if (i % 1000 == 0 && i != 0) { //can change this to a frequency of your preference (for real data I use 1e5 or 1e6)
+      cout << "Still chuggin. On event " << i << endl;
+      cout << "Total time passed: " << fixed << setprecision(5) << double(clock() - begin_time) /(double) CLOCKS_PER_SEC << " secs" << endl;
+    }
+    t->GetEntry(i);
+    //looping over jets and filling histograms
+    for (unsigned j = 0; j < p_Pt->size(); ++ j) { //all vectors of doubles in the branches should have the same size 
+      //2D plots
+      h2Ds[0]->Fill(g_Pt->at(j),(g_Pt->at(j) - p_Pt->at(j)) / (double) p_Pt->at(j),weight);
+      h2Ds[1]->Fill(p_Pt->at(j),(g_Pt->at(j) - p_Pt->at(j)) / (double) p_Pt->at(j),weight);
+      h2Ds[2]->Fill(p_Pt->at(j),(g_M->at(j) - p_M->at(j)) / (double) p_M->at(j),weight);          
+      h2Ds[4]->Fill(g_Pt->at(j) / (double) p_Pt->at(j), p_Pt->at(j), weight);
+      h2Ds[5]->Fill(g_M->at(j) / (double) p_M->at(j), p_Pt->at(j), weight);
+
+      //not sure if it makes the most sense to require the pythia groomed jet to pass the criterion, rather than the geant groomed jet. Something to think about.
+      if (p_zg->at(j) >= 0.1) { //otherwise, we tag and drop the groomed jet
+	h2Ds[3]->Fill(p_Pt->at(j),(g_mg->at(j) - p_mg->at(j)) / (double) p_Pt->at(j),weight);
+	h2Ds[6]->Fill(g_mg->at(j) / (double) p_mg->at(j), p_Pt->at(j), weight);
+      }//SD loop
+    }//!jet loop
+  }//!event loop
+  //!needs to be outside the event loop; not sure exactly what it does
+  t->ResetBranchAddresses();
+  return;
+}
+
 
 int main (int argc, const char ** argv) {
   //intro
@@ -272,6 +336,23 @@ int main (int argc, const char ** argv) {
   TH2D* ptg_v_pt = new TH2D("ptg_v_pt","",ptbins,ptlow,pthigh,ptbins,ptlow,pthigh);
   TH2D* ratio_ptgpt_v_pt = new TH2D("ratio_ptgpt_v_pt","",21,0,2,ptbins,ptlow,pthigh);
   TH2D* mcd_v_pt = new TH2D("mcd_v_pt","",20,0,5,ptbins,ptlow,pthigh);
+
+  //detector resolutions:
+  //matched hists (2D)
+  TH2D *deltaPtvGePt = new TH2D("deltaPtvGePt",";Det. p^{jet}_{T} [GeV/c];#Delta p_{T}^{jet} (Det - Gen) / p_{T}^{gen-jet}",11,5,60,220,-40,40);//because we divide by gen pT so the y-axis can go beyond -1 to 1.
+  //it's legacy from me being dumb that the ratios and deltas have flipped axes. Should eventually get around to flipping one or the other (careful of downstream effects).
+  TH2D *deltaPtvPyPt = new TH2D("deltaPtvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta p_{T}^{jet} (Det - Gen) / p_{T}^{gen-jet}",11,5,60,220,-1,1);
+  TH2D *ratioPtvPyPt = new TH2D("ratioPtvPyPt",";p_{T}^{det-jet} / p_{T}^{gen-jet};Gen. p^{jet}_{T} [GeV/c]",25,0,2,15,5,80);
+  TH2D *deltaMvPyPt = new TH2D("deltaMvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta M_{jet} (Det - Gen) / M^{gen}_{jet}",11,5,60,220,-1,1);
+  TH2D *ratioMvPyPt = new TH2D("ratioMvPyPt",";M^{det}_{jet} / M^{gen}_{jet};Gen. p^{jet}_{T} [GeV/c]",25,0,2,15,5,80);
+  TH2D *deltaZgvPyPt = new TH2D("deltaZgvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta z_{g} (Det - Gen)",11,5,60,220,-1,1);
+  TH2D *ratioZgvPyPt = new TH2D("ratioZgvPyPt",";z_{g}^{det} / z_{g}^{gen};Gen. p^{jet}_{T} [GeV/c]",25,0,2,15,5,80);
+  TH2D *deltaRgvPyPt = new TH2D("deltaRgvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta R_{g} (Det - Gen)",11,5,60,220,-1,1);
+  TH2D *ratioRgvPyPt = new TH2D("ratioRgvPyPt",";R_{g}^{det} / R_{g}^{gen};Gen. p^{jet}_{T} [GeV/c]",25,0,2,15,5,80);
+  TH2D *deltaPtgvPyPt = new TH2D("deltaPtgvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta p_{T,g} (Det - Gen) / p_{T,g}^{gen-jet}",11,5,60,220,-1,1);
+  TH2D *ratioPtgvPyPt = new TH2D("ratioPtgvPyPt",";p_{T,g}^{det} / p_{T,g}^{gen};Gen. p^{jet}_{T} [GeV/c]",25,0,2,15,5,80);
+  TH2D *deltaMgvPyPt = new TH2D("deltaMgvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta M_{g} (Det - Gen) / M_{g}^{gen-jet}",11,5,60,220,-1,1);
+  TH2D *ratioMgvPyPt = new TH2D("ratioMgvPyPt",";M_{g}^{det} / M_{g}^{gen};Gen. p^{jet}_{T} [GeV/c]",25,0,2,15,5,80);
  
   //jet mass dependence on event activity
   //these two are actually dummies
@@ -316,13 +397,17 @@ int main (int argc, const char ** argv) {
   vector<TH2D*> h2Ds = {m_v_pt,ch_frac_v_pt,zg_v_pt,rg_v_pt,mg_v_pt,ptg_v_pt,ratio_ptgpt_v_pt,mcd_v_pt,phi_v_pt,eta_v_pt,m_v_pt_counts,mg_v_pt_counts,tau0_v_pt,tau05_v_pt,tau_05_v_pt,tau_1_v_pt,tau0_g_v_pt,tau05_g_v_pt,tau_05_g_v_pt,tau_1_g_v_pt};
   vector<TH3D*> h3Ds = {bbc_east_rate_v_pt_v_m, bbc_east_sum_v_pt_v_m};
   
+  vector<TH2D*> matched2Ds = {deltaPtvGePt,deltaPtvPyPt,deltaMvPyPt,deltaMgvPyPt,ratioPtvPyPt,ratioMvPyPt,ratioMgvPyPt};
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
   //calling analysis function(s)! "event" here is the internal name of the tree in "fin"  
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
   TreetoHist (fin, "event", h1Ds, h2Ds, h3Ds, data_bool, 0); //data_bool decides of weighting is necessary, 0/1 tells if we fill det or part level hists
-  TreetoHist (fin, "event", PL_h1Ds, PL_h2Ds, PL_h3Ds, data_bool, 1);  
+  TreetoHist (fin, "event", PL_h1Ds, PL_h2Ds, PL_h3Ds, data_bool, 1);
+  if (!data_bool) {//only match to particle-level for simulation
+    MatchedTreetoHist (fin, "event", matched2Ds);
+  }
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
   //outro
@@ -352,6 +437,9 @@ int main (int argc, const char ** argv) {
     }
     for (unsigned i = 0; i < PL_h3Ds.size(); ++ i) {
       PL_h3Ds[i]->Write();
+    }
+    for (unsigned i = 0; i < matched2Ds.size(); ++ i) {
+      matched2Ds[i]->Write();
     }
   }
     

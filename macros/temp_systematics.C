@@ -364,10 +364,16 @@ void temp_systematics () {
   vector<TH1D*> ratio_old_new = {(TH1D*) systs_old[0]->Clone("ratio0"), (TH1D*) systs_old[1]->Clone("ratio1"), (TH1D*) systs_old[2]->Clone("ratio2")};
   
   TLine *unity = new TLine (0,1,10,1); unity->SetLineStyle(kDashed);
-
+  
   for (int i = 0; i < w_systs.size(); ++ i) {
-    ratio_old_new[i]->Divide(w_systs[i]);
-    ratio_old_new[i]->GetYaxis()->SetRangeUser(0.9,1.1);
+    
+    for (int j = 1; j < w_systs[i]->GetNbinsX(); ++ j) {
+      //cout << "DEBUG: " << ratio_old_new[i]->GetBinError(j) << " " << w_systs[i]->GetBinError(j) << " " << ratio_old_new[i]->GetBinError(j)/(double) w_systs[i]->GetBinError(j) << endl;
+      ratio_old_new[i]->SetBinContent(j, ratio_old_new[i]->GetBinError(j) / (double) w_systs[i]->GetBinError(j)); 
+    }
+    
+    //    ratio_old_new[i]->Divide(w_systs[i]);
+    ratio_old_new[i]->GetYaxis()->SetRangeUser(0,2);
     ratio_old_new[i]->GetXaxis()->SetRangeUser(0,10);
     ratio_old_new[i]->SetMarkerStyle(kOpenCircle);
     ratio_old_new[i]->SetMarkerColor(kMagenta);

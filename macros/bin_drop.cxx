@@ -100,7 +100,7 @@ int main () {
   const string sim_path = "~/jetmass2/out/sim/hists/";
   const string match_path = "~/jetmass2/out/sim/";
   const string data_path = "~/jetmass2/out/data/hists/";
-  const string match_file = "sim_matched_closureconsistency";
+  const string match_file = "sim_matched_allbugsfixed";//_closureconsistency";
   const string data_file = "data_hists_ppJP2";
   const string sim_file = "unmatched_hists";
   

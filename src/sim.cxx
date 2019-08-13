@@ -85,19 +85,26 @@ int main (int argc, const char ** argv) {
   else if ( inputIsList)  { P6Chain = TStarJetPicoUtils::BuildChainFromFileList(chainList.c_str()); GEANTChain = TStarJetPicoUtils::BuildChainFromFileList(chainList.c_str());}
   else { __ERR("data file is not recognized type: .root or .txt only.") return -1; }
   
-  //These histograms are used to smear the priors for the systematics responses
-  TFile *p6in = new TFile("~/jetmass/macros/hists/hists_w_o_bin_drop_R04.root","READ"); //CHANGE THIS IF YOU CHANGE THE RADIUS!!!
+  //These histograms (from p6in and ratioin) are used to smear the priors for the systematics responses
+  //this file contains the detector resolution histograms
+  TFile *p6in = new TFile("~/jetmass2/out/sim/hists/matched_hists_matchingbugfixed.root","READ");//CHANGE THIS IF YOU CHANGE THE RADIUS
   
   TH2D *pt_res_py2D = (TH2D*) p6in->Get("deltaPtvPyPt");
   TH2D *pt_res_ge2D = (TH2D*) p6in->Get("deltaPtvGePt");
-  TH1D *p8ratiop6_2030 = (TH1D*) p6in->Get("p8Mproj");
-  TH1D *p8ratiop6_g_2030 = (TH1D*) p6in->Get("p8Mgproj");
   
   pt_res_py2D->SetDirectory(0);
   pt_res_ge2D->SetDirectory(0);
+  p6in->Close();
+  
+  //this file contains the ratio of pythia8 to pythia6 ungroomed/groomed mass for a given bin of pT.
+  TFile *ratioin = new TFile("~/jetmass2/out/sim/p8_p6_ratio.root","READ");
+  
+  TH1D *p8ratiop6_2030 = (TH1D*) ratioin->Get("hratio");
+  TH1D *p8ratiop6_g_2030 = (TH1D*) ratioin->Get("hratio_g");
+  
   p8ratiop6_2030->SetDirectory(0);
   p8ratiop6_g_2030->SetDirectory(0);
-  p6in->Close();
+  ratioin->Close();
   
   TFile *fout = new TFile( ( outputDir + outFileName ).c_str() ,"RECREATE");
   fout->cd();
@@ -427,7 +434,7 @@ int main (int argc, const char ** argv) {
       
       if (P6Reader->ReadEvent(p_EventID) == 1) {p_n_accepted++;} // == 1 => event loaded and passed selections
       if (GEANTReader->ReadEvent(g_EventID) == 1) {g_n_accepted++;}
-      
+            
       P6Reader->PrintStatus(10); GEANTReader->PrintStatus(10);     // Print out reader status every 10 seconds
       
       //filling the data structures that were defined before the event loop:
@@ -557,7 +564,6 @@ int main (int argc, const char ** argv) {
       //We have two vectors to be filled with matched jets. If they aren't, when looping over pythia jets, we have misses. Same goes when looping over geant jets with fakes. And for matches, we just fill with however many entries there are in the matched vectors.
       //MatchJets returns a vector of pairs of indices (i,j). The first entry is the position of the jet to match, the second its match's position, the third the position of the next jet to match, the fourth its match's position, etc.
       //FakesandMisses returns a vector of indices (i) corresponding to the indices of misses or fakes from the original candidate vector.
-      
       if (match) {
 	//before the actual matching, fill the spectrum that will be used for statistical error correction later
 	for (int i = 0; i < p_Jets.size(); ++ i) {
@@ -643,10 +649,10 @@ int main (int argc, const char ** argv) {
 	    miss_indices = FakesandMisses(p_matches, p_Jets, misses); //find misses
 	  }
 	}
-            
+        
 	//fakes
 	if (g_Jets.size() != 0) {
-	  //clear the vectors to be used for determination of fakes (jets we find in Geant that don't have a match in Pythia
+	  //clear the vectors to be used for determination of fakes (jets we find in Geant that don't have a match in Pythia)
 	  fakes.clear(); fake_indices.clear();
 	  g_matches_for_fakes.clear(); p_matches_for_fakes.clear();
 		
@@ -702,8 +708,14 @@ int main (int argc, const char ** argv) {
 	    sampleB_mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
 	  }
 	}//for loop over misses
-            
-	for (int i = 0; i < g_matches.size(); ++ i) { //g_matches.size == p_matches.size == match_indices.size()
+	
+	//IMPORTANT NOTE:
+	//match_indices contains the indices of pairs of geant and pythia matched jets. So if we loop over a list of
+	//e.g. geant matches, the index i of a given geant match will be 2*i+1 in the match_indices list.
+	//I.e. if we want to access the 3rd geant matched jet (at index 2), we skip over the first 2 pairs of match indices,
+	//and the corresponding pythia match, to index at position 5. When accessing pythia jets in the match_indices list,
+	//since they come first in each pair, it is similar but with 2*i instead. 
+	for (int i = 0; i < g_matches.size(); ++ i) { //g_matches.size == p_matches.size == 1/2 (match_indices.size())
 	  //matches should be at same index in respective vectors
 	  //RESPONSES:
           //determine on a per-jet basis the pT and M smearing for the systematic prior variation
@@ -711,50 +723,49 @@ int main (int argc, const char ** argv) {
 	    double res_for_this_jet = pt_res_ge->GetBinContent(pt_res_ge->GetXaxis()->FindBin(g_matches[i].pt()));
 	    prior_adjust = gRandom->Gaus(0,fabs(res_for_this_jet*g_matches[i].pt()));
 	    m_pt_res_DS->Fill(g_matches[i].m(),g_matches[i].pt()+prior_adjust,p_matches[i].m(),p_matches[i].pt(),mc_weight);
-	    mg_pt_res_DS->Fill(g_GroomedJets[match_indices[i]].m(),g_Jets[match_indices[i]].pt()+prior_adjust,p_GroomedJets[match_indices[i]].m(),p_Jets[match_indices[i]].pt(),mc_weight);
+	    mg_pt_res_DS->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),g_Jets[match_indices[(2*i)+1]].pt()+prior_adjust,p_GroomedJets[match_indices[2*i]].m(),p_Jets[match_indices[2*i]].pt(),mc_weight);
 	  }
 	  else if (iSyst == 5) {//gen-level pT smearing
 	    double res_for_this_jet = pt_res_py->GetBinContent(pt_res_py->GetXaxis()->FindBin(p_matches[i].pt()));
 	    prior_adjust = fabs(gRandom->Gaus(0,fabs(res_for_this_jet*p_matches[i].pt())));
 	    m_pt_res_GS->Fill(g_matches[i].m(),g_matches[i].pt(),p_matches[i].m(),p_matches[i].pt()-prior_adjust,mc_weight);
-	    mg_pt_res_DS->Fill(g_GroomedJets[match_indices[i]].m(),g_Jets[match_indices[i]].pt(),p_GroomedJets[match_indices[i]].m(),p_Jets[match_indices[i]].pt()-prior_adjust,mc_weight);
+	    mg_pt_res_DS->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),g_Jets[match_indices[(2*i)+1]].pt(),p_GroomedJets[match_indices[2*i]].m(),p_Jets[match_indices[2*i]].pt()-prior_adjust,mc_weight);
                     
 	  }
 	  else if (iSyst == 6) {//gen-level M/Mg smearing
 	    prior_adjust = p8ratiop6_2030->GetBinContent(p8ratiop6_2030->GetXaxis()->FindBin(p_matches[i].m()));
-	    prior_adjust_g = p8ratiop6_g_2030->GetBinContent(p8ratiop6_g_2030->GetXaxis()->FindBin(p_GroomedJets[match_indices[i]].m()));
+	    prior_adjust_g = p8ratiop6_g_2030->GetBinContent(p8ratiop6_g_2030->GetXaxis()->FindBin(p_GroomedJets[match_indices[2*i]].m()));
 	    m_pt_res_MS->Fill(g_matches[i].m(),g_matches[i].pt(),p_matches[i].m(),p_matches[i].pt(),mc_weight*prior_adjust);
-	    mg_pt_res_MS->Fill(g_GroomedJets[match_indices[i]].m(),g_Jets[match_indices[i]].pt(),p_GroomedJets[match_indices[i]].m(),p_Jets[match_indices[i]].pt(),mc_weight*prior_adjust);
+	    mg_pt_res_MS->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),g_Jets[match_indices[(2*i)+1]].pt(),p_GroomedJets[match_indices[2*i]].m(),p_Jets[match_indices[2*i]].pt(),mc_weight*prior_adjust);
 	  }
 	  else {//filling other systematic variation responses normally
 	    syst_res[iSyst]->Fill(g_matches[i].m(),g_matches[i].pt(),p_matches[i].m(),p_matches[i].pt(),mc_weight);
-	    syst_res_g[iSyst]->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),p_GroomedJets[match_indices[i]].m(),p_Jets[match_indices[i]].pt(), mc_weight);
+	    syst_res_g[iSyst]->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(), g_Jets[match_indices[(2*i)+1]].pt(),p_GroomedJets[match_indices[2*i]].m(),p_Jets[match_indices[2*i]].pt(), mc_weight);
 	  }
                 
 	  pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
 	  m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
-	  mg_response->Fill(g_GroomedJets[match_indices[i]].m(), p_GroomedJets[match_indices[i]].m(), mc_weight);
+	  mg_response->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(), p_GroomedJets[match_indices[2*i]].m(), mc_weight);
 	  m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
-	  mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
-			       p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt(), mc_weight);
+	  mg_pt_response->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(), g_Jets[match_indices[(2*i)+1]].pt(),
+			       p_GroomedJets[match_indices[2*i]].m(), p_Jets[match_indices[2*i]].pt(), mc_weight);
 	  //closure sampleA responses
 	  if (match && p_EventID % 2 == 0) {
 	    sampleA_pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
 	    sampleA_m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
 	    sampleA_m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
-	    sampleA_mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
-					 p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt(), mc_weight);
+	    sampleA_mg_pt_response->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(), g_Jets[match_indices[(2*i)+1]].pt(),
+					 p_GroomedJets[match_indices[2*i]].m(), p_Jets[match_indices[2*i]].pt(), mc_weight);
 	  }
 	  //closure sampleB responses
 	  if (match && p_EventID % 2 != 0) {
 	    sampleB_pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
 	    sampleB_m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
 	    sampleB_m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
-	    sampleB_mg_pt_response->Fill(g_GroomedJets[match_indices[i]].m(), g_Jets[match_indices[i]].pt(),
-					 p_GroomedJets[match_indices[i]].m(), p_Jets[match_indices[i]].pt(), mc_weight);
+	    sampleB_mg_pt_response->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(), g_Jets[match_indices[(2*i)+1]].pt(),
+					 p_GroomedJets[match_indices[2*i]].m(), p_Jets[match_indices[2*i]].pt(), mc_weight);
 	  }
 	      
-              
 	  //(matched) TREES:
 	  //ungroomed
 	  p_Pt.push_back(p_matches[i].pt());
@@ -763,10 +774,10 @@ int main (int argc, const char ** argv) {
 	  p_Phi.push_back(p_matches[i].phi());
 	  p_E.push_back(p_matches[i].e());
 	  //groomed
-	  p_mg.push_back(p_GroomedJets[match_indices[i]].m());
-	  p_ptg.push_back(p_GroomedJets[match_indices[i]].pt());
-	  p_zg.push_back(p_GroomedJets[match_indices[i]].structure_of<SD>().symmetry());
-	  p_rg.push_back(p_GroomedJets[match_indices[i]].structure_of<SD>().delta_R());
+	  p_mg.push_back(p_GroomedJets[match_indices[2*i]].m());
+	  p_ptg.push_back(p_GroomedJets[match_indices[2*i]].pt());
+	  p_zg.push_back(p_GroomedJets[match_indices[2*i]].structure_of<SD>().symmetry());
+	  p_rg.push_back(p_GroomedJets[match_indices[2*i]].structure_of<SD>().delta_R());
 	  //ungroomed
 	  g_Pt.push_back(g_matches[i].pt());
 	  g_M.push_back(g_matches[i].m());
@@ -774,18 +785,15 @@ int main (int argc, const char ** argv) {
 	  g_Phi.push_back(g_matches[i].phi());
 	  g_E.push_back(g_matches[i].e());
 	  //groomed
-	  g_mg.push_back(g_GroomedJets[match_indices[i]].m());
-	  g_ptg.push_back(g_GroomedJets[match_indices[i]].pt());
-	  g_zg.push_back(g_GroomedJets[match_indices[i]].structure_of<SD>().symmetry());
-	  g_rg.push_back(g_GroomedJets[match_indices[i]].structure_of<SD>().delta_R());
-	      
+	  g_mg.push_back(g_GroomedJets[match_indices[(2*i)+1]].m());
+	  g_ptg.push_back(g_GroomedJets[match_indices[(2*i)+1]].pt());
+	  g_zg.push_back(g_GroomedJets[match_indices[(2*i)+1]].structure_of<SD>().symmetry());
+	  g_rg.push_back(g_GroomedJets[match_indices[(2*i)+1]].structure_of<SD>().delta_R());
 	  //assigning vectors of values we calculated earlier to the tree
-	  p_mcd.push_back(pmcd[match_indices[i]]);
-	  g_mcd.push_back(gmcd[match_indices[i]]);
-	      
-	  p_ch_e_frac.push_back(pch_e_frac[match_indices[i]]);
-	  g_ch_e_frac.push_back(gch_e_frac[match_indices[i]]);
-	      
+	  p_mcd.push_back(pmcd[match_indices[(2*i)+1]]);
+	  g_mcd.push_back(gmcd[match_indices[(2*i)+1]]);
+	  p_ch_e_frac.push_back(pch_e_frac[match_indices[(2*i)+1]]);
+	  g_ch_e_frac.push_back(gch_e_frac[match_indices[(2*i)+1]]);
 	}//for loop over matches
             
 	for (int i = 0; i < fakes.size(); ++ i) {
@@ -819,12 +827,10 @@ int main (int argc, const char ** argv) {
 	    sampleB_m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
 	    sampleB_mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt(), mc_weight);
 	  }
-	      
 	}//for loop over fakes
-            
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
       }//matching-required conditional
-        
+      
       else { //matching not required
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FILL RESPONSES/HISTS/TREES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 	//looping over pythia jets

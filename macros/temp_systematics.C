@@ -9,8 +9,9 @@ void temp_systematics () {
 
   TFile *fold = new TFile("~/jetmass2/out/unfold/unfolded_v1.root","READ");
   vector<TH1D*> systs_old = {(TH1D*) fold->Get("w_systs_0"),(TH1D*) fold->Get("w_systs_1"),(TH1D*) fold->Get("w_systs_2")};
+  vector<TH1D*> reco_old = {(TH1D*) fold->Get("nom_0"),(TH1D*) fold->Get("nom_1"),(TH1D*) fold->Get("nom_2")};
   
-  TFile *fres = new TFile("~/jetmass2/out/sim/sim_matched_closureconsistency_bindropped.root","READ");
+  TFile *fres = new TFile("~/jetmass2/out/sim/sim_matched_allbugsfixed_bindropped.root","READ");
   RooUnfoldResponse *rnom = (RooUnfoldResponse*) fres->Get("m_pt_res_nom"); //!
   RooUnfoldResponse *rTS = (RooUnfoldResponse*) fres->Get("m_pt_res_TS"); //!
   RooUnfoldResponse *rTU = (RooUnfoldResponse*) fres->Get("m_pt_res_TU"); //!
@@ -43,8 +44,7 @@ void temp_systematics () {
   TH2D *reco_GS = (TH2D*) unfold_GS->Hreco((RooUnfold::ErrorTreatment) 3);
   TH2D *reco_MS = (TH2D*) unfold_MS->Hreco((RooUnfold::ErrorTreatment) 3);
 
-  //I believe this should be changed when the bug in the projections is fixed...
-  //If this note is still here I haven't thought about it further yet
+  //These ranges are okay now that Projection2D has the plotting bug removed.
   const int nBins = 3;
   TAxis* reco_axis = reco_nom->GetYaxis(); TAxis* det_axis = m_pt_dat->GetYaxis();  
   double ranges[nBins + 1] = {(double) reco_axis->FindBin(20), (double) reco_axis->FindBin(25), (double) reco_axis->FindBin(30), (double) reco_axis->FindBin(40)};//3,4,5,6,8,12};
@@ -302,6 +302,7 @@ void temp_systematics () {
     Prettify1D(dats[i], kBlack, kOpenStar, 4/*4*/, kBlack, "M [GeV/c^{2}]", "1/N dN/dM",0,10,0,0.5);
     Prettify1D(w_systs[i],kRed,kFullStar,0,kRed,"M [GeV/c^{2}]","1/N dN/dM",0,10,0,0.5);
     Prettify1D(systs_old[i],kBlue,kFullStar,0,kBlue,"M [GeV/c^{2}]","1/N dN/dM",0,10,0,0.5);
+    Prettify1D(reco_old[i],kBlue,kFullStar,4,kBlue,"M [GeV/c^{2}]","1/N dN/dM",0,10,0,0.5);
     w_systs[i]->SetFillColor(kRed - 10); w_systs[i]->SetFillStyle(/*3352*/1001);
     systs_old[i]->SetFillColor(kBlue - 10); systs_old[i]->SetFillStyle(/*3352*/1001);   
   }
@@ -319,8 +320,8 @@ void temp_systematics () {
       if (i == 0) {scaling = scalefactors->GetBinContent(scalex->FindBin(20));/*old: 1.122;*/} //these numbers are calculated using the bin content of the ratio of gen. matched spectrum to gen. inclusive (unmatched). See macros/stat_err_scaling.cxx.      
       if (i == 1) {scaling = scalefactors->GetBinContent(scalex->FindBin(25));/*old: 1.082;*/}
       if (i == 2) {scaling = max(scalefactors->GetBinContent(scalex->FindBin(30)),scalefactors->GetBinContent(scalex->FindBin(35)));/*old: 1.062;*/}
-      double binerror = reco_noms[i]->GetBinError(j);
-      reco_noms[i]->SetBinError(j,(double) binerror*scaling);
+      double binerror = reco_noms_copy[i]->GetBinError(j);
+      reco_noms_copy[i]->SetBinError(j,(double) binerror*scaling);
       cout << "bin " << j << " error: " << binerror << endl;
       cout << "corresponding raw data error: " << dats[i]->GetBinError(j) << endl;
       cout << "scaling bin " << j << " error by: " << scaling << endl;
@@ -334,8 +335,10 @@ void temp_systematics () {
   TLegend *twsysts2 = new TLegend(0.5,0.55,0.75,0.7); twsysts2->SetBorderSize(0);
   //twsysts2->AddEntry(dats[0],"Raw data","p");
   TH1D* for_legend = (TH1D*) w_systs[0]->Clone("for_legend"); for_legend->SetMarkerSize(2);
+  TH1D* for_legend_old = (TH1D*) systs_old[0]->Clone("for_legend_old"); for_legend_old->SetMarkerSize(2);
   twsysts2->AddEntry(for_legend,"Unfolded data (v2)","pf");
-  twsysts2->AddEntry(systs_old[0],"v1 systematics","f");
+  twsysts2->AddEntry(for_legend_old,"Unfolded data (v1)","pf");
+  //twsysts2->AddEntry(reco_old[0],"Unfolded data (v1)","p");
   
   TLatex *tpost = new TLatex(); tpost->SetTextColor(kRed);
   
@@ -350,7 +353,7 @@ void temp_systematics () {
   //cws->cd(1); hdummycws->Draw(); t = PanelTitle();
   for (int i = 0; i < nBins; ++ i) {
 
-    cws->cd(i+1); w_systs[i]->Draw("E3same9"); systs_old[i]->Draw("E3same9"); dats[i]->Draw("same"); reco_noms_copy[i]->Draw("same9"); slice->DrawLatexNDC(0.5,0.77,(pts[i]+" < p_{T} < "+pts[i+1]+" GeV/c").c_str());
+    cws->cd(i+1); w_systs[i]->Draw("E3same9"); systs_old[i]->Draw("E3same9"); /*dats[i]->Draw("same");*/reco_old[i]->Draw("same9"); reco_noms_copy[i]->Draw("same9"); slice->DrawLatexNDC(0.5,0.77,(pts[i]+" < p_{T} < "+pts[i+1]+" GeV/c").c_str());
     //w_systs[i]->GetXaxis()->SetTitleSize(0.08); w_systs[i]->GetYaxis()->SetTitleSize(0.08);
     if (i == 0) {ttitle->DrawLatex(4.2,0.46, "pp 200 GeV run12 JP2");ttitle->DrawLatex(4.2,0.43, "anti-k_{T}, R = 0.4");ttitle->DrawLatex(4.2,0.4, "Ch+Ne jets, |#eta| < 0.4");}
     if (i == 1) { /*tpost->DrawLatexNDC(0.15,0.87,"PREVIEW - Work in Progress");*/}
@@ -358,32 +361,41 @@ void temp_systematics () {
     
   }
 
+  //  cws->SaveAs("~/jetmass/plots/systematics/unfolded_w_systs_etc_and_PL_R04.pdf");
+  
+  
   TCanvas *ccheck = new TCanvas("ccheck","ccheck",1200,500);
   DivideCanvas(ccheck,"0",3,1);
   
-  vector<TH1D*> ratio_old_new = {(TH1D*) systs_old[0]->Clone("ratio0"), (TH1D*) systs_old[1]->Clone("ratio1"), (TH1D*) systs_old[2]->Clone("ratio2")};
-  
+  vector<TH1D*> ratio_old_new = {(TH1D*) reco_old[0]->Clone("ratio0"), (TH1D*) reco_old[1]->Clone("ratio1"), (TH1D*) reco_old[2]->Clone("ratio2")};
+  vector<TH1D*> systs_ratio = {(TH1D*) systs_old[0]->Clone("sratio0"), (TH1D*) systs_old[1]->Clone("sratio1"), (TH1D*) systs_old[2]->Clone("sratio2")};
+
   TLine *unity = new TLine (0,1,10,1); unity->SetLineStyle(kDashed);
   
   for (int i = 0; i < w_systs.size(); ++ i) {
     
     for (int j = 1; j < w_systs[i]->GetNbinsX(); ++ j) {
       //cout << "DEBUG: " << ratio_old_new[i]->GetBinError(j) << " " << w_systs[i]->GetBinError(j) << " " << ratio_old_new[i]->GetBinError(j)/(double) w_systs[i]->GetBinError(j) << endl;
-      ratio_old_new[i]->SetBinContent(j, ratio_old_new[i]->GetBinError(j) / (double) w_systs[i]->GetBinError(j)); 
+      systs_ratio[i]->SetBinContent(j, systs_ratio[i]->GetBinError(j) / (double) w_systs[i]->GetBinError(j)); 
     }
     
-    //    ratio_old_new[i]->Divide(w_systs[i]);
+    ratio_old_new[i]->Divide(reco_noms_copy[i]/*w_systs[i]*/);
     ratio_old_new[i]->GetYaxis()->SetRangeUser(0,2);
     ratio_old_new[i]->GetXaxis()->SetRangeUser(0,10);
     ratio_old_new[i]->SetMarkerStyle(kOpenCircle);
     ratio_old_new[i]->SetMarkerColor(kMagenta);
     ratio_old_new[i]->SetLineColor(kMagenta);
     ratio_old_new[i]->SetMarkerSize(2);
-    ccheck->cd(i+1); ratio_old_new[i]->Draw();
+    systs_ratio[i]->SetMarkerStyle(kOpenCircle);
+    systs_ratio[i]->SetMarkerColor(kGreen+2);
+    systs_ratio[i]->SetLineColor(kGreen+2);
+    systs_ratio[i]->SetMarkerSize(2);
+    
+    ccheck->cd(i+1); ratio_old_new[i]->Draw(); systs_ratio[i]->Draw("same");
     unity->Draw("same");
   }
-  
-  TFile *fout = new TFile("~/jetmass2/out/unfold/unfolded_v2.root","RECREATE");
+  /*  
+  TFile *fout = new TFile("~/jetmass2/out/unfold/unfolded_v2_bugsfixed.root","RECREATE");
   fout->cd();
   for (int i = 0; i < nBins; ++ i) {
     reco_noms_copy[i]->Write();
@@ -391,8 +403,7 @@ void temp_systematics () {
     w_systs[i]->Write();
   }
   fout->Close();
-  
-  //  cws->SaveAs("~/jetmass/plots/systematics/unfolded_w_systs_etc_and_PL_R04.pdf");
+  */
 
   return;
 }

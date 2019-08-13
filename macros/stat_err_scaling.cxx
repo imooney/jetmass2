@@ -37,7 +37,7 @@ int main () {
 
   const string path = "~/jetmass2/out/sim/";
  
-  const string file_in = "sim_matched_closureconsistency.root";
+  const string file_in = "sim_matched_allbugsfixed.root";//_closureconsistency.root";
 
   TFile *fin = new TFile((path+file_in).c_str(),"READ");
   

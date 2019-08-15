@@ -35,6 +35,7 @@ int main (int argc, const char ** argv) {
   std::string outputDir = "out/"; // directory where everything will be saved
   std::string outFileName = "test.root"; //output file
   std::string chainList = "simlist.txt"; // input file: can be .root, .txt, .list
+  double radius = 0.4; //jet radius parameter; input value can range from 0.1 to 9.9.
   bool full = 1;  //full = 1 => ch+ne; full = 0 => ch only.
   bool match = 0; //match = 0 => no match between Pythia & Pythia+Geant events.
   
@@ -43,7 +44,7 @@ int main (int argc, const char ** argv) {
   case 1: // Default case
     __OUT("Using Default Settings");
     break;
-  case 6: { // Custom case
+  case 7: { // Custom case
     __OUT("Using Custom Settings");
     std::vector<std::string> arguments( argv+1, argv+argc );
     
@@ -52,12 +53,13 @@ int main (int argc, const char ** argv) {
     // output and file names
     outputDir         = arguments[0];
     outFileName       = arguments[1];
-    if (arguments[2] == "ch") {full = 0;} else {full = 1;}
-    if (arguments[3] == "matched") {match = 1;} else if (arguments[3] == "unmatched") {match = 0;} else {cerr << "Not a valid flag!" << endl; exit(1);}
-    chainList         = arguments[4];
+    radius            = radius_str_to_double (arguments[2]);
+    if (arguments[3] == "ch") {full = 0;} else {full = 1;}
+    if (arguments[4] == "matched") {match = 1;} else if (arguments[4] == "unmatched") {match = 0;} else {cerr << "Not a valid flag!" << endl; exit(1);}
+    chainList         = arguments[5];
     
     //Printing settings:
-    cout << "Outputting to: " << (outputDir+outFileName).c_str() << "\nSettings:\n" << arguments[2] << " jets;\n match pythia and geant? " << match << ";\n input file: " << chainList << "\n";
+    cout << "Outputting to: " << (outputDir+outFileName).c_str() << "\nSettings:\nR = " << radius << " " <<  arguments[3] << " jets;\n match pythia and geant? " << match << ";\n input file: " << chainList << "\n";
     break;
   }
   default: { // Error: invalid custom settings
@@ -87,7 +89,8 @@ int main (int argc, const char ** argv) {
   
   //These histograms (from p6in and ratioin) are used to smear the priors for the systematics responses
   //this file contains the detector resolution histograms
-  TFile *p6in = new TFile("~/jetmass2/out/sim/hists/matched_hists_matchingbugfixed.root","READ");//CHANGE THIS IF YOU CHANGE THE RADIUS
+  //arguments[2] determines the radius, so this will automatically change which file is pulled - obviously requires the files already to exist for the given R.
+  TFile *p6in = new TFile(("~/jetmass2/out/sim/hists/matched_hists_R"+(string) argv[3]+".root").c_str(),"READ");
   
   TH2D *pt_res_py2D = (TH2D*) p6in->Get("deltaPtvPyPt");
   TH2D *pt_res_ge2D = (TH2D*) p6in->Get("deltaPtvGePt");
@@ -97,7 +100,7 @@ int main (int argc, const char ** argv) {
   p6in->Close();
   
   //this file contains the ratio of pythia8 to pythia6 ungroomed/groomed mass for a given bin of pT.
-  TFile *ratioin = new TFile("~/jetmass2/out/sim/p8_p6_ratio.root","READ");
+  TFile *ratioin = new TFile(("~/jetmass2/out/sim/p8_p6_ratio_R"+(string) argv[3]+".root").c_str(),"READ");
   
   TH1D *p8ratiop6_2030 = (TH1D*) ratioin->Get("hratio");
   TH1D *p8ratiop6_g_2030 = (TH1D*) ratioin->Get("hratio_g");
@@ -332,7 +335,7 @@ int main (int argc, const char ** argv) {
     
     
   //defining the algorithm and radius parameter for clustering jets
-  JetDefinition jet_def(antikt_algorithm, R);
+  JetDefinition jet_def(antikt_algorithm, radius/*R*/);
   
   //Creating SoftDrop grooming object
   contrib::SoftDrop sd(Beta,z_cut,R0);

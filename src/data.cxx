@@ -87,6 +87,7 @@ int main ( int argc, const char** argv) {
   std::string chainList = "list.txt"; // input file: can be .root, .txt, .list                                                                                 
   std::string chainName = "JetTree"; // tree name in input file                                                                                                
   std::string trigger = "ppJP2"; // trigger name: ppJP2, ppHT, ppVPDMB, pAuJP2, pAuBBCMB, AA[TBD] 
+  double radius = 0.4; //jet radius parameter; input value can range from 0.1 to 9.9.
   bool full = 1; //If TRUE, run over full (ch+ne) jets. If FALSE, run over ch jets.
   
   // Now check to see if we were given modifying arguments
@@ -94,7 +95,7 @@ int main ( int argc, const char** argv) {
   case 1: // Default case
     __OUT("Using Default Settings");
       break;
-  case 6: { // Custom case
+  case 7: { // Custom case
     __OUT("Using Custom Settings");
       std::vector<std::string> arguments( argv+1, argv+argc );
             
@@ -104,11 +105,12 @@ int main ( int argc, const char** argv) {
     // output and file names
     outputDir         = arguments[0];
     outFileName       = arguments[1];
-    trigger           = arguments[2]; //ppJP2, ppHT, ppVPDMB, pAJP2, pABBCMB, or AA [TBD]
-    if (arguments[3] == "ch") {full = 0;} else {full = 1;} //either ch+ne jets (default) or ch jets (if "ch")
-    chainList         = arguments[4];
+    radius            = radius_str_to_double (arguments[2]);
+    trigger           = arguments[3]; //ppJP2, ppHT, ppVPDMB, pAJP2, pABBCMB, or AA [TBD]
+    if (arguments[4] == "ch") {full = 0;} else {full = 1;} //either ch+ne jets (default) or ch jets (if "ch")
+    chainList         = arguments[5];
             
-    std::cout << "Running analysis of " << arguments[3] << " jets in the " << trigger << "-triggered data. Results will be output to " << outputDir << "." << std::endl;
+    std::cout << "Running analysis of " << arguments[4] << " jets in the " << trigger << "-triggered data. Results will be output to " << outputDir << "." << std::endl;
     std::cout << "The input file is " << chainList << " and the output file is " << outFileName << "." << std::endl;
     
     break;
@@ -219,7 +221,7 @@ int main ( int argc, const char** argv) {
   
   // Choose a jet and area definition
   // --------------------------------
-  JetDefinition jet_def = fastjet::JetDefinition(fastjet::antikt_algorithm, R);
+  JetDefinition jet_def = fastjet::JetDefinition(fastjet::antikt_algorithm, radius/*R*/);
   
   // create an area definition for the clustering
   //----------------------------------------------------------

@@ -7,11 +7,12 @@
 #1: the analysis type. Current options: QA, data, sim
 #2: the trigger. Current options for pp: JP2, HT, VPDMB(-nobsmd); for pA: JP2, BBCMB. For MC analysis, only JP2 is allowed at the moment.
 #3: the species. Current options: pp, pA, AA
-#4: an analysis-specific wildcard (not required). Currently being used in data to take either full (full) or charged (ch) jets.
-#5: second analysis-specific wildcard (not required). Currently being used in sim to either require matching (matched) - for responses - or not (unmatched) - for normal spectra
+#4: the jet radius. Options: any number > 0 & <= 9.9; passed in without the decimal, e.g. "06" for 0.6.
+#5: an analysis-specific wildcard (not required). Currently being used in data to take either full (full) or charged (ch) jets.
+#6: second analysis-specific wildcard (not required). Currently being used in sim to either require matching (matched) - for responses - or not (unmatched) - for normal spectra
 
 # Arguments       
-if ( $# < "3") then
+if ( $# < "4") then
     echo 'Error: illegal number of parameters'
     exit
 endif
@@ -19,19 +20,28 @@ endif
 set ExecPath = `pwd`
 set arg = '' 
 
-if ($1 == 'QA') then
+set analysisType = $1
+set trigger = $2
+set species = $3
+set radius = $4
+set wc1 = $5
+set wc2 = $6
+
+#~~~input checking and directory / file setup~~~#
+
+if (${analysisType} == 'QA') then
     make bin/QA || exit
     set execute = './bin/QA'
     # Create the folder name for output
     set outFile = QA
     echo 'Running in QA mode!'
-else if ($1 == 'data') then
+else if (${analysisType} == 'data') then
     make bin/data || exit
     set execute = './bin/data'
     # Create the folder name for output
     set outFile = data
     echo 'Running in data mode!'
-else if ($1 == 'sim') then
+else if (${analysisType} == 'sim') then
     make bin/sim || exit
     set execute = './bin/sim'
     # Create the folder name for output
@@ -42,28 +52,28 @@ else
     exit
 endif
 
-if ($1 != 'sim') then
-    if ($2 == 'JP2' && $3 == 'pp') then
+if (${analysisType} != 'sim') then
+    if (${trigger} == 'JP2' && ${species} == 'pp') then
 	set trigger = "ppJP2"
 	set base = /nfs/rhi/STAR/Data/ppJP2Run12/sum	
 	echo "Running on the ppJP2-triggered data!"
-    else if ($2 == 'HT' && $3 == 'pp') then
+    else if (${trigger} == 'HT' && ${species} == 'pp') then
 	set trigger = "ppHT"
 	set base = /nfs/rhi/STAR/Data/ppHT2Run12/pp12Pico
 	echo "Running on the ppHT-triggered data!"
-    else if ($2 == 'VPDMB' && $3 == 'pp') then
+    else if (${trigger} == 'VPDMB' && ${species} == 'pp') then
 	set trigger = "ppVPDMB"
 	set base = /nfs/rhi/STAR/Data/ppMBRun12/sum
 	echo "Running on the ppMB-triggered data!"
-    else if ($2 == 'JP2' && $3 == 'pA') then
+    else if (${trigger} == 'JP2' && ${species} == 'pA') then
 	set trigger = "pAuJP2"
 	set base = /nfs/rhi/STAR/Data/P16id/production_pAu200_2015/HT/pAu_2015_200_HT_1
 	echo "Running on the pAuJP2-triggered data!"
-    else if ($2 == 'BBCMB' && $3 == 'pA') then
+    else if (${trigger} == 'BBCMB' && ${species} == 'pA') then
 	set trigger = "pAuBBCMB"
 	set base = /nfs/rhi/STAR/Data/P16id/production_pAu200_2015/MB/pAu_2015_200_MB_1
 	echo "Running on the pAuBBCMB-triggered data!"
-    else if ($3 == 'AA' || $3 == 'AuAu') then
+    else if (${species} == 'AA' || ${species} == 'AuAu') then
 	echo "AA is not ready yet - be patient!"
     else
 	echo "Error: unrecognized trigger and/or species option!"
@@ -85,16 +95,18 @@ endif
 
 echo ${base} #for debugging
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 # Now Submit jobs for each data file
 foreach input ( ${base}* )
 
     #synthesize the output file base name from the input file base name and the options passed
     set OutBase = `basename $input | sed 's/.root//g'`
     set uscore = "_" #useful for chaining variables together
-    if ($1 != 'sim') then
-	set OutBase = "$OutBase$uscore$trigger$uscore$4"
+    if (${analysisType} != 'sim') then
+	set OutBase = "$OutBase$uscore$trigger$uscore${wc1}${uscore}R${radius}"
     else
-	set OutBase = "$OutBase$uscore$4$uscore$5"
+	set OutBase = "$OutBase$uscore${wc1}$uscore${wc2}${uscore}R${radius}"
     endif
     #make the output path and names
     set outLocation = out/${outFile}/
@@ -113,18 +125,18 @@ foreach input ( ${base}* )
     set dummy = 'dummy' #this extra argument is for compatibility between QA and the other segments of the analysis (or for future expansion)
 
     #setting command-line args based on the analysis file being used:
-    if ($1 == 'QA') then
+    if (${analysisType} == 'QA') then
 	set arg = "$outLocation $outName $trigger $dummy $Files"
-    else if ($1 == 'data') then
-	set arg = "$outLocation $outName $trigger $4 $Files"
-    else if ($1 == 'sim') then
-	set arg = "$outLocation $outName $4 $5 $Files"
+    else if (${analysisType} == 'data') then
+	set arg = "$outLocation $outName ${radius} $trigger ${wc1} $Files"
+    else if (${analysisType} == 'sim') then
+	set arg = "$outLocation $outName ${radius} ${wc1} ${wc2} $Files"
     endif
 
     echo "now submitting this script: "
-    echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+    echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisType} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
-    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg   
+    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisType} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg   
     #add back in a second: -q erhiq
 
 end

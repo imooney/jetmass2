@@ -294,7 +294,6 @@ namespace Rivet {
 
     /// Perform the per-event analysis
     void analyze(const Event& event) {
-      std::cout << "1" << std::endl;
       const double weight = handler().crossSection();
 
       //! clear the vectors for each event!
@@ -339,7 +338,6 @@ namespace Rivet {
       pthat = -9999;
       mcweight = -9999;
       
-      std::cout << "2" << std::endl;
       const double qscale = event.genEvent()->event_scale();
       //SHOULD BE CHANGED IF A DIFFERENT NUMBER OF EVENTS ARE RUN!
       int nEvents = -1;
@@ -352,7 +350,6 @@ namespace Rivet {
 	nEvents = 1000000;//100; for testing
       }
       eventID = event.genEvent()->event_number() + _mode*nEvents;
-      std::cout << "3" << std::endl;
       // std::cout<<"pthat = "<<qscale<<" ; xsec-weight = "<<weight<<std::endl;
 
       // Constituent selectors
@@ -375,7 +372,6 @@ namespace Rivet {
 
       fastjet::JetDefinition jet_def(fastjet::antikt_algorithm, _jetR);
       
-      std::cout << "4" << std::endl;
       //QUARK v. GLUON PREP: figuring out what/where the hard scattered partons are
       vector<int> identity; vector<PseudoJet> hardparton;
       //for (int i = 0; i < event.genEvent()->particles_size(); ++ i) {
@@ -397,7 +393,6 @@ namespace Rivet {
 	}
       }
       
-      std::cout << "5" << std::endl;
       //debugging!
       /*
       cout << "identity: " << identity.size() << " hardparton: " << hardparton.size() << std::endl;
@@ -416,7 +411,7 @@ namespace Rivet {
       foreach ( const Particle& p, FS) {
 	intermediate = PseudoJet(p.px(), p.py(), p.pz(), p.E());
 	
-	cout << "DEBUG: final state hadron = " << p.pid() << ": " << p.mass() << " " << pdg->GetParticle(p.pid())->Mass() << endl;
+	//cout << "DEBUG: final state hadron = " << p.pid() << ": " << p.mass() << " " << pdg->GetParticle(p.pid())->Mass() << endl;
 
 	intermediate.reset_PtYPhiM(p.pt(),p.rap(),p.phi(),(double) pdg->GetParticle(p.pid())->Mass()); //PDG MASSES!!!
        
@@ -427,13 +422,12 @@ namespace Rivet {
 	}
 	
       }     
-      std::cout << "6" << std::endl;
       //! get all the partons
       PseudoJets PLjet;
       foreach ( const Particle & p, FP) {
 	intermediate = PseudoJet(p.px(), p.py(), p.pz(), p.E());
 
-	cout << setprecision(5) << "DEBUG: final state parton = " << p.pid() << ": " << p.mass() << " " << pdg->GetParticle(p.pid())->Mass() << endl;
+	//cout << setprecision(5) << "DEBUG: final state parton = " << p.pid() << ": " << p.mass() << " " << pdg->GetParticle(p.pid())->Mass() << endl;
 	
 	//! the following two lines are possibilities for adjusting the mass assignment per particle. By default, parton's off-shell mass is used.
 	//intermediate.reset_PtYPhiM(p.pt(),p.rap(),p.phi(),pdg->GetParticle(p.pid())->Mass()); //PDG MASSES!!!
@@ -460,7 +454,6 @@ namespace Rivet {
       PseudoJets recoJets_bkgsub_ch = select_both_hi(recoJets_bs_ch);
       PseudoJets recoJets_PL = select_both_hi(recoJets_bs_pl);
       
-      std::cout << "7" << std::endl;
       if(printDebug){
 	std::cout<<"bkg subtracted Jets: "<<std::endl;
 	foreach (const PseudoJet jet, recoJets_bkgsub){
@@ -488,7 +481,6 @@ namespace Rivet {
       }
       if (bad_event) {return;}
       
-      std::cout << "8" << std::endl;
       
       //loop over good jets, filling vectors with observables
       foreach(const PseudoJet jet, recoJets_PL) {
@@ -530,7 +522,6 @@ namespace Rivet {
 	}	
       }
 
-      std::cout << "9" << std::endl;
       
       //! DEBUG: std::cout << "number of good jets in the event: " << recoJets_bkgsub.size() << std::endl;
       
@@ -623,7 +614,6 @@ namespace Rivet {
 	fastjet::contrib::SoftDrop sd(beta, z_cut, symmetry_measure, _jetR);
 	PseudoJet sd_jet = sd(jet);
 
-	std::cout << "10" << std::endl;
 	
 	if(sd_jet != 0) { //! unless I'm mistaken, this condition should never evaluate to false, since grooming by default doesn't remove jets
 	  
@@ -650,7 +640,6 @@ namespace Rivet {
       if (recoJets_bkgsub.size() != 0) {
 	ResultTree->Fill();
       }
-      std::cout << "11" << std::endl;
     }//! analyze function
     
     /// Normalise histograms etc., after the run

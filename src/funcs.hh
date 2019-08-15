@@ -72,6 +72,8 @@ namespace Analysis {
 
   template<typename T>
   T CastTo(std::string);  
+
+  double radius_str_to_double (std::string radius_str);
   
   //initializes the reader with the appropriate cuts & selections
   void InitReader(TStarJetPicoReader *, TChain*, int, const std::string, const double, const double, const double, const double, const double, const double, const double, const double, const double, const double, const bool, const std::string, const std::string);

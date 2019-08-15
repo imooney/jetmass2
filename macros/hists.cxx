@@ -405,7 +405,7 @@ int main (int argc, const char ** argv) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
   TreetoHist (fin, "event", h1Ds, h2Ds, h3Ds, data_bool, 0); //data_bool decides of weighting is necessary, 0/1 tells if we fill det or part level hists
   TreetoHist (fin, "event", PL_h1Ds, PL_h2Ds, PL_h3Ds, data_bool, 1);
-  if (!data_bool) {//only match to particle-level for simulation
+  if (fin_name.find("_matched") != string::npos) {//only match to particle-level for matched simulation
     MatchedTreetoHist (fin, "event", matched2Ds);
   }
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//

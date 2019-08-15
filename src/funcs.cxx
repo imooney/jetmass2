@@ -67,6 +67,15 @@ namespace Analysis {
     return dummy;
   }
 
+  //When we want e.g. R_jet = 0.4 for analysis, and take in "04" on the command line, this converts to (double) 0.4.
+  double radius_str_to_double (std::string radius_str) {
+    std::string radiusNum = radius_str.substr(0,1)+"."+radius_str.substr(1,1); //e.g. 0.4                                                               
+    double radius_double = (double) std::stod(radiusNum); //converting the string 0.4 to a double
+    std::cout << "DEBUG: jet radius = " << radius_double << std::endl;
+    
+    return radius_double;
+  }
+
   //  INITIATE READER with some selections
   void InitReader( TStarJetPicoReader * reader, TChain* chain, int nEvents, const std::string trig, const double vZ, const double vZDiff, const double Pt, const double Et, const double Etmin, const double DCA, const double NFit, const double NFitRatio, const double maxEtTow, const double hc, const bool mip_correction, const std::string badTows, const std::string bad_run_list) {
     // set the chain

@@ -1,17 +1,130 @@
-#include "RooUnfoldResponse.h"
-#include "Plots_old.h"
+//Isaac Mooney, WSU, August 2019
+//This file takes in the data and systematics responses, RooUnfolds using the data and the nominal and varied responses, appropriately adjusts the statistical errors using an input file (produced/described by macros/stat_err_scaling.cxx), calculates the systematic uncertainties on the mass result, and saves the result with these uncertainties as output.
+
+#include <ctime>
+#include <iostream>
+#include <iomanip>
+#include <math.h>
 #include <algorithm>
+
+#include <TROOT.h>
+#include <TFile.h>
+#include <TTree.h>
+#include <TH1.h>
+#include <TF1.h>
+#include <TH2.h>
+#include <TH3.h>
+#include <TGraph.h>
+#include <TLatex.h>
+#include <TRandom.h>
+
+#include "RooUnfold.h"
+#include "RooUnfoldResponse.h"
+#include "RooUnfoldBayes.h"
 
 using namespace std;
 
-void temp_systematics () {
-  gStyle->SetPalette(kPastel);
+//THESE FUNCTIONS ARE HERE ONLY TEMPORARILY UNTIL I HAVE TIME TO LINK THE PLOTS LIBRARY/MAKE A NEW ONE
 
-  TFile *fold = new TFile("~/jetmass2/out/unfold/groomed_unfolded_v1.root","READ");
-  vector<TH1D*> systs_old = {(TH1D*) fold->Get("w_systs_0"),(TH1D*) fold->Get("w_systs_1"),(TH1D*) fold->Get("w_systs_2")};
-  vector<TH1D*> reco_old = {(TH1D*) fold->Get("nom_0"),(TH1D*) fold->Get("nom_1"),(TH1D*) fold->Get("nom_2")};
+//projects a 2D histogram in desired ranges and returns an array of the (1D) projections on desired axis                                                        
+std::vector<TH1D*> Projection2D (TH2D * hist2D, const int nBins, double * ranges, const std::string axis) {
+  std::vector<TH1D*> proj1Ds;
+  for (int i = 0; i < nBins; ++ i) {
+    std::string low = std::to_string(ranges[i]);
+    std::string high = std::to_string(ranges[i+1]);
+    std::string low_rough = low.substr(0,2);
+    std::string high_rough = high.substr(0,2);
+    if (low_rough.substr(1,2) == ".") {low_rough = low_rough.substr(0,1);}
+    if (high_rough.substr(1,2) == ".") {high_rough = high_rough.substr(0,1);}
+    if (axis == "x" || axis == "X" || axis == "1") {
+      proj1Ds.push_back(hist2D->ProjectionX((hist2D->GetName() + axis + low_rough + high_rough).c_str(),ranges[i],ranges[i+1]- 1));
+    }
+    else if (axis == "y" || axis == "Y" || axis == "2") {
+      proj1Ds.push_back(hist2D->ProjectionY((hist2D->GetName() + axis + low_rough + high_rough).c_str(),ranges[i],ranges[i+1] - 1));
+    }
+    else {
+      std::cerr << "Improper axis given for projections. Exiting." << std::endl; exit(1);
+    }
+    proj1Ds[i]->SetTitle("");
+  }
+  return proj1Ds;
+}
+
+//prettify 1D histogram                                                                                                                                        
+void Prettify1D (TH1D * hist, const Color_t markColor, const Style_t markStyle, const double markSize, const Color_t lineColor,
+                 const std::string xTitle, const std::string yTitle, const double lowx, const double highx, const double lowy, const double highy) {
+  if (yTitle.find("1/N") != std::string::npos && yTitle.find("N_{cons}") == std::string::npos) {
+    hist->Scale(1/(double)hist->Integral());
+    double binwidth = (hist->GetXaxis()->GetXmax() - hist->GetXaxis()->GetXmin()) / (double) hist->GetXaxis()->GetNbins();
+    hist->Scale(1/(double)binwidth);
+  }
+  else if (yTitle.find("1/N") != std::string::npos && yTitle.find("N_{cons}") != std::string::npos) {
+    double binwidth = (hist->GetXaxis()->GetXmax() - hist->GetXaxis()->GetXmin()) / (double) hist->GetXaxis()->GetNbins();
+    hist->Scale(1/(double)binwidth);
+  }
+  else {
+    cout << "Not scaling by histogram " << hist->GetName() << "'s integral & bin width! If this is a cross section measurement, this will be a problem! Fix by passing histogram y-axis title containing anything but 'arb'" << endl;
+  }
+
+  hist->SetMarkerColor(markColor); hist->SetMarkerStyle(markStyle); hist->SetMarkerSize(markSize); hist->SetLineColor(lineColor);
+  hist->GetXaxis()->SetTitle((xTitle).c_str()); hist->GetYaxis()->SetTitle((yTitle).c_str());
+  if (highx != -1) {
+    hist->GetXaxis()->SetRangeUser(lowx, highx);
+  }
+  if (highy != -1) {
+    hist->GetYaxis()->SetRangeUser(lowy, highy);
+  }
+  return;
+}
+
+//prettify 1D histogram to be drawn as line with "C" option                                                                                                     
+void Prettify1DwLineStyle(TH1D * hist, const Color_t lineColor, const Style_t lineStyle, const double lineWidth,
+                          const std::string xTitle, const std::string yTitle, const double lowx, const double highx, const double lowy, const double highy) {
+  if (yTitle.find("1/N") != std::string::npos && yTitle.find("N_{cons}") == std::string::npos) { 
+    hist->Scale(1/(double)hist->Integral());
+    double binwidth = (hist->GetXaxis()->GetXmax() - hist->GetXaxis()->GetXmin()) / (double) hist->GetXaxis()->GetNbins();
+    hist->Scale(1/(double)binwidth);
+  }
+  else if (yTitle.find("1/N") != std::string::npos && yTitle.find("N_{cons}") != std::string::npos) {
+    double binwidth = (hist->GetXaxis()->GetXmax() - hist->GetXaxis()->GetXmin()) / (double) hist->GetXaxis()->GetNbins();
+    hist->Scale(1/(double)binwidth);
+  }
+  else {
+    cout << "Not scaling by histogram " << hist->GetName() << "'s integral & bin width! If this is a cross section measurement, this will be a problem! Fix by passing histogram y-axis title containing anything but 'arb'" << endl;
+  }
+
+  hist->SetLineColor(lineColor); hist->SetLineStyle(lineStyle); hist->SetLineWidth(lineWidth);
+  hist->GetXaxis()->SetTitle((xTitle).c_str()); hist->GetYaxis()->SetTitle((yTitle).c_str());
+  if (highx != -1) {
+    hist->GetXaxis()->SetRangeUser(lowx, highx);
+  }
+  if (highy != -1) {
+    hist->GetYaxis()->SetRangeUser(lowy, highy);
+  }
+  hist->Sumw2(0);
+  return;
+}
+
+int main () {
+  //intro
+  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+  TH1::SetDefaultSumw2();
+  TH2::SetDefaultSumw2();
+  TH3::SetDefaultSumw2();
+    
+  const string match_path = "~/jetmass2/out/sim/";
+  const string data_path = "~/jetmass2/out/data/hists/";
+  const string match_file = "sim_matched_bindropped";
+  const string data_file = "data_hists_ppJP2";
+    
+  //adjust when running over different radius value
+  const string radius = "_R04";
   
-  TFile *fres = new TFile("~/jetmass2/out/sim/sim_matched_allbugsfixed_bindropped.root","READ");
+  //input files
+  TFile *fres = new TFile((match_path+match_file+radius+".root").c_str(),"READ");
+  TFile *fdat = new TFile((data_path+data_file+radius+".root").c_str(),"READ");
+  cout << "A" << endl;
+  //systematics responses (rnom is nominal response for unfolding)
   RooUnfoldResponse *rnom = (RooUnfoldResponse*) fres->Get("mg_pt_res_nom"); //!
   RooUnfoldResponse *rTS = (RooUnfoldResponse*) fres->Get("mg_pt_res_TS"); //!
   RooUnfoldResponse *rTU = (RooUnfoldResponse*) fres->Get("mg_pt_res_TU"); //!
@@ -20,9 +133,10 @@ void temp_systematics () {
   RooUnfoldResponse *rGS = (RooUnfoldResponse*) fres->Get("mg_pt_res_GS"); //!
   RooUnfoldResponse *rMS = (RooUnfoldResponse*) fres->Get("mg_pt_res_MS"); //!
   
-  TFile *fdat = new TFile("~/jetmass2/out/data/hists/data_hists_ppJP2_bindropped.root","READ");
-  
+  //data spectrum
   TH2D* mg_pt_dat = (TH2D*) fdat->Get("mg_v_pt");
+  
+  cout << "B" << endl;
   
   RooUnfoldBayes *unfold_nom = new RooUnfoldBayes(rnom, mg_pt_dat, 4, false, "unfold_nom","");
   RooUnfoldBayes *unfold_IP2 = new RooUnfoldBayes(rnom, mg_pt_dat, 2, false, "unfold_IP2","");
@@ -33,7 +147,7 @@ void temp_systematics () {
   RooUnfoldBayes *unfold_DS = new RooUnfoldBayes(rDS, mg_pt_dat, 4, false, "unfold_DS","");
   RooUnfoldBayes *unfold_GS = new RooUnfoldBayes(rGS, mg_pt_dat, 4, false, "unfold_GS","");
   RooUnfoldBayes *unfold_MS = new RooUnfoldBayes(rMS, mg_pt_dat, 4, false, "unfold_MS","");
-  
+  cout << "C" << endl;
   TH2D *reco_nom = (TH2D*) unfold_nom->Hreco((RooUnfold::ErrorTreatment) 3);
   TH2D *reco_IP2 = (TH2D*) unfold_IP2->Hreco((RooUnfold::ErrorTreatment) 3);
   TH2D *reco_IP6 = (TH2D*) unfold_IP6->Hreco((RooUnfold::ErrorTreatment) 3);
@@ -45,12 +159,19 @@ void temp_systematics () {
   TH2D *reco_MS = (TH2D*) unfold_MS->Hreco((RooUnfold::ErrorTreatment) 3);
 
   //These ranges are okay now that Projection2D has the plotting bug removed.
-  const int nBins = 3;
-  TAxis* reco_axis = reco_nom->GetYaxis(); TAxis* det_axis = mg_pt_dat->GetYaxis();  
-  double ranges[nBins + 1] = {(double) reco_axis->FindBin(20), (double) reco_axis->FindBin(25), (double) reco_axis->FindBin(30), (double) reco_axis->FindBin(40)};//3,4,5,6,8,12};
-  double ranges_d[nBins + 1] = {(double) det_axis->FindBin(20), (double) det_axis->FindBin(25), (double) det_axis->FindBin(30), (double) det_axis->FindBin(40)};//1,2,3,4,6,10};
-  string pts[nBins + 1] = {"20","25","30","40"};
-  
+  const int nBins = 2;
+  const int nBins_m = 14;
+  TAxis* reco_axis = reco_nom->GetYaxis(); TAxis* det_axis = mg_pt_dat->GetYaxis();
+  /*OLD:
+    double ranges[nBins + 1] = {(double) reco_axis->FindBin(20), (double) reco_axis->FindBin(25), (double) reco_axis->FindBin(30), (double) reco_axis->FindBin(40)};//3,4,5,6,8,12};
+    double ranges_d[nBins + 1] = {(double) det_axis->FindBin(20), (double) det_axis->FindBin(25), (double) det_axis->FindBin(30), (double) det_axis->FindBin(40)};//1,2,3,4,6,10};
+    string pts[nBins + 1] = {"20","25","30","40"};
+  */
+  //NEW:
+  double ranges[nBins + 1] = {(double) reco_axis->FindBin(20), (double) reco_axis->FindBin(30), (double) reco_axis->FindBin(45)};//3,4,5,6,8,12};
+  double ranges_d[nBins + 1] = {(double) det_axis->FindBin(20), (double) det_axis->FindBin(30), (double) det_axis->FindBin(45)};//1,2,3,4,6,10};
+  string pts[nBins + 1] = {"20","30","45"};
+    
   vector<TH1D*> reco_noms = Projection2D(reco_nom,nBins,ranges,"x");
   vector<TH1D*> reco_IP2s = Projection2D(reco_IP2,nBins,ranges,"x");
   vector<TH1D*> reco_IP6s = Projection2D(reco_IP6,nBins,ranges,"x");
@@ -127,7 +248,7 @@ void temp_systematics () {
     reco_MSs[i]->Sumw2(0);
 
   
-    for (int j = 1; j <= 14; ++ j) {
+    for (int j = 1; j <= nBins_m; ++ j) {
       //turning the ratio into a percentage.
       reco_IP2s[i]->SetBinContent(j,fabs(reco_IP2s[i]->GetBinContent(j) - 1));
       reco_IP6s[i]->SetBinContent(j,fabs(reco_IP6s[i]->GetBinContent(j) - 1));
@@ -140,6 +261,8 @@ void temp_systematics () {
     }
     
   }
+  
+  cout << "D" << endl;
   
   for (int i = 0; i < nBins; ++ i) {
     Prettify1DwLineStyle(reco_IP2s[i],2, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1); 
@@ -160,49 +283,6 @@ void temp_systematics () {
     reco_MSs[i]->SetFillColor(11); reco_MSs[i]->SetFillStyle(3690);
 
   }
-  
-  TLegend *l1 = new TLegend(0.1,0.5,0.28,0.8); l1->SetBorderSize(0);
-  l1->AddEntry(reco_IP2s[0],"IP2","f");
-  l1->AddEntry(reco_IP6s[0],"IP6","f");
-  l1->AddEntry(reco_TSs[0],"TS","f");
-  l1->AddEntry(reco_TUs[0],"TU","f");
-
-  TLegend *l2 = new TLegend(0.1,0.5,0.28,0.8); l2->SetBorderSize(0);
-  l2->AddEntry(reco_HC50s[0],"HC50","f");
-  l2->AddEntry(reco_DSs[0],"DS","f");
-  l2->AddEntry(reco_GSs[0],"GS","f");
-  l2->AddEntry(reco_MSs[0],"MS","f");
- 
-
-  TLatex *slice = new TLatex();
-  
-  TCanvas *csys = MakeCanvas ("csys","0",1200,500);
-  DivideCanvas(csys,"0", 3,1);
-  
-  TH1D* hdummy = new TH1D("hdummy",";M_{g} [GeV/c^{2}];relative uncertainty",14,0,14);
-  hdummy->GetYaxis()->SetRangeUser(0,1);
-    
-  TLatex *p = new TLatex();
-  p->SetTextAlign(11);
-  p->SetTextSize(0.07);
-  
-  /*csys->cd(1); hdummy->Draw();*/ TLatex *t = new TLatex();
-  for (int i = 0; i < nBins; ++ i) {
-    csys->cd(i+1); 
-    reco_HC50s[i]->Draw("lf2same   "); reco_TSs[i]->Draw("lf2same   "); reco_TUs[i]->Draw("lf2same   ");
-    reco_DSs[i]->Draw("lf2same   "); reco_GSs[i]->Draw("lf2same   "); reco_IP2s[i]->Draw("lf2same   "); reco_IP6s[i]->Draw("lf2same   "); reco_MSs[i]->Draw("lf2same   ");
-    if (i == 0) {
-      p->DrawLatexNDC(0.2,0.65, "pp 200 GeV run12 JP2");
-      p->DrawLatexNDC(0.2,0.55, "anti-k_{T}, R = 0.4");
-      p->DrawLatexNDC(0.2,0.45, "Ch+Ne jets, |#eta| < 0.4");
-    }
-    if (i==1) {l1->Draw("same");} if (i==2) {l2->Draw("same");} slice->DrawLatexNDC(0.3,0.8,(pts[i]+" < p_{T} < "+pts[i+1]+" GeV/c").c_str());
-  }
-    
-  //  csys->SaveAs("~/jetmass/plots/systematics/systematics_R04.pdf");
-
-
-  
 
   //taking maximum envelopes!
   TH2D* env_HC = new TH2D("env_HC","",14,0,14,15,5,80);
@@ -211,25 +291,21 @@ void temp_systematics () {
   vector<TH1D*> env_uns = Projection2D(env_un,nBins,ranges,"x");
   TH2D* net = new TH2D("net","",14,0,14,15,5,80);
   vector<TH1D*> nets = Projection2D(net,nBins,ranges,"x");
-  TH2D* stat = new TH2D("stat","",14,0,14,15,5,80);
-  vector<TH1D*> stats = Projection2D(stat,nBins,ranges,"x");
-  
-  const int nBins_m = 14;
 
   vector<vector< double> > syst_errs2D;
   
   for (int i = 0; i < nBins; ++ i) {
     vector<double> syst_errs1D; 
     reco_noms_copy[i]->Scale(1/(double)reco_noms_copy[i]->Integral());
-    
+    //for each mass bin, determine the largest effect in each category
     for (int j = 1; j < nBins_m + 1; ++ j) {
-      //hadronic correction envelope - using an ordered set here to automatically get the largest value. 
+      //hadronic correction envelope
       double hcs [1] = {reco_HC50s[i]->GetBinContent(j)};
       set<double> hc_sort (hcs, hcs+1);
       set<double>::iterator hc = hc_sort.end(); hc --;
       double hc_envelope = *hc;
       env_HCs[i]->SetBinContent(j, hc_envelope);
-      //unfolding envelope
+      //unfolding envelope - using an ordered set here to automatically get the largest value
       double uns [5] = {reco_DSs[i]->GetBinContent(j), reco_GSs[i]->GetBinContent(j), reco_MSs[i]->GetBinContent(j), reco_IP2s[i]->GetBinContent(j), reco_IP6s[i]->GetBinContent(j)};
       set<double> un_sort (uns, uns+5);
       set<double>::iterator un = un_sort.end(); un --;
@@ -238,53 +314,22 @@ void temp_systematics () {
       //total uncertainty = TU + TS + un envelope + hc envelope
       double square = pow(hc_envelope,2) + pow(un_envelope,2) + pow(reco_TUs[i]->GetBinContent(j),2) + pow(reco_TSs[i]->GetBinContent(j),2);
       nets[i]->SetBinContent(j,sqrt(square));
-      stats[i]->SetBinContent(j,reco_noms_copy[i]->GetBinError(j));
       syst_errs1D.push_back(nets[i]->GetBinContent(j));
     }
     
     syst_errs2D.push_back(syst_errs1D);
   }
 
+  //prettification
   for (int i = 0; i < nBins; ++ i) {
     Prettify1DwLineStyle(env_HCs[i],7, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
     env_HCs[i]->SetFillColor(7); env_HCs[i]->SetFillStyle(3353);
     Prettify1DwLineStyle(env_uns[i],2, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
     env_uns[i]->SetFillColor(2); env_uns[i]->SetFillStyle(3305);
     Prettify1DwLineStyle(nets[i], kBlack, kSolid, 2, "M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
-    Prettify1DwLineStyle(stats[i], kBlack, kDashed, 2, "M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
   }
-  
-  TLegend *tenvs = new TLegend(0.1,0.4,0.4,0.75); tenvs->SetBorderSize(0);
-  tenvs->AddEntry(env_HCs[0],"Hadronic correction","f");
-  tenvs->AddEntry(reco_TSs[0],"Tower scale","f");
-  tenvs->AddEntry(reco_TUs[0],"Tracking","f");
-  tenvs->AddEntry(env_uns[0],"Unfolding","f");
-  tenvs->AddEntry(nets[0],"Total systematic uncertainty","l");
-  
-  TCanvas *cenvs = new TCanvas("cenvs","cenvs",1200,500);
-  DivideCanvas(cenvs,"0",3,1);
-  
-  TH1D* hdummyenvs = new TH1D("hdummyenvs",";;relative uncertainty",1,0,14);
-  hdummyenvs->GetYaxis()->SetRangeUser(0,1);
 
-  for (int i = 0; i < nBins; ++ i) {
-    cenvs->cd(i+1); 
-    env_HCs[i]->Draw("lf2same   "); reco_TSs[i]->Draw("lf2same   "); reco_TUs[i]->Draw("lf2same   "); env_uns[i]->Draw("lf2same   "); nets[i]->Draw("lf2same"); slice->DrawLatexNDC(0.3,0.8,(pts[i]+" < p_{T} < "+pts[i+1]+" GeV/c").c_str());
-    if (i == 0) {
-      p->DrawLatexNDC(0.2,0.65, "pp 200 GeV run12 JP2");
-      p->DrawLatexNDC(0.2,0.55, "anti-k_{T}, R = 0.4");
-      p->DrawLatexNDC(0.2,0.45, "Ch+Ne jets, |#eta| < 0.4");
-    }
-    if (i == 1) {tenvs->Draw("same");}
-  }
-  
-  for (int i = 1; i <= nets[1]->GetNbinsX(); ++ i) {
-    if (i == 2 || i == 5 || i == 8) {
-      cout << 100*env_HCs[1]->GetBinContent(i) << "% " << 100*reco_TSs[1]->GetBinContent(i) << "% " << 100*reco_TUs[1]->GetBinContent(i) << "% " << 100*env_uns[1]->GetBinContent(i) << "% " << 100*nets[1]->GetBinContent(i) << endl;
-    }
-  }
-  
-  // cenvs->SaveAs("~/jetmass/plots/systematics/systematic_envelopes_R04.pdf");
+  cout << "E" << endl;
   
   //unfolded result with systematic errors!
   vector<TH1D*> w_systs;
@@ -299,16 +344,13 @@ void temp_systematics () {
 
   for (int i = 0; i < nBins; ++ i) {
     Prettify1D(reco_noms_copy[i],kRed,kFullStar,4,kRed,"M_{g} [GeV/c^{2}]","1/N dN/dM_{g}",0,10,0,0.5);
-    Prettify1D(dats[i], kBlack, kOpenStar, 4/*4*/, kBlack, "M_{g} [GeV/c^{2}]", "1/N dN/dM_{g}",0,10,0,0.5);
+    Prettify1D(dats[i], kBlack, kOpenStar, 4, kBlack, "M_{g} [GeV/c^{2}]", "1/N dN/dM_{g}",0,10,0,0.5);
     Prettify1D(w_systs[i],kRed,kFullStar,0,kRed,"M_{g} [GeV/c^{2}]","1/N dN/dM_{g}",0,10,0,0.5);
-    Prettify1D(systs_old[i],kBlue,kFullStar,0,kBlue,"M_{g} [GeV/c^{2}]","1/N dN/dM_{g}",0,10,0,0.5);
-    Prettify1D(reco_old[i],kBlue,kFullStar,4,kBlue,"M_{g} [GeV/c^{2}]","1/N dN/dM_{g}",0,10,0,0.5);
-    w_systs[i]->SetFillColor(kRed - 10); w_systs[i]->SetFillStyle(/*3352*/1001);
-    systs_old[i]->SetFillColor(kBlue - 10); systs_old[i]->SetFillStyle(/*3352*/1001);   
+    w_systs[i]->SetFillColor(kRed - 10); w_systs[i]->SetFillStyle(1001);
   }
    
   //scaling errors
-  TFile *fstats = new TFile("~/jetmass2/out/sim/stat_err_scaling.root","READ");
+  TFile *fstats = new TFile(("~/jetmass2/out/sim/stat_err_scaling"+radius+".root").c_str(),"READ");
   TH1D* scalefactors = (TH1D*) fstats->Get("hratio");
 
   for (int i = 0; i < nBins; ++ i) {
@@ -317,9 +359,10 @@ void temp_systematics () {
       double scaling = -1;
       TAxis *scalex = scalefactors->GetXaxis();
       //will access the scalefactors histogram for pt values 20, 25, 30, 35, so if you change the ranges you show, change the FindBin calls, too.                 
-      if (i == 0) {scaling = scalefactors->GetBinContent(scalex->FindBin(20));/*old: 1.122;*/} //these numbers are calculated using the bin content of the ratio of gen. matched spectrum to gen. inclusive (unmatched). See macros/stat_err_scaling.cxx.      
-      if (i == 1) {scaling = scalefactors->GetBinContent(scalex->FindBin(25));/*old: 1.082;*/}
-      if (i == 2) {scaling = max(scalefactors->GetBinContent(scalex->FindBin(30)),scalefactors->GetBinContent(scalex->FindBin(35)));/*old: 1.062;*/}
+      if (i == 0) {scaling = max(scalefactors->GetBinContent(scalex->FindBin(20)),scalefactors->GetBinContent(scalex->FindBin(25)));/*old: 1.122;*/} //these numbers are calculated using the bin content of the ratio of gen. matched spectrum to gen. inclusive (unmatched). See macros/stat_err_scaling.cxx.
+      //if (i == 1) {scaling = scalefactors->GetBinContent(scalex->FindBin(25));/*old: 1.082;*/}
+      //function from algorithm.h is max(a,b). Can't take 3 arguments, so have to do max(max(a,b),c).
+      if (i == 1) {scaling = max(max(scalefactors->GetBinContent(scalex->FindBin(30)),scalefactors->GetBinContent(scalex->FindBin(35))),scalefactors->GetBinContent(scalex->FindBin(40)));/*old: 1.062;*/}
       double binerror = reco_noms_copy[i]->GetBinError(j);
       reco_noms_copy[i]->SetBinError(j,(double) binerror*scaling);
       cout << "bin " << j << " error: " << binerror << endl;
@@ -329,81 +372,35 @@ void temp_systematics () {
     }
   }
   
-  TCanvas *cws = new TCanvas("cws","cws",1200,500);
-  DivideCanvas(cws,"0",3,1);
-
-  TLegend *twsysts2 = new TLegend(0.5,0.55,0.75,0.7); twsysts2->SetBorderSize(0);
-  //twsysts2->AddEntry(dats[0],"Raw data","p");
-  TH1D* for_legend = (TH1D*) w_systs[0]->Clone("for_legend"); for_legend->SetMarkerSize(2);
-  TH1D* for_legend_old = (TH1D*) systs_old[0]->Clone("for_legend_old"); for_legend_old->SetMarkerSize(2);
-  twsysts2->AddEntry(for_legend,"Unfolded data (v2)","pf");
-  twsysts2->AddEntry(for_legend_old,"Unfolded data (v1)","pf");
-  //twsysts2->AddEntry(reco_old[0],"Unfolded data (v1)","p");
+  cout << "F" << endl;
   
-  TLatex *tpost = new TLatex(); tpost->SetTextColor(kRed);
-  
-  TLatex *ttitle = new TLatex(); ttitle->SetTextAlign(11); ttitle->SetTextSize(0.05);
-  t->SetTextAlign(11);
-  t->SetTextSize(0.07);
-  
-  TH1D* hdummycws = new TH1D("hdummycws",";;1/N dN/dM_{g}",1,0,10);
-  hdummycws->GetYaxis()->SetRangeUser(0,0.4);
-  hdummycws->GetYaxis()->SetTitleSize(0.06);
-
-  //cws->cd(1); hdummycws->Draw(); t = PanelTitle();
-  for (int i = 0; i < nBins; ++ i) {
-
-    cws->cd(i+1); w_systs[i]->Draw("E3same9"); systs_old[i]->Draw("E3same9"); /*dats[i]->Draw("same");*/reco_old[i]->Draw("same9"); reco_noms_copy[i]->Draw("same9"); slice->DrawLatexNDC(0.5,0.77,(pts[i]+" < p_{T} < "+pts[i+1]+" GeV/c").c_str());
-    //w_systs[i]->GetXaxis()->SetTitleSize(0.08); w_systs[i]->GetYaxis()->SetTitleSize(0.08);
-    if (i == 0) {ttitle->DrawLatex(4.2,0.46, "pp 200 GeV run12 JP2");ttitle->DrawLatex(4.2,0.43, "anti-k_{T}, R = 0.4");ttitle->DrawLatex(4.2,0.4, "Ch+Ne jets, |#eta| < 0.4");}
-    if (i == 1) { /*tpost->DrawLatexNDC(0.15,0.87,"PREVIEW - Work in Progress");*/}
-    if (i == 2) { twsysts2->Draw("same9");}
-    
-  }
-
-  //  cws->SaveAs("~/jetmass/plots/systematics/unfolded_w_systs_etc_and_PL_R04.pdf");
-  
-  
-  TCanvas *ccheck = new TCanvas("ccheck","ccheck",1200,500);
-  DivideCanvas(ccheck,"0",3,1);
-  
-  vector<TH1D*> ratio_old_new = {(TH1D*) reco_old[0]->Clone("ratio0"), (TH1D*) reco_old[1]->Clone("ratio1"), (TH1D*) reco_old[2]->Clone("ratio2")};
-  vector<TH1D*> systs_ratio = {(TH1D*) systs_old[0]->Clone("sratio0"), (TH1D*) systs_old[1]->Clone("sratio1"), (TH1D*) systs_old[2]->Clone("sratio2")};
-
-  TLine *unity = new TLine (0,1,10,1); unity->SetLineStyle(kDashed);
-  
-  for (int i = 0; i < w_systs.size(); ++ i) {
-    
-    for (int j = 1; j < w_systs[i]->GetNbinsX(); ++ j) {
-      //cout << "DEBUG: " << ratio_old_new[i]->GetBinError(j) << " " << w_systs[i]->GetBinError(j) << " " << ratio_old_new[i]->GetBinError(j)/(double) w_systs[i]->GetBinError(j) << endl;
-      systs_ratio[i]->SetBinContent(j, systs_ratio[i]->GetBinError(j) / (double) w_systs[i]->GetBinError(j)); 
-    }
-    
-    ratio_old_new[i]->Divide(reco_noms_copy[i]/*w_systs[i]*/);
-    ratio_old_new[i]->GetYaxis()->SetRangeUser(0,2);
-    ratio_old_new[i]->GetXaxis()->SetRangeUser(0,10);
-    ratio_old_new[i]->SetMarkerStyle(kOpenCircle);
-    ratio_old_new[i]->SetMarkerColor(kMagenta);
-    ratio_old_new[i]->SetLineColor(kMagenta);
-    ratio_old_new[i]->SetMarkerSize(2);
-    systs_ratio[i]->SetMarkerStyle(kOpenCircle);
-    systs_ratio[i]->SetMarkerColor(kGreen+2);
-    systs_ratio[i]->SetLineColor(kGreen+2);
-    systs_ratio[i]->SetMarkerSize(2);
-    
-    ccheck->cd(i+1); ratio_old_new[i]->Draw(); systs_ratio[i]->Draw("same");
-    unity->Draw("same");
-  }
-  /*  
-  TFile *fout = new TFile("~/jetmass2/out/unfold/unfolded_v2_bugsfixed.root","RECREATE");
+  TFile *fout = new TFile(("~/jetmass2/out/unfold/unfolded"+radius+".root").c_str(),"RECREATE");
   fout->cd();
+    
   for (int i = 0; i < nBins; ++ i) {
-    reco_noms_copy[i]->Write();
-    dats[i]->Write();
-    w_systs[i]->Write();
+    reco_IP2s[i]->Write(); //systematics
+    reco_IP6s[i]->Write();
+    reco_TSs[i]->Write();
+    reco_TUs[i]->Write();
+    reco_HC50s[i]->Write();
+    reco_DSs[i]->Write();
+    reco_GSs[i]->Write();
+    reco_MSs[i]->Write();
+      
+    env_HCs[i]->Write(); //systematic envelopes
+    env_uns[i]->Write();
+    nets[i]->Write();
+        
+      
+    reco_noms_copy[i]->Write(); //unfolded datapoints
+    dats[i]->Write(); //raw datapoints
+    w_systs[i]->Write(); //unfolded data with errors equal to net systematic uncertainty
   }
+  
+  cout << "G" << endl;
+  
   fout->Close();
-  */
+  
 
-  return;
+  return 0;
 }

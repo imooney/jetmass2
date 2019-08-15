@@ -28,18 +28,29 @@
 
 using namespace std;
 
-int main () {
+int main (int argc, const char** argv) {
   //intro                                                                                                                                                      
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//                                                                       
+  //basic argument checking.                                                                                                                                   
+  if (argc != 2) {
+    cerr << "Should be one argument: jet radius. Received "
+         << argc-1 << ". Exiting." << endl;
+    exit(1);
+  }  
+   
+  //argv[1] should be the jet radius e.g. "04".                                                                                                               
+  string radius = (string) argv[1];
+  radius = "_R"+radius;//appending the "_R" used in file naming.
+  
   TH1::SetDefaultSumw2();
   TH2::SetDefaultSumw2();
   TH3::SetDefaultSumw2();
 
   const string path = "~/jetmass2/out/sim/";
- 
-  const string file_in = "sim_matched_allbugsfixed.root";//_closureconsistency.root";
+  const string file_in = "sim_matched";
 
-  TFile *fin = new TFile((path+file_in).c_str(),"READ");
+  TFile *fin = new TFile((path+file_in+radius+".root").c_str(),"READ");
+  cout << "DEBUG: input file name is " << fin->GetName() << endl;
   
   RooUnfoldResponse* res = (RooUnfoldResponse*) fin->Get("pt_response");
   TH1D* match_plus_miss = (TH1D*) fin->Get("pt_gen_match_plus_miss");
@@ -57,7 +68,7 @@ int main () {
     hratio->SetBinContent(i,sqrt(hratio->GetBinContent(i)));
   }
   
-  TFile *fout = new TFile((path+"stat_err_scaling.root").c_str(),"RECREATE");
+  TFile *fout = new TFile((path+"stat_err_scaling"+radius+".root").c_str(),"RECREATE");
 
   fout->cd();
   hratio->Write();

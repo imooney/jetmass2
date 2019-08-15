@@ -90,9 +90,20 @@ void DropBins(RooUnfoldResponse *response, vector<int> to_drop) {
   return;
 }
 
-int main () {
+int main (int argc, const char** argv) {
   //intro                                                                                                                                                      
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//                                                                       
+  //basic argument checking.                                                                                                                                   
+  if (argc != 2) {
+    cerr << "Should be one argument: jet radius. Received "
+         << argc-1 << ". Exiting." << endl;
+    exit(1);
+  }
+
+  //argv[1] should be the jet radius e.g. "04".                                                                                                                
+  string radius = (string) argv[1];
+  radius = "_R"+radius;//appending the "_R" used in file naming.  
+
   TH1::SetDefaultSumw2();
   TH2::SetDefaultSumw2();
   TH3::SetDefaultSumw2();
@@ -100,13 +111,13 @@ int main () {
   const string sim_path = "~/jetmass2/out/sim/hists/";
   const string match_path = "~/jetmass2/out/sim/";
   const string data_path = "~/jetmass2/out/data/hists/";
-  const string match_file = "sim_matched_allbugsfixed";//_closureconsistency";
+  const string match_file = "sim_matched";
   const string data_file = "data_hists_ppJP2";
   const string sim_file = "unmatched_hists";
-  
-  TFile *match_in = new TFile((match_path+match_file+".root").c_str(),"READ");
-  TFile *data_in = new TFile((data_path+data_file+".root").c_str(),"READ");
-  TFile *sim_in = new TFile((sim_path+sim_file+".root").c_str(),"READ");
+
+  TFile *match_in = new TFile((match_path+match_file+radius+".root").c_str(),"READ");
+  TFile *data_in = new TFile((data_path+data_file+radius+".root").c_str(),"READ");
+  TFile *sim_in = new TFile((sim_path+sim_file+radius+".root").c_str(),"READ");
   
   //~~~closure - must be done first
   RooUnfoldResponse *sampleA_m_pt_response = (RooUnfoldResponse*) match_in->Get("sampleA_m_pt_response");
@@ -285,9 +296,9 @@ int main () {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
   //output files - same as inputs but with "_bindropped" appended.
-  TFile *match_out = new TFile((match_path+match_file+"_bindropped.root").c_str(),"RECREATE");
-  TFile *data_out = new TFile((data_path+data_file+"_bindropped.root").c_str(),"RECREATE");
-  TFile *sim_out = new TFile((sim_path+sim_file+"_bindropped.root").c_str(),"RECREATE");
+  TFile *match_out = new TFile((match_path+match_file+radius+"_bindropped.root").c_str(),"RECREATE");
+  TFile *data_out = new TFile((data_path+data_file+radius+"_bindropped.root").c_str(),"RECREATE");
+  TFile *sim_out = new TFile((sim_path+sim_file+radius+"_bindropped.root").c_str(),"RECREATE");
 
   match_out->cd();
   //nominal responses

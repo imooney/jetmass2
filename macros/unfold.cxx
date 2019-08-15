@@ -105,48 +105,71 @@ void Prettify1DwLineStyle(TH1D * hist, const Color_t lineColor, const Style_t li
   return;
 }
 
-int main () {
+int main (int argc, const char** argv) {
   //intro
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+  //basic argument checking.                                                                                                                                   
+  if (argc < 2) {
+    cerr << "Should be at least one argument: jet radius (can also pass a grooming flag, after). Received "
+         << argc-1 << ". Exiting." << endl;
+    exit(1);
+  }
+
+  //argv[1] should be the jet radius e.g. "04".                                                                                                                
+  string radius = (string) argv[1];
+  radius = "_R"+radius;//appending the "_R" used in file naming.  
+
+  bool groomflag = 0;
+
+  string hname = "m"; //for internal histogram name calls: default
+  string htitle = "M"; //for axis titles of histograms: default
+  if (argc > 2) {
+    string groom_str = (string) argv[2];
+    if (groom_str == "g") {
+      groomflag = 1; //a logic switch
+      hname = "mg"; //for internal histogram name calls
+      htitle = "M_{g}"; //for axis titles of histograms
+      cout << "Running Mg unfolding on groomed jets!" << endl;
+    }
+  } 
+  
+  
   TH1::SetDefaultSumw2();
   TH2::SetDefaultSumw2();
   TH3::SetDefaultSumw2();
     
   const string match_path = "~/jetmass2/out/sim/";
   const string data_path = "~/jetmass2/out/data/hists/";
-  const string match_file = "sim_matched_bindropped";
+  const string match_file = "sim_matched";
   const string data_file = "data_hists_ppJP2";
-    
-  //adjust when running over different radius value
-  const string radius = "_R04";
   
   //input files
-  TFile *fres = new TFile((match_path+match_file+radius+".root").c_str(),"READ");
-  TFile *fdat = new TFile((data_path+data_file+radius+".root").c_str(),"READ");
+  TFile *fres = new TFile((match_path+match_file+radius+"_bindropped.root").c_str(),"READ");
+  TFile *fdat = new TFile((data_path+data_file+radius+"_bindropped.root").c_str(),"READ");
   cout << "A" << endl;
   //systematics responses (rnom is nominal response for unfolding)
-  RooUnfoldResponse *rnom = (RooUnfoldResponse*) fres->Get("mg_pt_res_nom"); //!
-  RooUnfoldResponse *rTS = (RooUnfoldResponse*) fres->Get("mg_pt_res_TS"); //!
-  RooUnfoldResponse *rTU = (RooUnfoldResponse*) fres->Get("mg_pt_res_TU"); //!
-  RooUnfoldResponse *rHC50 = (RooUnfoldResponse*) fres->Get("mg_pt_res_HC50"); //!
-  RooUnfoldResponse *rDS = (RooUnfoldResponse*) fres->Get("mg_pt_res_DS"); //!
-  RooUnfoldResponse *rGS = (RooUnfoldResponse*) fres->Get("mg_pt_res_GS"); //!
-  RooUnfoldResponse *rMS = (RooUnfoldResponse*) fres->Get("mg_pt_res_MS"); //!
+  RooUnfoldResponse *rnom = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_nom").c_str()); //!
+  RooUnfoldResponse *rTS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_TS").c_str()); //!
+  RooUnfoldResponse *rTU = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_TU").c_str()); //!
+  RooUnfoldResponse *rHC50 = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_HC50").c_str()); //!
+  RooUnfoldResponse *rDS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_DS").c_str()); //!
+  RooUnfoldResponse *rGS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_GS").c_str()); //!
+  RooUnfoldResponse *rMS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_MS").c_str()); //!
   
   //data spectrum
-  TH2D* mg_pt_dat = (TH2D*) fdat->Get("mg_v_pt");
+  TH2D* m_pt_dat = (TH2D*) fdat->Get((hname+"_v_pt").c_str());
   
   cout << "B" << endl;
   
-  RooUnfoldBayes *unfold_nom = new RooUnfoldBayes(rnom, mg_pt_dat, 4, false, "unfold_nom","");
-  RooUnfoldBayes *unfold_IP2 = new RooUnfoldBayes(rnom, mg_pt_dat, 2, false, "unfold_IP2","");
-  RooUnfoldBayes *unfold_IP6 = new RooUnfoldBayes(rnom, mg_pt_dat, 6, false, "unfold_IP6","");
-  RooUnfoldBayes *unfold_TS = new RooUnfoldBayes(rTS, mg_pt_dat, 4, false, "unfold_TS","");
-  RooUnfoldBayes *unfold_TU = new RooUnfoldBayes(rTU, mg_pt_dat, 4, false, "unfold_TU","");
-  RooUnfoldBayes *unfold_HC50 = new RooUnfoldBayes(rHC50, mg_pt_dat, 4, false, "unfold_HC50","");
-  RooUnfoldBayes *unfold_DS = new RooUnfoldBayes(rDS, mg_pt_dat, 4, false, "unfold_DS","");
-  RooUnfoldBayes *unfold_GS = new RooUnfoldBayes(rGS, mg_pt_dat, 4, false, "unfold_GS","");
-  RooUnfoldBayes *unfold_MS = new RooUnfoldBayes(rMS, mg_pt_dat, 4, false, "unfold_MS","");
+  RooUnfoldBayes *unfold_nom = new RooUnfoldBayes(rnom, m_pt_dat, 4, false, "unfold_nom","");
+  RooUnfoldBayes *unfold_IP2 = new RooUnfoldBayes(rnom, m_pt_dat, 2, false, "unfold_IP2","");
+  RooUnfoldBayes *unfold_IP6 = new RooUnfoldBayes(rnom, m_pt_dat, 6, false, "unfold_IP6","");
+  RooUnfoldBayes *unfold_TS = new RooUnfoldBayes(rTS, m_pt_dat, 4, false, "unfold_TS","");
+  RooUnfoldBayes *unfold_TU = new RooUnfoldBayes(rTU, m_pt_dat, 4, false, "unfold_TU","");
+  RooUnfoldBayes *unfold_HC50 = new RooUnfoldBayes(rHC50, m_pt_dat, 4, false, "unfold_HC50","");
+  RooUnfoldBayes *unfold_DS = new RooUnfoldBayes(rDS, m_pt_dat, 4, false, "unfold_DS","");
+  RooUnfoldBayes *unfold_GS = new RooUnfoldBayes(rGS, m_pt_dat, 4, false, "unfold_GS","");
+  RooUnfoldBayes *unfold_MS = new RooUnfoldBayes(rMS, m_pt_dat, 4, false, "unfold_MS","");
   cout << "C" << endl;
   TH2D *reco_nom = (TH2D*) unfold_nom->Hreco((RooUnfold::ErrorTreatment) 3);
   TH2D *reco_IP2 = (TH2D*) unfold_IP2->Hreco((RooUnfold::ErrorTreatment) 3);
@@ -161,7 +184,7 @@ int main () {
   //These ranges are okay now that Projection2D has the plotting bug removed.
   const int nBins = 2;
   const int nBins_m = 14;
-  TAxis* reco_axis = reco_nom->GetYaxis(); TAxis* det_axis = mg_pt_dat->GetYaxis();
+  TAxis* reco_axis = reco_nom->GetYaxis(); TAxis* det_axis = m_pt_dat->GetYaxis();
   /*OLD:
     double ranges[nBins + 1] = {(double) reco_axis->FindBin(20), (double) reco_axis->FindBin(25), (double) reco_axis->FindBin(30), (double) reco_axis->FindBin(40)};//3,4,5,6,8,12};
     double ranges_d[nBins + 1] = {(double) det_axis->FindBin(20), (double) det_axis->FindBin(25), (double) det_axis->FindBin(30), (double) det_axis->FindBin(40)};//1,2,3,4,6,10};
@@ -171,7 +194,7 @@ int main () {
   double ranges[nBins + 1] = {(double) reco_axis->FindBin(20), (double) reco_axis->FindBin(30), (double) reco_axis->FindBin(45)};//3,4,5,6,8,12};
   double ranges_d[nBins + 1] = {(double) det_axis->FindBin(20), (double) det_axis->FindBin(30), (double) det_axis->FindBin(45)};//1,2,3,4,6,10};
   string pts[nBins + 1] = {"20","30","45"};
-    
+  
   vector<TH1D*> reco_noms = Projection2D(reco_nom,nBins,ranges,"x");
   vector<TH1D*> reco_IP2s = Projection2D(reco_IP2,nBins,ranges,"x");
   vector<TH1D*> reco_IP6s = Projection2D(reco_IP6,nBins,ranges,"x");
@@ -265,21 +288,21 @@ int main () {
   cout << "D" << endl;
   
   for (int i = 0; i < nBins; ++ i) {
-    Prettify1DwLineStyle(reco_IP2s[i],2, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1); 
+    Prettify1DwLineStyle(reco_IP2s[i],2, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1); 
     reco_IP2s[i]->SetFillColor(2); reco_IP2s[i]->SetFillStyle(3305);
-    Prettify1DwLineStyle(reco_IP6s[i],3, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
+    Prettify1DwLineStyle(reco_IP6s[i],3, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
     reco_IP6s[i]->SetFillColor(3); reco_IP6s[i]->SetFillStyle(3395);
-    Prettify1DwLineStyle(reco_TSs[i],4, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
+    Prettify1DwLineStyle(reco_TSs[i],4, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
     reco_TSs[i]->SetFillColor(4); reco_TSs[i]->SetFillStyle(3490);
-    Prettify1DwLineStyle(reco_TUs[i],5, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
+    Prettify1DwLineStyle(reco_TUs[i],5, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
     reco_TUs[i]->SetFillColor(5); reco_TUs[i]->SetFillStyle(3436);
-    Prettify1DwLineStyle(reco_HC50s[i],6, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
+    Prettify1DwLineStyle(reco_HC50s[i],6, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
     reco_HC50s[i]->SetFillColor(6); reco_HC50s[i]->SetFillStyle(3335);
-    Prettify1DwLineStyle(reco_DSs[i],8, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1); 
+    Prettify1DwLineStyle(reco_DSs[i],8, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1); 
     reco_DSs[i]->SetFillColor(8); reco_DSs[i]->SetFillStyle(3944);
-    Prettify1DwLineStyle(reco_GSs[i],9, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
+    Prettify1DwLineStyle(reco_GSs[i],9, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
     reco_GSs[i]->SetFillColor(9); reco_GSs[i]->SetFillStyle(3544);
-    Prettify1DwLineStyle(reco_MSs[i],11, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
+    Prettify1DwLineStyle(reco_MSs[i],11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
     reco_MSs[i]->SetFillColor(11); reco_MSs[i]->SetFillStyle(3690);
 
   }
@@ -322,11 +345,11 @@ int main () {
 
   //prettification
   for (int i = 0; i < nBins; ++ i) {
-    Prettify1DwLineStyle(env_HCs[i],7, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
+    Prettify1DwLineStyle(env_HCs[i],7, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
     env_HCs[i]->SetFillColor(7); env_HCs[i]->SetFillStyle(3353);
-    Prettify1DwLineStyle(env_uns[i],2, kSolid, 2,"M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
+    Prettify1DwLineStyle(env_uns[i],2, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
     env_uns[i]->SetFillColor(2); env_uns[i]->SetFillStyle(3305);
-    Prettify1DwLineStyle(nets[i], kBlack, kSolid, 2, "M_{g} [GeV/c^{2}]","relative uncertainty",0,14,0,1);
+    Prettify1DwLineStyle(nets[i], kBlack, kSolid, 2, (htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
   }
 
   cout << "E" << endl;
@@ -340,12 +363,12 @@ int main () {
     }
   }
 
-  vector<TH1D*> dats = Projection2D(mg_pt_dat,nBins,ranges_d,"x");
+  vector<TH1D*> dats = Projection2D(m_pt_dat,nBins,ranges_d,"x");
 
   for (int i = 0; i < nBins; ++ i) {
-    Prettify1D(reco_noms_copy[i],kRed,kFullStar,4,kRed,"M_{g} [GeV/c^{2}]","1/N dN/dM_{g}",0,10,0,0.5);
-    Prettify1D(dats[i], kBlack, kOpenStar, 4, kBlack, "M_{g} [GeV/c^{2}]", "1/N dN/dM_{g}",0,10,0,0.5);
-    Prettify1D(w_systs[i],kRed,kFullStar,0,kRed,"M_{g} [GeV/c^{2}]","1/N dN/dM_{g}",0,10,0,0.5);
+    Prettify1D(reco_noms_copy[i],kRed,kFullStar,4,kRed,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1D(dats[i], kBlack, kOpenStar, 4, kBlack, (htitle+" [GeV/c^{2}]").c_str(), ("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1D(w_systs[i],kRed,kFullStar,0,kRed,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
     w_systs[i]->SetFillColor(kRed - 10); w_systs[i]->SetFillStyle(1001);
   }
    
@@ -374,7 +397,12 @@ int main () {
   
   cout << "F" << endl;
   
-  TFile *fout = new TFile(("~/jetmass2/out/unfold/unfolded"+radius+".root").c_str(),"RECREATE");
+  string ftitle = "unfolded";
+  if (groomflag) {
+    ftitle = "groomed_"+ftitle;
+  }
+
+  TFile *fout = new TFile(("~/jetmass2/out/unfold/"+ftitle+radius+".root").c_str(),"RECREATE");
   fout->cd();
     
   for (int i = 0; i < nBins; ++ i) {

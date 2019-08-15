@@ -12,11 +12,14 @@
     #4: the jet radius. Options: any number > 0 & <= 9.9; passed in without the decimal, e.g. "06" for 0.6.        
     #5: an analysis-specific wildcard (not required)
 
-#something to think about: for e.g. bin_drop or stat_err_scaling, now that we have jet radius as a knob, it would be nice to pass this in to this code as well. Is this doable?
+# command line arguments for analysis afterburners (e.g. bin_drop, unfolding, ...)
+    #1: the executable (see above)
+    #2: the jet radius (see above)
+    #3: the groom flag: Either nothing, or "g". Former -> ungroomed jets; latter -> groomed jets.
 
-if ( $# < "1") then
+if ( $# < "2") then
     echo 'Error: illegal number of parameters'
-    exit #need a filename, so have to have at least one argument
+    exit #need a filename, so have to have at least one argument; and all analysis types currently need at least one other argument.
 endif
 
 #compile!
@@ -26,11 +29,16 @@ cd .. #back to the top-level directory
 
 set base = ""
 
+#this block is used for the main analysis (running MC / data, making histograms,...)
 set analysisTag = $1 #this could be e.g. "unfolded" or "bin_drop"
 set inputType = $2 #this could be e.g. "data" or "sim"
 set species = $3 #i.e. pp, pA, AA
 set radius = $4 #e.g. 04 for 0.4
 set tag = $5 #analysis-specific tag (currently for full v. charged jets in data or matched v. unmatched in simulation)
+
+#this block is used for afterburners (e.g. bin_drop, stat_err_scaling, unfolding,...)
+set afterburner_radius = $2 #this is the same as radius, but using an earlier argument since the afterburners require fewer of them.
+set groom_flag = $3 #this is not required, but if a 'g' is passed, the (Mg) unfolding is done on groomed jets.
 
 echo 'Pulling files from out/'${inputType}'!'
 echo 'Species is '${species}'!'
@@ -61,15 +69,23 @@ set execute = "./macros/bin/${analysisTag}" #or 'root macros/bin/${analysisTag}.
 
 if (${analysisTag} == 'bin_drop' || ${analysisTag} == 'stat_err_scaling' || ${analysisTag} == 'unfold') then
 
+    echo 'radius is '$afterburner_radius'!'
+    if ($groom_flag == 'g') then
+	echo 'analyzing groomed jets!'
+    endif
+    
     if (! -d log/${analysisTag}) then
 	mkdir -p log/${analysisTag}
     endif
     
     set LogFile = log/${analysisTag}/${analysisTag}.log
     set ErrFile = log/${analysisTag}/${analysisTag}.err	    
+
+    set arg = "$afterburner_radius $groom_flag" #groom_flag is so far only required for unfolding
     
-    echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute
-    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute
+    #this is pretty sloppy right now - I'm passing $2 as an argument to the execution, but $2 is actually the radius, not the inputType in this case...
+    echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
 else #anything but procedures which don't need any args or input/output help
     

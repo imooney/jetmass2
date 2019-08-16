@@ -91,6 +91,64 @@ void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH
   return;
 }
 
+//self explanatory: takes branches in a tree, "treestr", in file f, and fills histograms with them
+//this time, requires matches between hadron and parton level so we can make 2D plots with both
+void MatchedTreetoHist (TFile *f, string treestr, vector<TH2D*> h2Ds) {  
+  //initializing the variables that will be filled by the values in the branches later
+ 
+  vector<double> *p_Pt = 0;
+  vector<double> *p_M = 0;
+  vector<double> *p_mg = 0;
+  vector<double> *p_zg = 0;
+  vector<double> *g_Pt = 0;
+  vector<double> *g_M = 0;
+  vector<double> *g_mg = 0;
+  vector<double> *g_zg = 0;
+  
+  double weight = -1;
+
+  //getting the tree and linking the branches with the variables                                                                                                           
+  TTree *t = (TTree*) f->Get(treestr.c_str());
+  //parton-level                                                                                                                                
+  t->SetBranchAddress("PL_pt_match",&PL_pt);
+  t->SetBranchAddress("PL_M_match",&PL_M);
+  t->SetBranchAddress("PL_mg_match",&PL_mg);
+  t->SetBranchAddress("PL_zg_match",&PL_zg);
+  //hadron-level
+  t->SetBranchAddress("HL_Pt_match",&HL_Pt);
+  t->SetBranchAddress("HL_M_match",&HL_M);
+  t->SetBranchAddress("HL_mg_match",&HL_mg);
+  t->SetBranchAddress("HL_zg_match",&HL_zg);
+  //simulation needs to be x-section weighted                                                                                                                             
+  t->SetBranchAddress("mcweight", &weight);
+
+  cout << ("RUNNING OVER TREE "+treestr+"! Entries: ").c_str() << t->GetEntries() << endl;
+  const clock_t begin_time = clock(); //timing - for debugging and for fun
+  for (unsigned i = 0; i < t->GetEntries(); ++ i) { //"event" loop
+    if (i % 1000 == 0 && i != 0) { //can change this to a frequency of your preference (for real data I use 1e5 or 1e6)
+      cout << "Still chuggin. On event " << i << endl;
+      cout << "Total time passed: " << fixed << setprecision(5) << double(clock() - begin_time) /(double) CLOCKS_PER_SEC << " secs" << endl;
+    }
+    t->GetEntry(i);
+    
+    //filling "event" observables
+    //
+    //looping over "tracks" and filling histograms
+    for (unsigned j = 0; j < PL_pt->size(); ++ j) { //all vectors of doubles in the branches should have the same size 
+      //2Ds!                                                                                                                                           
+      h2Ds[0]->Fill(PL_M->at(j), HL_pt->at(j), weight);
+      if (PL_zg->at(j) >= 0.1) { //otherwise, we tag and drop the groomed jet //could also choose the requirement to be at hadron-level or both or either
+	h2Ds[1]->Fill(PL_mg->at(j), HL_pt->at(j), weight);
+      } 
+    }//!jet loop
+  }//!event loop
+  
+  //!needs to be outside the event loop; not sure exactly what it does
+  t->ResetBranchAddresses();
+  return;
+}
+
+
 int main (int argc, const char ** argv) {
   //intro
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -166,13 +224,18 @@ int main (int argc, const char ** argv) {
   TH3D* PLmgvrgvpt = new TH3D("PLmgvrgvpt",";M_{g} [GeV/c^{2}];R_{g}; p_{T} [GeV/c]",14,0,14,10,0,0.5,ptbins,ptlow,pthigh);
   TH3D* PLzgvrgvpt = new TH3D("PLzgvrgvpt",";z_{g};R_{g}; p_{T} [GeV/c]",10,0,0.5,10,0,0.5,ptbins,ptlow,pthigh);
   
+  //~~~MATCHED PARTON- TO HADRON-LEVEL~~~//
+  TH2D* PLmvHLpt = new TH2D("PLmvHLpt",";M [GeV/c^{2}];p_{T} [GeV/c]",14,0,14,ptbins,ptlow,pthigh);
+  TH2D* PLmgvHLpt = new TH2D("PLmgvHLpt",";M_{g} [GeV/c^{2}];p_{T} [GeV/c]",14,0,14,ptbins,ptlow,pthigh);
+
 
   //putting them in a vector to more easily shuttle them back and forth in the function. Drawback: have to know their order.
   vector<TH2D*> h2Ds = {mvpt,mvpt_q,mvpt_g,mvpt_n,etavpt,phivpt,mgvpt,zgvpt,rgvpt};
   vector<TH3D*> h3Ds = {mvmgvpt,mvzgvpt,mvrgvpt,mgvzgvpt,mgvrgvpt,zgvrgvpt}; 
   vector<TH2D*> PLh2Ds = {PLmvpt,dummy,dummy,dummy,PLetavpt,PLphivpt,PLmgvpt,PLzgvpt,PLrgvpt};
   vector<TH3D*> PLh3Ds = {PLmvmgvpt,PLmvzgvpt,PLmvrgvpt,PLmgvzgvpt,PLmgvrgvpt,PLzgvrgvpt};
- 
+  vector<TH2D*> matchh2Ds = {PLmvHLpt,PLmgvHLpt};
+  
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
     
   //inelegant way to reuse the same function twice: hardcode the branch names
@@ -184,6 +247,7 @@ int main (int argc, const char ** argv) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
   TreetoHist (fin, "ResultTree", HLbranches, h2Ds, h3Ds, 1); //1 = hadronic
   TreetoHist (fin, "PartonTree", PLbranches, PLh2Ds, PLh3Ds, 0); //0 = partonic
+  MatchTreetoHist (fin, "MatchTree", matchh2Ds);
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
   //outro
@@ -196,10 +260,16 @@ int main (int argc, const char ** argv) {
   //writing hists to file
   for (unsigned i = 0; i < h2Ds.size(); ++ i) {
     h2Ds[i]->Write();
+    PLh2Ds[i]->Write();
   }
   for (unsigned i = 0; i < h3Ds.size(); ++ i) {
     h3Ds[i]->Write();
+    PLh2Ds[i]->Write();
   }
+  for (unsigned i = 0; i < matchh2Ds.size(); ++ i) {
+    matchh2Ds[i]->Write();
+  }
+ 
   cout << "Wrote to " << fout->GetName() << endl;
   
   //closing file

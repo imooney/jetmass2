@@ -60,6 +60,38 @@ namespace Rivet {
       }else 
 	return std::pair<double,double>(-1,-1);
     }
+
+    std::vector<int> MatchJets(const std::vector<fastjet::PseudoJet> candidates_safe, const std::vector<fastjet::PseudoJet> toMatch, std::vector<fastjet::PseudoJet> & c_matches, std::vector<fastjet::PseudoJet> & t_matches) {
+      std::vector<int> match_indices;
+      if (candidates_safe.size() == 0 || toMatch.size() == 0) {
+	return match_indices; //later, match_indices being empty will tell us there were no matches                                                                      
+      }
+      
+      //define candidates outside the loop so list continually dwindles as we remove matched candidates                                                                   
+      std::vector<fastjet::PseudoJet> candidates = candidates_safe;
+      for (unsigned i = 0; i < toMatch.size(); ++ i) { //for each jet in toMatch, we try to find a match from candidates_copy                                           
+	//defined inside the loop so that for each toMatch jet there's a new set of candidates                                                                            
+	std::vector<fastjet::PseudoJet> candidates_copy = candidates;
+	fastjet::Selector selectMatchedJets = fastjet::SelectorCircle( _jetR );
+	selectMatchedJets.set_reference( toMatch[i] );
+	//note: matchedToJet and candidates_copy are equivalent, assuming candidates_safe was already sorted by pT                                                        
+	std::vector<fastjet::PseudoJet> matchedToJet = sorted_by_pt( selectMatchedJets( candidates_copy ));
+	if (matchedToJet.size() == 0) { continue; } //means no match to this jet. Remove none from candidates. Continuing on to the next one.                             
+	else { //found at least one match. Need to remove the highest pT one from candidates and add the respective jets to the match vectors.                            
+	  match_indices.push_back(i); //push back the toMatch match position                                                                                             
+	  t_matches.push_back(toMatch[i]);
+	  c_matches.push_back(matchedToJet[0]); //highest pT match                                                                                                        
+	  for (unsigned j = 0; j < candidates.size(); ++ j) { //finding which one to delete from candidates before next toMatch iteration.
+	    if (matchedToJet[0].delta_R(candidates[j]) < 0.0001) { //is probably the same jet                                                                            
+	      candidates.erase(candidates.begin() + j); //removing the jet from the overall list of candidates so it can't be considered next time                        
+	      match_indices.push_back(j); //push back the candidate match position                                                                                        
+	      break; //should exit only the c_matches loop.                                                                                                              
+	    }
+	  }
+	}
+      }
+      return match_indices;
+    }
        
     //! Book histograms and initialise projections before the run
     void init() {
@@ -164,38 +196,38 @@ namespace Rivet {
       //handles the output for each pt-hat bin
       if(_mode == 0){
 	//! For P6: "../out/py6_decayed_jewel_pthatbin580_R%s.root"
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_5pthatbin10_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_5pthatbin10_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }    
       else if(_mode == 1){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_10pthatbin15_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_10pthatbin15_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 2){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_15pthatbin20_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_15pthatbin20_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 3){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_20pthatbin25_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_20pthatbin25_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 4){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_25pthatbin30_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_25pthatbin30_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 5){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_30pthatbin35_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_30pthatbin35_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 6){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_35pthatbin40_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_35pthatbin40_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 7){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_40pthatbin45_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_40pthatbin45_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 8){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_45pthatbin50_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_45pthatbin50_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 9){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_50pthatbin60_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_50pthatbin60_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 10){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_60pthatbin80_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_60pthatbin80_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }
         
@@ -237,6 +269,29 @@ namespace Rivet {
       PartonTree->Branch("PLconsEta",&PLconsEta);
       PartonTree->Branch("pthat",&pthat,"pthat/d");
       PartonTree->Branch("mcweight",&mcweight,"mcweight/d");
+
+      //! partonic final state jets matched geometrically to hadronic final state jets
+      MatchTree = new TTree("MatchTree","Matched partonic/hadronic jets");
+      PL_pt_match.clear();
+      PL_m_match.clear();
+      PL_mg_match.clear();
+      PL_zg_match.clear();
+      HL_pt_match.clear();
+      HL_m_match.clear();
+      HL_mg_match.clear();
+      HL_zg_match.clear();
+
+      MatchTree->Branch("PL_pt_match",&PL_pt_match);
+      MatchTree->Branch("PL_m_match",&PL_m_match);
+      MatchTree->Branch("PL_mg_match",&PL_mg_match);
+      MatchTree->Branch("PL_zg_match",&PL_zg_match);
+      MatchTree->Branch("HL_pt_match",&HL_pt_match);
+      MatchTree->Branch("HL_m_match",&HL_m_match);
+      MatchTree->Branch("HL_mg_match",&HL_mg_match);
+      MatchTree->Branch("HL_zg_match",&HL_zg_match);
+      MatchTree->Branch("pthat",&pthat,"pthat/d");
+      MatchTree->Branch("mcweight",&mcweight,"mcweight/d");
+
 
       //! hadronic final state jets
       ResultTree=new TTree("ResultTree","Result Jets");
@@ -297,7 +352,8 @@ namespace Rivet {
       const double weight = handler().crossSection();
 
       //! clear the vectors for each event!
-
+      
+      //parton jets
       PLpt.clear();
       PLm.clear();
       PLptg.clear();
@@ -312,6 +368,17 @@ namespace Rivet {
       PLconsEta.clear();
       PLconspT.clear();
       
+      //matched jets
+      PL_pt_match.clear();
+      PL_m_match.clear();
+      PL_mg_match.clear();
+      PL_zg_match.clear();
+      HL_pt_match.clear();
+      HL_m_match.clear();
+      HL_mg_match.clear();
+      HL_zg_match.clear();
+      
+      //hadron jets
       nCons.clear();
       conspT.clear();
       consDist.clear();
@@ -372,6 +439,10 @@ namespace Rivet {
 
       fastjet::JetDefinition jet_def(fastjet::antikt_algorithm, _jetR);
       
+      //grooming                                                                                                                                                         
+      fastjet::contrib::RecursiveSymmetryCutBase::SymmetryMeasure  symmetry_measure = fastjet::contrib::RecursiveSymmetryCutBase::scalar_z;
+      fastjet::contrib::SoftDrop sd(beta, z_cut, symmetry_measure, _jetR);
+
       //QUARK v. GLUON PREP: figuring out what/where the hard scattered partons are
       vector<int> identity; vector<PseudoJet> hardparton;
       //for (int i = 0; i < event.genEvent()->particles_size(); ++ i) {
@@ -482,7 +553,7 @@ namespace Rivet {
       if (bad_event) {return;}
       
       
-      //loop over good jets, filling vectors with observables
+      //loop over good parton-level jets, filling vectors with observables
       foreach(const PseudoJet jet, recoJets_PL) {
 	PLpt.push_back(jet.pt());
 	PLm.push_back(jet.m());
@@ -500,10 +571,7 @@ namespace Rivet {
 	PLconspT.push_back(cons_Pt);
 	PLconsEta.push_back(cons_Eta);
 
-	//grooming
-	fastjet::contrib::RecursiveSymmetryCutBase::SymmetryMeasure  symmetry_measure = fastjet::contrib::RecursiveSymmetryCutBase::scalar_z;
-	fastjet::contrib::SoftDrop sd(beta, z_cut, symmetry_measure, _jetR);
-        PseudoJet sd_jet = sd(jet);
+	PseudoJet sd_jet = sd(jet);
 	
 	if(sd_jet != 0) { //! unless I'm mistaken, this condition should never evaluate to false, since grooming by default doesn't remove jets 
 
@@ -525,6 +593,7 @@ namespace Rivet {
       
       //! DEBUG: std::cout << "number of good jets in the event: " << recoJets_bkgsub.size() << std::endl;
       
+      //looping over good hadron-level jets, filling vectors with observables
       foreach(const PseudoJet jet, recoJets_bkgsub){// CHANGE WHEN GOING BETWEEN FULL JETS AND CHARGED JETS
 	nCons.push_back(jet.constituents().size());
 	
@@ -610,8 +679,6 @@ namespace Rivet {
 	jetphi.push_back(jet.phi());
 
 	//grooming:
-	fastjet::contrib::RecursiveSymmetryCutBase::SymmetryMeasure symmetry_measure = fastjet::contrib::RecursiveSymmetryCutBase::scalar_z;
-	fastjet::contrib::SoftDrop sd(beta, z_cut, symmetry_measure, _jetR);
 	PseudoJet sd_jet = sd(jet);
 
 	
@@ -634,6 +701,48 @@ namespace Rivet {
 	  rg.push_back(-999);
 	}
       }
+      
+      std::vector<fastjet::PseudoJet> HL_matches; std::vector<fastjet::PseudoJet> PL_matches;
+      std::vector<int> match_indices;//alternate PL match 0, HL match 0, PL match 1, HL match 1, ...
+      
+      //PERFORM PARTON-TO-HADRON JET MATCHING!
+      if (recoJets_PL.size() != 0) {
+	HL_matches.clear(); PL_matches.clear();
+	match_indices.clear();
+	//match indices are a holdover from my jetmass2/src/sim code where I had to index a list of already groomed jets.
+	//Here it is redundant because I groom each matched jet individually.
+	match_indices = MatchJets(recoJets_bkgsub, recoJets_PL, HL_matches, PL_matches); //find matches
+	if (HL_matches.size() != PL_matches.size()) {std::cerr << "Somehow we have different-sized match vectors. Exiting!" <<std::endl; exit(1);}
+      }
+      //FILL VECTORS WITH MATCHES!
+      for (unsigned i = 0; i < HL_matches.size(); ++ i) {//HL_matches.size() == PL_matches.size() == 1/2 match_indices.size()
+	//matches should be at the same index in respective vectors
+	HL_pt_match.push_back(HL_matches[i].pt());
+	HL_m_match.push_back(HL_matches[i].m());
+	
+	PL_pt_match.push_back(PL_matches[i].pt());
+	PL_m_match.push_back(PL_matches[i].m());
+	
+	//grooming                                                                                                                                                        
+	PseudoJet sd_HL = sd(HL_matches[i]);
+	PseudoJet sd_PL = sd(PL_matches[i]);
+	
+	if (sd_HL != 0) { //should always evaluate to true
+	  double z = sd_HL.structure_of<fastjet::contrib::SoftDrop>().symmetry();
+	  HL_mg_match.push_back(sd_HL.m());
+	  HL_zg_match.push_back(z);
+	}
+	if (sd_PL != 0) { //should always evaluate to true
+	  double z = sd_PL.structure_of<fastjet::contrib::SoftDrop>().symmetry();
+	  PL_mg_match.push_back(sd_PL.m());
+	  PL_zg_match.push_back(z);
+	}
+      }
+      
+      if (PL_matches.size() != 0) {//should also be equivalent to asking if HL_matches.size() != 0
+	MatchTree->Fill();
+      }
+
       if (recoJets_PL.size() != 0) {
 	PartonTree->Fill();
       }
@@ -693,6 +802,16 @@ namespace Rivet {
     vector<vector<double> > PLconsM;
     vector<vector<double> > PLconsEta;
     
+    //matched hadron- & parton-level jets
+    vector<double> PL_pt_match;
+    vector<double> PL_m_match;
+    vector<double> PL_mg_match;
+    vector<double> PL_zg_match;
+    vector<double> HL_pt_match;
+    vector<double> HL_m_match;
+    vector<double> HL_mg_match;
+    vector<double> HL_zg_match;
+
     //hadron-level jet constituents
     vector<vector<double> > conspT;
     vector<vector<double> > consDist;
@@ -727,6 +846,7 @@ namespace Rivet {
     //! Declare histograms here, e.g.: TH1D * hJetpT[2];
     
     TTree * PartonTree;
+    TTree * MatchTree;
     TTree * ResultTree;
   
     TDatabasePDG * pdg;

@@ -53,7 +53,7 @@ else if ($TYPE == "P8") then
     #writing flags to the file
     echo "#Determines whether Herwig or Pythia HepMC files will be the input\ninputIsPythia = TRUE\n#Sets the jet radius parameter for clustering\njetRadius = "$RADIUS"\n#If hadronic final state, turns weak decays on or off; otherwise, partonic FS\ndecayFlag = "$DECAYS"\n" > submit/rivet_flags.txt
     set inpath = $P8Path
-    set Filename = "FSR_only_PYTHIA8"
+    set Filename = "PYTHIA8"#"FSR_only_PYTHIA8"
     if ($DECAYS == "decayed") then
 	set whichdir = "wDecay"
         set Fileend = ${nEvents}"200GeV_decays_on.hepmc"

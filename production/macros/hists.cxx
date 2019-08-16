@@ -96,14 +96,14 @@ void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH
 void MatchedTreetoHist (TFile *f, string treestr, vector<TH2D*> h2Ds) {  
   //initializing the variables that will be filled by the values in the branches later
  
-  vector<double> *p_Pt = 0;
-  vector<double> *p_M = 0;
-  vector<double> *p_mg = 0;
-  vector<double> *p_zg = 0;
-  vector<double> *g_Pt = 0;
-  vector<double> *g_M = 0;
-  vector<double> *g_mg = 0;
-  vector<double> *g_zg = 0;
+  vector<double> *PL_pt = 0;
+  vector<double> *PL_M = 0;
+  vector<double> *PL_mg = 0;
+  vector<double> *PL_zg = 0;
+  vector<double> *HL_pt = 0;
+  vector<double> *HL_M = 0;
+  vector<double> *HL_mg = 0;
+  vector<double> *HL_zg = 0;
   
   double weight = -1;
 
@@ -111,12 +111,12 @@ void MatchedTreetoHist (TFile *f, string treestr, vector<TH2D*> h2Ds) {
   TTree *t = (TTree*) f->Get(treestr.c_str());
   //parton-level                                                                                                                                
   t->SetBranchAddress("PL_pt_match",&PL_pt);
-  t->SetBranchAddress("PL_M_match",&PL_M);
+  t->SetBranchAddress("PL_m_match",&PL_M);
   t->SetBranchAddress("PL_mg_match",&PL_mg);
   t->SetBranchAddress("PL_zg_match",&PL_zg);
   //hadron-level
-  t->SetBranchAddress("HL_Pt_match",&HL_Pt);
-  t->SetBranchAddress("HL_M_match",&HL_M);
+  t->SetBranchAddress("HL_pt_match",&HL_pt);
+  t->SetBranchAddress("HL_m_match",&HL_M);
   t->SetBranchAddress("HL_mg_match",&HL_mg);
   t->SetBranchAddress("HL_zg_match",&HL_zg);
   //simulation needs to be x-section weighted                                                                                                                             
@@ -137,9 +137,9 @@ void MatchedTreetoHist (TFile *f, string treestr, vector<TH2D*> h2Ds) {
     for (unsigned j = 0; j < PL_pt->size(); ++ j) { //all vectors of doubles in the branches should have the same size 
       //2Ds!                                                                                                                                           
       h2Ds[0]->Fill(PL_M->at(j), HL_pt->at(j), weight);
-      if (PL_zg->at(j) >= 0.1) { //otherwise, we tag and drop the groomed jet //could also choose the requirement to be at hadron-level or both or either
+      //      if (PL_zg->at(j) >= 0.1) { //otherwise, we tag and drop the groomed jet //could also choose the requirement to be at hadron-level or both or either
 	h2Ds[1]->Fill(PL_mg->at(j), HL_pt->at(j), weight);
-      } 
+	//      }//CHANGE BACK LATER!!!!!!!!! 
     }//!jet loop
   }//!event loop
   
@@ -247,7 +247,7 @@ int main (int argc, const char ** argv) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
   TreetoHist (fin, "ResultTree", HLbranches, h2Ds, h3Ds, 1); //1 = hadronic
   TreetoHist (fin, "PartonTree", PLbranches, PLh2Ds, PLh3Ds, 0); //0 = partonic
-  MatchTreetoHist (fin, "MatchTree", matchh2Ds);
+  MatchedTreetoHist (fin, "MatchTree", matchh2Ds);
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
   //outro

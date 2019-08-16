@@ -37,7 +37,7 @@ echo 'Jet radius is '$4
 
 #setting input files based on command-line arguments
 if (${inputType} == 'pythia') then 
-    set base = out/star_mass_pythia8_IsaacsHepmcs_
+    set base = out/star_mass_pythia8_IsaacsHepmcs_FSR_only_
 else if (${inputType} == 'herwig') then
     set base = out/star_mass_herwig7_IsaacsHepmcs_
 else
@@ -66,12 +66,12 @@ foreach input ( ${base}*R${radius}_${finalstate}.root )
 #    set OutBase = "$OutBase$uscore$tag" #appending what we did to produce this file, e.g. "unfolded"
 
     set outLocation = out/${inputType}/${analysisTag}/ #producing a separate folder for output of different steps of the analysis
-    set outName = ${OutBase}.root
+    set outName = test_${OutBase}.root
 
     set inFiles = ${input}
 
-    set LogFile = log/${inputType}/${analysisTag}/${OutBase}.log
-    set ErrFile = log/${inputType}/${analysisTag}/${OutBase}.err
+    set LogFile = log/${inputType}/${analysisTag}/test_${OutBase}.log
+    set ErrFile = log/${inputType}/${analysisTag}/test_${OutBase}.err
 
     echo "Logging output to " $LogFile
     echo "Logging errors to " $ErrFile

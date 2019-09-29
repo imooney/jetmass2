@@ -182,18 +182,13 @@ int main (int argc, const char** argv) {
   TH2D *reco_MS = (TH2D*) unfold_MS->Hreco((RooUnfold::ErrorTreatment) 3);
 
   //These ranges are okay now that Projection2D has the plotting bug removed.
-  const int nBins = 2;
+  const int nBins = 3;
   const int nBins_m = 14;
   TAxis* reco_axis = reco_nom->GetYaxis(); TAxis* det_axis = m_pt_dat->GetYaxis();
-  /*OLD:
-    double ranges[nBins + 1] = {(double) reco_axis->FindBin(20), (double) reco_axis->FindBin(25), (double) reco_axis->FindBin(30), (double) reco_axis->FindBin(40)};//3,4,5,6,8,12};
-    double ranges_d[nBins + 1] = {(double) det_axis->FindBin(20), (double) det_axis->FindBin(25), (double) det_axis->FindBin(30), (double) det_axis->FindBin(40)};//1,2,3,4,6,10};
-    string pts[nBins + 1] = {"20","25","30","40"};
-  */
-  //NEW:
-  double ranges[nBins + 1] = {(double) reco_axis->FindBin(20), (double) reco_axis->FindBin(30), (double) reco_axis->FindBin(45)};//3,4,5,6,8,12};
-  double ranges_d[nBins + 1] = {(double) det_axis->FindBin(20), (double) det_axis->FindBin(30), (double) det_axis->FindBin(45)};//1,2,3,4,6,10};
-  string pts[nBins + 1] = {"20","30","45"};
+  
+  double ranges[nBins + 1] = {(double) reco_axis->FindBin(20), (double) reco_axis->FindBin(25), (double) reco_axis->FindBin(30), (double) reco_axis->FindBin(40)};
+  double ranges_d[nBins + 1] = {(double) det_axis->FindBin(20), (double) det_axis->FindBin(25), (double) det_axis->FindBin(30), (double) det_axis->FindBin(40)};
+  string pts[nBins + 1] = {"20","25","30","40"};
   
   vector<TH1D*> reco_noms = Projection2D(reco_nom,nBins,ranges,"x");
   vector<TH1D*> reco_IP2s = Projection2D(reco_IP2,nBins,ranges,"x");
@@ -381,11 +376,11 @@ int main (int argc, const char** argv) {
     for (int j = 1; j <= reco_noms[i]->GetNbinsX(); ++ j) {
       double scaling = -1;
       TAxis *scalex = scalefactors->GetXaxis();
-      //will access the scalefactors histogram for pt values 20, 25, 30, 35, so if you change the ranges you show, change the FindBin calls, too.                 
-      if (i == 0) {scaling = max(scalefactors->GetBinContent(scalex->FindBin(20)),scalefactors->GetBinContent(scalex->FindBin(25)));/*old: 1.122;*/} //these numbers are calculated using the bin content of the ratio of gen. matched spectrum to gen. inclusive (unmatched). See macros/stat_err_scaling.cxx.
-      //if (i == 1) {scaling = scalefactors->GetBinContent(scalex->FindBin(25));/*old: 1.082;*/}
+      //will access the scalefactors histogram for pt values 20, 25, 30, 35, so if you change the ranges you show, change the FindBin calls, too.   
+      if (i == 0) {scaling = /*max(*/scalefactors->GetBinContent(scalex->FindBin(20)/*),scalefactors->GetBinContent(scalex->FindBin(25))*/);/*old: 1.122;*/} //these numbers are calculated using the bin content of the ratio of gen. matched spectrum to gen. inclusive (unmatched). See macros/stat_err_scaling.cxx.
+      if (i == 1) {scaling = scalefactors->GetBinContent(scalex->FindBin(25));/*old: 1.082;*/}
       //function from algorithm.h is max(a,b). Can't take 3 arguments, so have to do max(max(a,b),c).
-      if (i == 1) {scaling = max(max(scalefactors->GetBinContent(scalex->FindBin(30)),scalefactors->GetBinContent(scalex->FindBin(35))),scalefactors->GetBinContent(scalex->FindBin(40)));/*old: 1.062;*/}
+      if (i == 1) {scaling = /*max(*/max(scalefactors->GetBinContent(scalex->FindBin(30)),scalefactors->GetBinContent(scalex->FindBin(35))/*),scalefactors->GetBinContent(scalex->FindBin(40))*/);/*old: 1.062;*/}
       double binerror = reco_noms_copy[i]->GetBinError(j);
       reco_noms_copy[i]->SetBinError(j,(double) binerror*scaling);
       cout << "bin " << j << " error: " << binerror << endl;
@@ -402,7 +397,7 @@ int main (int argc, const char** argv) {
     ftitle = "groomed_"+ftitle;
   }
 
-  TFile *fout = new TFile(("~/jetmass2/out/unfold/"+ftitle+radius+".root").c_str(),"RECREATE");
+  TFile *fout = new TFile(("~/jetmass2/out/unfold/"+ftitle+radius+"_forpaper.root").c_str(),"RECREATE");
   fout->cd();
     
   for (int i = 0; i < nBins; ++ i) {

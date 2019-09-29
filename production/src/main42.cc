@@ -14,8 +14,8 @@
 // WARNING: typically one needs 25 MB/100 events at the LHC.
 // Therefore large event samples may be impractical.
 
-#include "/nfs/rhi/STAR/software/pythia8/include/Pythia8/Pythia.h"
-#include "/nfs/rhi/STAR/software/pythia8/include/Pythia8Plugins/HepMC2.h"
+#include "/tier2/home/groups/rhi/STAR/software/pythia8/include/Pythia8/Pythia.h"
+#include "/tier2/home/groups/rhi/STAR/software/pythia8/include/Pythia8Plugins/HepMC2.h"
 
 using namespace Pythia8;
 

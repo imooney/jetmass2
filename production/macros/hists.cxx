@@ -20,11 +20,12 @@
 using namespace std;
 
 //self explanatory: takes branches in a tree, "treestr", in file f, and fills histograms with them
-void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH2D*> h2Ds, vector<TH3D*> h3Ds, bool hadronic) {  
+void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH1D*> h1Ds, vector<TH2D*> h2Ds, vector<TH3D*> h3Ds, bool hadronic) {  
   //initializing the variables that will be filled by the values in the branches later
   vector<double> *Pt = 0; vector<double> *Eta = 0; vector<double> *Phi = 0;
   vector<double> *M = 0; vector<double> *zg = 0; vector<double> *rg = 0; vector<double> *mg = 0;
   vector<int> *qvg = 0;
+  vector<vector<double> > *PID = 0; vector<vector<double> > *consPt = 0;
   
   double weight = -1;
   
@@ -38,10 +39,17 @@ void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH
   t->SetBranchAddress(branchnames[5].c_str(),&zg);
   t->SetBranchAddress(branchnames[6].c_str(),&rg);
   
-  if (hadronic) {t->SetBranchAddress("qvg",&qvg);}
+  if (hadronic) {
+    t->SetBranchAddress("qvg",&qvg);
+    t->SetBranchAddress("consPID",&PID);
+    t->SetBranchAddress("conspT",&consPt);
+  }
   
   t->SetBranchAddress("mcweight", &weight);
 
+  
+  vector<double> JEF_pi(15),JEF_K(15),JEF_p(15),JEF_other(15),JEF_tot(15);
+  
   cout << ("RUNNING OVER TREE "+treestr+"! Entries: ").c_str() << t->GetEntries() << endl;
   const clock_t begin_time = clock(); //timing - for debugging and for fun
   for (unsigned i = 0; i < t->GetEntries(); ++ i) { //"event" loop
@@ -54,7 +62,36 @@ void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH
     //filling "event" observables
     //
     //looping over "tracks" and filling histograms
-    for (unsigned j = 0; j < Pt->size(); ++ j) { //all vectors of doubles in the branches should have the same size 
+    for (unsigned j = 0; j < Pt->size(); ++ j) { //all vectors of doubles in the branches should have the same size
+      if (hadronic) {//don't have the following branches coded in the parton-tree
+	for (unsigned k = 0; k < PID->at(j).size(); ++ k) { //constituent loop
+	  //~~~this block will handle the pi/K/p jet energy fraction calculation~~~//
+	  if (fabs(PID->at(j).at(k)) == (double) 211 || PID->at(j).at(k) == (double) 111) {
+	    //cout << "DEBUG: PIONS: PID = " << PID->at(j).at(k) << " should be |211| or 111" << endl;
+	    //for each jet pT we have a running count of the JEF of pions. We therefore index the vector of pions depending on the jet's pT. E.g. for 5 GeV bins starting at 5 GeV, a 20 GeV jet is in the 3rd bin (indexing from 0) or: (20 - 5)/5. 
+	    JEF_pi[(int)((Pt->at(j)-5)/(double)5)] += consPt->at(j).at(k)*weight;
+	    //cout << "DEBUG: PIONS: " << weight << " " << consPt->at(j).at(k)*weight << endl;
+	  }
+	  else if (fabs(PID->at(j).at(k)) == (double) 321 || PID->at(j).at(k) == (double) 311 || PID->at(j).at(k) == (double) 310 || PID->at(j).at(k) == (double) 130) {
+	    //cout << "DEBUG: KAONS: PID = " << PID->at(j).at(k) << " should be |321|, 311, 310, or 130" << endl;
+	    JEF_K[(int)((Pt->at(j)-5)/(double)5)] += consPt->at(j).at(k)*weight;
+	    //cout << "DEBUG: KAONS: " << weight << " " << consPt->at(j).at(k)*weight << endl;
+	  }
+	  else if (fabs(PID->at(j).at(k)) == (double) 2212) {
+	    //cout << "DEBUG: PROTONS: PID = " << PID->at(j).at(k) << " should be |2212|" << endl;
+	    JEF_p[(int)((Pt->at(j)-5)/(double)5)] += consPt->at(j).at(k)*weight;
+	    //cout << "DEBUG: PROTONS: " << weight << " " << consPt->at(j).at(k)*weight << endl;
+	  }
+	  else {
+	    //cout << "DEBUG: OTHERS: PID = " << PID->at(j).at(k) << " should be anything but |211|, 111, |321|, 311, 310, 130, or |2212|" << endl;
+	    JEF_other[(int)((Pt->at(j)-5)/(double)5)] += consPt->at(j).at(k)*weight;
+	    //cout << "DEBUG: OTHERS: " << weight << " " << consPt->at(j).at(k)*weight << endl;
+	  }
+	  JEF_tot[(int)((Pt->at(j)-5)/(double)5)] += consPt->at(j).at(k)*weight;
+	  //cout << "DEBUG: TOTAL: " << weight << " " << consPt->at(j).at(k)*weight << endl;
+	  //~~~          ~~~//
+	}//for loop over constituents
+      }//hadronic conditional
       //2Ds!                                                                                                                                           
       h2Ds[0]->Fill(M->at(j), Pt->at(j), weight);
       //quark v. gluon jets
@@ -85,7 +122,28 @@ void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH
       } 
     }//!jet loop
   }//!event loop
-  
+
+  if (hadronic) {//normalizing the JEFs
+    for (unsigned i = 0; i < JEF_tot.size(); ++ i) {
+      cout << "DEBUG: " << JEF_pi[i] << " " << JEF_K[i] << " " << JEF_p[i] << " " << JEF_other[i] << " " << JEF_tot[i] << endl;
+      if (JEF_tot[i] != 0) {
+	JEF_pi[i] /= (double) JEF_tot[i];
+	JEF_K[i] /= (double) JEF_tot[i];
+	JEF_p[i] /= (double) JEF_tot[i];
+	JEF_other[i] /= (double) JEF_tot[i];
+      }
+      else { //to avoid dividing by zero when there are no jets in the bin
+	JEF_pi[i] = 0;
+	JEF_K[i] = 0;
+	JEF_p[i] = 0;
+	JEF_other[i] = 0;
+      }
+      h1Ds[0]->Fill(5*i+5,JEF_pi[i]);//re-converts the bin number to a jet pT value for filling the hist
+      h1Ds[1]->Fill(5*i+5,JEF_K[i]);
+      h1Ds[2]->Fill(5*i+5,JEF_p[i]);
+      h1Ds[3]->Fill(5*i+5,JEF_other[i]);
+    }
+  }
   //!needs to be outside the event loop; not sure exactly what it does
   t->ResetBranchAddresses();
   return;
@@ -167,7 +225,7 @@ int main (int argc, const char ** argv) {
   //argv[3] should be the name of the input file
   string fin_name = (string) argv[3];
   TFile *fin = new TFile(fin_name.c_str(),"READ");
-  cout << "DEBUG: input file name is " << fin->GetName() << endl;
+  //cout << "DEBUG: input file name is " << fin->GetName() << endl;
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~hists~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
@@ -182,6 +240,7 @@ int main (int argc, const char ** argv) {
   const int nBins_pt = 8;
   double edges[nBins_pt + 1] = {5,10,15,20,25,30,40,60,100};
   
+  TH1D* dummy1D = new TH1D("dummy1D","",1,0,1);
   TH2D* dummy = new TH2D("dummy","",1,0,1,1,0,1);
   
   //~~~HADRON LEVEL~~~
@@ -198,6 +257,23 @@ int main (int argc, const char ** argv) {
   TH2D* phivpt = new TH2D("phivpt",";#phi;p_{T} [GeV/c]",50,0,2*M_PI,ptbins,ptlow,pthigh);
   TH2D* zgvpt = new TH2D("zgvpt",";z_{g} [GeV/c^{2}];p_{T} [GeV/c]",10,0,0.5,ptbins,ptlow,pthigh);
   TH2D* rgvpt = new TH2D("rgvpt",";R_{g} [GeV/c^{2}];p_{T} [GeV/c]",10,0,0.5,ptbins,ptlow,pthigh);
+
+  //jet energy fraction by species, and delta_R & z as function of species
+  TH1D* ptvJEF_pi = new TH1D("ptvJEF_pi","",15,5,80);
+  TH1D* ptvJEF_K = new TH1D("ptvJEF_K","",15,5,80);
+  TH1D* ptvJEF_p = new TH1D("ptvJEF_p","",15,5,80);
+  TH1D* ptvJEF_other = new TH1D("ptvJEF_other","",15,5,80);
+  TH2D* deltaRvpt_pi = new TH2D("deltaRvpt_pi","",10,0,0.5,15,5,80);
+  TH2D* deltaRvpt_K = new TH2D("deltaRvpt_K","",10,0,0.5,15,5,80);
+  TH2D* deltaRvpt_p = new TH2D("deltaRvpt_p","",10,0,0.5,15,5,80);
+  TH2D* deltaRvpt_other = new TH2D("deltaRvpt_other","",10,0,0.5,15,5,80);
+  TH2D* zvpt_pi = new TH2D("zvpt_pi","",10,0,1,15,5,80);
+  TH2D* zvpt_K = new TH2D("zvpt_K","",10,0,1,15,5,80);
+  TH2D* zvpt_p = new TH2D("zvpt_p","",10,0,1,15,5,80);
+  TH2D* zvpt_other = new TH2D("zvpt_other","",10,0,1,15,5,80);
+  
+  //need 4 1D hists of jet pT weighted by the JEF. How is JEF calculated? Add up all the pTs of the constituents and divide by the jet pT. Then weight that number with the MC weight. Keep a running tally of these numbers. Add the next jet's weighted number to this first number, and also to the running total. At the end, divide each of the four weighted numbers by the weighted total to get the JEF for each of the species. Stack them here. Or create the stack in another plotting macro if ownership is weird w/r/t prettification later.
+  //do the same thing at the constituent level with z and delta_R?
   
   //3D correlations
   TH3D* mvmgvpt = new TH3D("mvmgvpt",";M [GeV/c^{2}];M_{g} [GeV/c^{2}]; p_{T} [GeV/c]",14,0,14,14,0,14,ptbins,ptlow,pthigh);
@@ -230,9 +306,11 @@ int main (int argc, const char ** argv) {
 
 
   //putting them in a vector to more easily shuttle them back and forth in the function. Drawback: have to know their order.
-  vector<TH2D*> h2Ds = {mvpt,mvpt_q,mvpt_g,mvpt_n,etavpt,phivpt,mgvpt,zgvpt,rgvpt};
+  vector<TH1D*> h1Ds = {ptvJEF_pi, ptvJEF_K, ptvJEF_p, ptvJEF_other};
+  vector<TH2D*> h2Ds = {mvpt,mvpt_q,mvpt_g,mvpt_n,etavpt,phivpt,mgvpt,zgvpt,rgvpt,deltaRvpt_pi,deltaRvpt_K,deltaRvpt_p,deltaRvpt_other,zvpt_pi,zvpt_K,zvpt_p,zvpt_other};
   vector<TH3D*> h3Ds = {mvmgvpt,mvzgvpt,mvrgvpt,mgvzgvpt,mgvrgvpt,zgvrgvpt}; 
-  vector<TH2D*> PLh2Ds = {PLmvpt,dummy,dummy,dummy,PLetavpt,PLphivpt,PLmgvpt,PLzgvpt,PLrgvpt};
+  vector<TH1D*> PLh1Ds = {dummy1D,dummy1D,dummy1D,dummy1D};
+  vector<TH2D*> PLh2Ds = {PLmvpt,dummy,dummy,dummy,PLetavpt,PLphivpt,PLmgvpt,PLzgvpt,PLrgvpt,dummy,dummy,dummy,dummy,dummy,dummy,dummy,dummy};
   vector<TH3D*> PLh3Ds = {PLmvmgvpt,PLmvzgvpt,PLmvrgvpt,PLmgvzgvpt,PLmgvrgvpt,PLzgvrgvpt};
   vector<TH2D*> matchh2Ds = {PLmvHLpt,PLmgvHLpt};
   
@@ -245,9 +323,9 @@ int main (int argc, const char ** argv) {
   
   //calling analysis function(s)! "event" here is the internal name of the tree in "fin"  
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-  TreetoHist (fin, "ResultTree", HLbranches, h2Ds, h3Ds, 1); //1 = hadronic
-  TreetoHist (fin, "PartonTree", PLbranches, PLh2Ds, PLh3Ds, 0); //0 = partonic
-  MatchedTreetoHist (fin, "MatchTree", matchh2Ds);
+  TreetoHist (fin, "ResultTree", HLbranches, h1Ds, h2Ds, h3Ds, 1); //1 = hadronic
+  TreetoHist (fin, "PartonTree", PLbranches, PLh1Ds, PLh2Ds, PLh3Ds, 0); //0 = partonic
+  //MatchedTreetoHist (fin, "MatchTree", matchh2Ds);
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
   //outro
@@ -258,6 +336,10 @@ int main (int argc, const char ** argv) {
   cout << "DEBUG: output file name is " << fout->GetName() << endl;
   
   //writing hists to file
+  for (unsigned i = 0; i < h1Ds.size(); ++ i) {
+    h1Ds[i]->Write();
+    PLh1Ds[i]->Write();
+  }
   for (unsigned i = 0; i < h2Ds.size(); ++ i) {
     h2Ds[i]->Write();
     PLh2Ds[i]->Write();
@@ -267,7 +349,7 @@ int main (int argc, const char ** argv) {
     PLh2Ds[i]->Write();
   }
   for (unsigned i = 0; i < matchh2Ds.size(); ++ i) {
-    matchh2Ds[i]->Write();
+    //matchh2Ds[i]->Write();
   }
  
   cout << "Wrote to " << fout->GetName() << endl;

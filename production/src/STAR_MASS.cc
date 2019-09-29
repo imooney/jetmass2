@@ -196,41 +196,41 @@ namespace Rivet {
       //handles the output for each pt-hat bin
       if(_mode == 0){
 	//! For P6: "../out/py6_decayed_jewel_pthatbin580_R%s.root"
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_5pthatbin10_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_5pthatbin10_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }    
       else if(_mode == 1){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_10pthatbin15_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_10pthatbin15_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 2){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_15pthatbin20_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_15pthatbin20_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 3){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_20pthatbin25_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_20pthatbin25_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 4){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_25pthatbin30_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_25pthatbin30_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 5){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_30pthatbin35_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_30pthatbin35_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 6){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_35pthatbin40_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_35pthatbin40_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 7){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_40pthatbin45_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_40pthatbin45_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 8){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_45pthatbin50_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_45pthatbin50_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 9){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_50pthatbin60_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_50pthatbin60_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 10){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_FSR_only_60pthatbin80_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_60pthatbin80_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
 	fout->cd();
       }
-        
+      
       //! book desired histograms here
       //...
 
@@ -301,6 +301,7 @@ namespace Rivet {
       consGirth.clear();
       consM.clear();
       consEta.clear();
+      consPID.clear();
       jetTau1.clear();
       jetTau05.clear();
       jetTau0.clear();
@@ -328,6 +329,7 @@ namespace Rivet {
       ResultTree->Branch("consGirth",&consGirth);
       ResultTree->Branch("consM",&consM);
       ResultTree->Branch("consEta",&consEta);
+      ResultTree->Branch("consPID",&consPID);
       ResultTree->Branch("jetTau1",&jetTau1);
       ResultTree->Branch("jetTau05",&jetTau05);
       ResultTree->Branch("jetTau0",&jetTau0);
@@ -385,6 +387,7 @@ namespace Rivet {
       consGirth.clear();
       consM.clear();
       consEta.clear();
+      consPID.clear();
       jetTau1.clear();
       jetTau05.clear();
       jetTau0.clear();
@@ -486,7 +489,9 @@ namespace Rivet {
 
 	intermediate.reset_PtYPhiM(p.pt(),p.rap(),p.phi(),(double) pdg->GetParticle(p.pid())->Mass()); //PDG MASSES!!!
        
+	intermediate.set_user_index(p.pid());
 	pJet_sub.push_back(intermediate);
+	
 	//! add only charged particles to charged jets
 	if (p.charge() != 0) {
 	  pJet_ch.push_back(PseudoJet(p.px(), p.py(), p.pz(), p.E()));
@@ -641,11 +646,13 @@ namespace Rivet {
 	vector<double> cons_pt;
 	vector<double> cons_mass;
 	vector<double> cons_eta;
+	vector<double> cons_pid;
 	//vector<PseudoJet> jet_cons = jet.constituents();
 	foreach (const PseudoJet cons, jet.constituents()) {
 	  cons_pt.push_back(cons.pt());
 	  cons_mass.push_back(cons.m());
 	  cons_eta.push_back(cons.eta());
+	  cons_pid.push_back(cons.user_index());
 	  double consR = fabs(cons.delta_R(jet));
 	  cons_dist.push_back(consR);
 	  double part_girth = consR * cons.pt() / (double) jet.pt();
@@ -664,6 +671,7 @@ namespace Rivet {
 	consGirth.push_back(cons_girth);
 	consM.push_back(cons_mass);
 	consEta.push_back(cons_eta);
+	consPID.push_back(cons_pid);
 	//~~~
 	//formula: tau_a = 1/pT sum (pT,i * deltaR^a) (as opposed to ^(2 - a))
 	jetTau_1.push_back(a_1 / (double) jet.pt());
@@ -818,7 +826,8 @@ namespace Rivet {
     vector<vector<double> > consGirth;
     vector<vector<double> > consM;
     vector<vector<double> > consEta;
-    
+    vector<vector<double> > consPID;
+
     //hadron-level jets
     vector<int> qvg;
     vector<double> jetTau1;

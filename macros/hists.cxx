@@ -199,11 +199,13 @@ void MatchedTreetoHist (TFile *f, string treestr, vector<TH2D*> h2Ds) {
       h2Ds[2]->Fill(p_Pt->at(j),(g_M->at(j) - p_M->at(j)) / (double) p_M->at(j),weight);          
       h2Ds[4]->Fill(g_Pt->at(j) / (double) p_Pt->at(j), p_Pt->at(j), weight);
       h2Ds[5]->Fill(g_M->at(j) / (double) p_M->at(j), p_Pt->at(j), weight);
-
+      h2Ds[7]->Fill(g_M->at(j) / (double) p_M->at(j), g_Pt->at(j), weight);
+      
       //not sure if it makes the most sense to require the pythia groomed jet to pass the criterion, rather than the geant groomed jet. Something to think about.
       if (p_zg->at(j) >= 0.1) { //otherwise, we tag and drop the groomed jet
 	h2Ds[3]->Fill(p_Pt->at(j),(g_mg->at(j) - p_mg->at(j)) / (double) p_Pt->at(j),weight);
 	h2Ds[6]->Fill(g_mg->at(j) / (double) p_mg->at(j), p_Pt->at(j), weight);
+	h2Ds[8]->Fill(g_mg->at(j) / (double) p_mg->at(j), g_Pt->at(j), weight);
       }//SD loop
     }//!jet loop
   }//!event loop
@@ -344,7 +346,7 @@ int main (int argc, const char ** argv) {
   TH2D *deltaPtvPyPt = new TH2D("deltaPtvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta p_{T}^{jet} (Det - Gen) / p_{T}^{gen-jet}",11,5,60,220,-1,1);
   TH2D *ratioPtvPyPt = new TH2D("ratioPtvPyPt",";p_{T}^{det-jet} / p_{T}^{gen-jet};Gen. p^{jet}_{T} [GeV/c]",25,0,2,15,5,80);
   TH2D *deltaMvPyPt = new TH2D("deltaMvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta M_{jet} (Det - Gen) / M^{gen}_{jet}",11,5,60,220,-1,1);
-  TH2D *ratioMvPyPt = new TH2D("ratioMvPyPt",";M^{det}_{jet} / M^{gen}_{jet};Gen. p^{jet}_{T} [GeV/c]",25,0,2,15,5,80);
+  TH2D *ratioMvPyPt = new TH2D("ratioMvPyPt",";M^{det}_{jet} / M^{gen}_{jet};Gen. p^{jet}_{T} [GeV/c]",20,0,1.999,15,5,80);
   TH2D *deltaZgvPyPt = new TH2D("deltaZgvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta z_{g} (Det - Gen)",11,5,60,220,-1,1);
   TH2D *ratioZgvPyPt = new TH2D("ratioZgvPyPt",";z_{g}^{det} / z_{g}^{gen};Gen. p^{jet}_{T} [GeV/c]",25,0,2,15,5,80);
   TH2D *deltaRgvPyPt = new TH2D("deltaRgvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta R_{g} (Det - Gen)",11,5,60,220,-1,1);
@@ -352,7 +354,10 @@ int main (int argc, const char ** argv) {
   TH2D *deltaPtgvPyPt = new TH2D("deltaPtgvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta p_{T,g} (Det - Gen) / p_{T,g}^{gen-jet}",11,5,60,220,-1,1);
   TH2D *ratioPtgvPyPt = new TH2D("ratioPtgvPyPt",";p_{T,g}^{det} / p_{T,g}^{gen};Gen. p^{jet}_{T} [GeV/c]",25,0,2,15,5,80);
   TH2D *deltaMgvPyPt = new TH2D("deltaMgvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta M_{g} (Det - Gen) / M_{g}^{gen-jet}",11,5,60,220,-1,1);
-  TH2D *ratioMgvPyPt = new TH2D("ratioMgvPyPt",";M_{g}^{det} / M_{g}^{gen};Gen. p^{jet}_{T} [GeV/c]",25,0,2,15,5,80);
+  TH2D *ratioMgvPyPt = new TH2D("ratioMgvPyPt",";M_{g}^{det} / M_{g}^{gen};Gen. p^{jet}_{T} [GeV/c]",20,0,2,15,5,80);
+
+  TH2D* ratioMvGePt = new TH2D("ratioMvGePt","",20,0,2,11,5,60);
+  TH2D* ratioMgvGePt = new TH2D("ratioMgvGePt","",20,0,2,11,5,60);
  
   //jet mass dependence on event activity
   //these two are actually dummies
@@ -397,7 +402,7 @@ int main (int argc, const char ** argv) {
   vector<TH2D*> h2Ds = {m_v_pt,ch_frac_v_pt,zg_v_pt,rg_v_pt,mg_v_pt,ptg_v_pt,ratio_ptgpt_v_pt,mcd_v_pt,phi_v_pt,eta_v_pt,m_v_pt_counts,mg_v_pt_counts,tau0_v_pt,tau05_v_pt,tau_05_v_pt,tau_1_v_pt,tau0_g_v_pt,tau05_g_v_pt,tau_05_g_v_pt,tau_1_g_v_pt};
   vector<TH3D*> h3Ds = {bbc_east_rate_v_pt_v_m, bbc_east_sum_v_pt_v_m};
   
-  vector<TH2D*> matched2Ds = {deltaPtvGePt,deltaPtvPyPt,deltaMvPyPt,deltaMgvPyPt,ratioPtvPyPt,ratioMvPyPt,ratioMgvPyPt};
+  vector<TH2D*> matched2Ds = {deltaPtvGePt,deltaPtvPyPt,deltaMvPyPt,deltaMgvPyPt,ratioPtvPyPt,ratioMvPyPt,ratioMgvPyPt,ratioMvGePt,ratioMgvGePt};
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 

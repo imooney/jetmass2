@@ -29,9 +29,9 @@ set nHardBins = 11
 set nEvents = "_100Events_"
 set base = `pwd`
 set ExecPath = ${base}/submit
-set P6Path = /nfs/rhi/STAR/Data/RhicJEWEL
-set P8Path = /nfs/rhi/STAR/Data/IsaacsPy8
-set H7Path = /nfs/rhi/STAR/Data/RhicHerwig
+set P6Path = /tier2/home/groups/rhi/STAR/Data/RhicJEWEL
+set P8Path = /tier2/home/groups/rhi/STAR/Data/IsaacsPy8
+set H7Path = /tier2/home/groups/rhi/STAR/Data/RhicHerwig
 #some default file path/name components
 set whichdir = "woDecay" #default
 set inpath = $P8Path #default

@@ -55,23 +55,23 @@ endif
 if (${analysisType} != 'sim') then
     if (${trigger} == 'JP2' && ${species} == 'pp') then
 	set trigger = "ppJP2"
-	set base = /nfs/rhi/STAR/Data/ppJP2Run12/sum	
+	set base = /tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum	
 	echo "Running on the ppJP2-triggered data!"
     else if (${trigger} == 'HT' && ${species} == 'pp') then
 	set trigger = "ppHT"
-	set base = /nfs/rhi/STAR/Data/ppHT2Run12/pp12Pico
+	set base = /tier2/home/groups/rhi/STAR/Data/ppHT2Run12/pp12Pico
 	echo "Running on the ppHT-triggered data!"
     else if (${trigger} == 'VPDMB' && ${species} == 'pp') then
 	set trigger = "ppVPDMB"
-	set base = /nfs/rhi/STAR/Data/ppMBRun12/sum
+	set base = /tier2/home/groups/rhi/STAR/Data/ppMBRun12/sum
 	echo "Running on the ppMB-triggered data!"
     else if (${trigger} == 'JP2' && ${species} == 'pA') then
 	set trigger = "pAuJP2"
-	set base = /nfs/rhi/STAR/Data/P16id/production_pAu200_2015/HT/pAu_2015_200_HT_1
+	set base = /tier2/home/groups/rhi/STAR/Data/P16id/production_pAu200_2015/HT/pAu_2015_200_HT_1
 	echo "Running on the pAuJP2-triggered data!"
     else if (${trigger} == 'BBCMB' && ${species} == 'pA') then
 	set trigger = "pAuBBCMB"
-	set base = /nfs/rhi/STAR/Data/P16id/production_pAu200_2015/MB/pAu_2015_200_MB_1
+	set base = /tier2/home/groups/rhi/STAR/Data/P16id/production_pAu200_2015/MB/pAu_2015_200_MB_1
 	echo "Running on the pAuBBCMB-triggered data!"
     else if (${species} == 'AA' || ${species} == 'AuAu') then
 	echo "AA is not ready yet - be patient!"
@@ -80,7 +80,7 @@ if (${analysisType} != 'sim') then
 	exit
     endif
 else
-    set base = /nfs/rhi/STAR/Data/AddedEmbedPythiaRun12pp200/Cleanpp12Pico_
+    set base = /tier2/home/groups/rhi/STAR/Data/AddedEmbedPythiaRun12pp200/Cleanpp12Pico_
     echo "Running on the Pythia6 and Pythia6+Geant (JP2-triggered) simulation!"
 endif
 

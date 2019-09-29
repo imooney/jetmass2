@@ -292,13 +292,41 @@ int main (int argc, const char ** argv) {
   RooUnfoldResponse *sampleB_mg_pt_response = new RooUnfoldResponse(geMgvPt, pyMgvPt, "sampleB_mg_pt_response");
   RooUnfoldResponse *sampleB_mg_pt_response_counts = new RooUnfoldResponse(geMgvPt, pyMgvPt, "sampleB_mg_pt_response_counts");
     
-  //I don't really use these, typically...
-  RooUnfoldResponse *m_response1520 = new RooUnfoldResponse(14,0,14,14,0,14,"m_response1520","");
-  RooUnfoldResponse *m_response2025 = new RooUnfoldResponse(14,0,14,14,0,14,"m_response2025","");
-  RooUnfoldResponse *m_response2530 = new RooUnfoldResponse(14,0,14,14,0,14,"m_response2530","");
-  RooUnfoldResponse *m_response3040 = new RooUnfoldResponse(14,0,14,14,0,14,"m_response3040","");
-  RooUnfoldResponse *m_response4060 = new RooUnfoldResponse(14,0,14,14,0,14,"m_response4060","");
-    
+  //1D m responses for systematics: prior smearing
+  RooUnfoldResponse *m_res1520_nom = new RooUnfoldResponse(14,0,14,14,0,14,"m_res1520_nom","");
+  RooUnfoldResponse *m_res2025_nom = new RooUnfoldResponse(14,0,14,14,0,14,"m_res2025_nom","");
+  RooUnfoldResponse *m_res2530_nom = new RooUnfoldResponse(14,0,14,14,0,14,"m_res2530_nom","");
+  RooUnfoldResponse *m_res3040_nom = new RooUnfoldResponse(14,0,14,14,0,14,"m_res3040_nom","");
+  RooUnfoldResponse *m_res4060_nom = new RooUnfoldResponse(14,0,14,14,0,14,"m_res4060_nom","");
+  RooUnfoldResponse *m_res1520_p8smear = new RooUnfoldResponse(14,0,14,14,0,14,"m_res1520_p8smear","");
+  RooUnfoldResponse *m_res2025_p8smear = new RooUnfoldResponse(14,0,14,14,0,14,"m_res2025_p8smear","");
+  RooUnfoldResponse *m_res2530_p8smear = new RooUnfoldResponse(14,0,14,14,0,14,"m_res2530_p8smear","");
+  RooUnfoldResponse *m_res3040_p8smear = new RooUnfoldResponse(14,0,14,14,0,14,"m_res3040_p8smear","");
+  RooUnfoldResponse *m_res4060_p8smear = new RooUnfoldResponse(14,0,14,14,0,14,"m_res4060_p8smear","");
+  RooUnfoldResponse *m_res1520_h7smear = new RooUnfoldResponse(14,0,14,14,0,14,"m_res1520_h7smear","");
+  RooUnfoldResponse *m_res2025_h7smear = new RooUnfoldResponse(14,0,14,14,0,14,"m_res2025_h7smear","");
+  RooUnfoldResponse *m_res2530_h7smear = new RooUnfoldResponse(14,0,14,14,0,14,"m_res2530_h7smear","");
+  RooUnfoldResponse *m_res3040_h7smear = new RooUnfoldResponse(14,0,14,14,0,14,"m_res3040_h7smear","");
+  RooUnfoldResponse *m_res4060_h7smear = new RooUnfoldResponse(14,0,14,14,0,14,"m_res4060_h7smear","");
+  
+  //1D mg responses for systematics: prior smearing
+  RooUnfoldResponse *mg_res1520_nom = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res1520_nom","");
+  RooUnfoldResponse *mg_res2025_nom = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res2025_nom","");
+  RooUnfoldResponse *mg_res2530_nom = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res2530_nom","");
+  RooUnfoldResponse *mg_res3040_nom = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res3040_nom","");
+  RooUnfoldResponse *mg_res4060_nom = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res4060_nom","");
+  RooUnfoldResponse *mg_res1520_p8smear = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res1520_p8smear","");
+  RooUnfoldResponse *mg_res2025_p8smear = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res2025_p8smear","");
+  RooUnfoldResponse *mg_res2530_p8smear = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res2530_p8smear","");
+  RooUnfoldResponse *mg_res3040_p8smear = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res3040_p8smear","");
+  RooUnfoldResponse *mg_res4060_p8smear = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res4060_p8smear","");
+  RooUnfoldResponse *mg_res1520_h7smear = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res1520_h7smear","");
+  RooUnfoldResponse *mg_res2025_h7smear = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res2025_h7smear","");
+  RooUnfoldResponse *mg_res2530_h7smear = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res2530_h7smear","");
+  RooUnfoldResponse *mg_res3040_h7smear = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res3040_h7smear","");
+  RooUnfoldResponse *mg_res4060_h7smear = new RooUnfoldResponse(14,0,14,14,0,14,"mg_res4060_h7smear","");
+  
+  
   //responses for systematic uncertainty variation
   RooUnfoldResponse *m_pt_res_nom = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_res_nom"); //nominal
   RooUnfoldResponse *m_pt_res_TS = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_res_TS"); //tower scale
@@ -306,26 +334,34 @@ int main (int argc, const char ** argv) {
   RooUnfoldResponse *m_pt_res_HC50 = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_res_HC50"); //hadronic correction
   RooUnfoldResponse *m_pt_res_DS = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_res_DS"); //smear detector spectrum
   RooUnfoldResponse *m_pt_res_GS = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_res_GS"); //shift generator spectrum
-  RooUnfoldResponse *m_pt_res_MS = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_res_MS"); //shift generator mass spectrum
-    
+  //  RooUnfoldResponse *m_pt_res_MS = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_res_MS"); //shift generator mass spectrum
+  
   RooUnfoldResponse *mg_pt_res_nom = new RooUnfoldResponse(geMgvPt, pyMgvPt, "mg_pt_res_nom"); //nominal
   RooUnfoldResponse *mg_pt_res_TS = new RooUnfoldResponse(geMgvPt, pyMgvPt, "mg_pt_res_TS"); //tower scale
   RooUnfoldResponse *mg_pt_res_TU = new RooUnfoldResponse(geMgvPt, pyMgvPt, "mg_pt_res_TU"); //tracking uncertainty
   RooUnfoldResponse *mg_pt_res_HC50 = new RooUnfoldResponse(geMgvPt, pyMgvPt, "mg_pt_res_HC50"); //hadronic correction
   RooUnfoldResponse *mg_pt_res_DS = new RooUnfoldResponse(geMgvPt, pyMgvPt, "mg_pt_res_DS"); //smear detector spectrum
   RooUnfoldResponse *mg_pt_res_GS = new RooUnfoldResponse(geMgvPt, pyMgvPt, "mg_pt_res_GS"); //shift generator spectrum
-  RooUnfoldResponse *mg_pt_res_MS = new RooUnfoldResponse(geMgvPt, pyMgvPt, "mg_pt_res_MS"); //shift generator mass spectrum
-    
+  //RooUnfoldResponse *mg_pt_res_MS = new RooUnfoldResponse(geMgvPt, pyMgvPt, "mg_pt_res_MS"); //shift generator mass spectrum
+  
   //vectors of responses & hists for easy writing to file later
   std::vector<RooUnfoldResponse*> res = {pt_response,m_response,zg_response,rg_response,ptg_response,mg_response,m_pt_response,m_pt_response_counts,zg_pt_response,rg_pt_response,ptg_pt_response,mg_pt_response,mg_pt_response_counts,m_response1520,m_response2025,m_response2530,m_response3040,m_response4060};
     
   std::vector<RooUnfoldResponse*> sampleA_res = {sampleA_pt_response,sampleA_m_response,sampleA_zg_response,sampleA_rg_response,sampleA_ptg_response,sampleA_mg_response,sampleA_m_pt_response,sampleA_m_pt_response_counts,sampleA_zg_pt_response,sampleA_rg_pt_response,sampleA_ptg_pt_response,sampleA_mg_pt_response,sampleA_mg_pt_response_counts};
     
   std::vector<RooUnfoldResponse*> sampleB_res = {sampleB_pt_response,sampleB_m_response,sampleB_zg_response,sampleB_rg_response,sampleB_ptg_response,sampleB_mg_response,sampleB_m_pt_response,sampleB_m_pt_response_counts,sampleB_zg_pt_response,sampleB_rg_pt_response,sampleB_ptg_pt_response,sampleB_mg_pt_response,sampleB_mg_pt_response_counts};
+  
+  std::vector<RooUnfoldResponse*> syst_msmear = {m_res1520_nom,m_res2025_nom,m_res2530_nom,m_res3040_nom,m_res4060_nom,
+						 m_res1520_p8smear,m_res2025_p8smear,m_res2530_p8smear,m_res3040_p8smear,m_res4060_p8smear,
+						 m_res1520_h7smear,m_res2025_h7smear,m_res2530_h7smear,m_res3040_h7smear,m_res4060_h7smear};
+  std::vector<RooUnfoldResponse*> syst_mgsmear = {mg_res1520_nom,mg_res2025_nom,mg_res2530_nom,mg_res3040_nom,mg_res4060_nom,
+						 mg_res1520_p8smear,mg_res2025_p8smear,mg_res2530_p8smear,mg_res3040_p8smear,mg_res4060_p8smear,
+						 mg_res1520_h7smear,mg_res2025_h7smear,mg_res2530_h7smear,mg_res3040_h7smear,mg_res4060_h7smear};
+
     
-  std::vector<RooUnfoldResponse*> syst_res = {m_pt_res_nom,m_pt_res_TS,m_pt_res_TU,m_pt_res_HC50,m_pt_res_DS,m_pt_res_GS,m_pt_res_MS};
+  std::vector<RooUnfoldResponse*> syst_res = {m_pt_res_nom,m_pt_res_TS,m_pt_res_TU,m_pt_res_HC50,m_pt_res_DS,m_pt_res_GS};
     
-  std::vector<RooUnfoldResponse*> syst_res_g = {mg_pt_res_nom,mg_pt_res_TS,mg_pt_res_TU,mg_pt_res_HC50,mg_pt_res_DS,mg_pt_res_GS,mg_pt_res_MS};
+  std::vector<RooUnfoldResponse*> syst_res_g = {mg_pt_res_nom,mg_pt_res_TS,mg_pt_res_TU,mg_pt_res_HC50,mg_pt_res_DS,mg_pt_res_GS};
     
     
   std::vector<TH1D*> sampleA_h1Ds = {sampleA_pt_gen,sampleA_pt_det,sampleA_m_gen,sampleA_m_det,sampleA_mg_gen,sampleA_mg_det,sampleA_pt_gen_counts,sampleA_pt_det_counts,sampleA_m_gen_counts,sampleA_m_det_counts,sampleA_mg_gen_counts,sampleA_mg_det_counts};
@@ -965,7 +1001,10 @@ int main (int argc, const char ** argv) {
       m_pt_res_GS->Write(); mg_pt_res_GS->Write();
     }
     if (match && iSyst == 6) {
-      m_pt_res_MS->Write(); mg_pt_res_MS->Write();
+      for (int i = 0; i < syst_msmear.size(); ++ i) {
+	syst_msmear[i]->Write(); syst_mgsmear[i]->Write();
+      }
+      //      m_pt_res_MS->Write(); mg_pt_res_MS->Write();
     }
     
   }//systematic variation loop

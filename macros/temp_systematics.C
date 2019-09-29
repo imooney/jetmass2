@@ -273,7 +273,7 @@ void temp_systematics () {
     if (i == 0) {
       p->DrawLatexNDC(0.2,0.65, "pp 200 GeV run12 JP2");
       p->DrawLatexNDC(0.2,0.55, "anti-k_{T}, R = 0.4");
-      p->DrawLatexNDC(0.2,0.45, "Ch+Ne jets, |#eta| < 0.4");
+      p->DrawLatexNDC(0.2,0.45, "Ch+Ne jets, |#eta| < 0.6");
     }
     if (i == 1) {tenvs->Draw("same");}
   }
@@ -283,7 +283,7 @@ void temp_systematics () {
       cout << 100*env_HCs[1]->GetBinContent(i) << "% " << 100*reco_TSs[1]->GetBinContent(i) << "% " << 100*reco_TUs[1]->GetBinContent(i) << "% " << 100*env_uns[1]->GetBinContent(i) << "% " << 100*nets[1]->GetBinContent(i) << endl;
     }
   }
-  
+   
   // cenvs->SaveAs("~/jetmass/plots/systematics/systematic_envelopes_R04.pdf");
   
   //unfolded result with systematic errors!

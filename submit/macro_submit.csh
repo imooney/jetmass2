@@ -56,7 +56,7 @@ else if (${species} == 'AA') then
     echo 'Error: AA is not ready yet! Be patient!'
     exit
 else
-    if (${analysisTag} != 'bin_drop' && ${analysisTag} != 'stat_err_scaling' && ${analysisTag} != 'unfold') then
+    if (${analysisTag} != 'bin_drop' && ${analysisTag} != 'stat_err_scaling' && ${analysisTag} != 'unfold' && ${analysisTag} != 'closure') then
 	echo 'Error: unrecognized collision species!'
 	exit
     endif
@@ -67,7 +67,7 @@ set ExecPath = `pwd`
 set uscore = "_" #for easy concatenation of variables later
 set execute = "./macros/bin/${analysisTag}" #or 'root macros/bin/${analysisTag}.cxx+' on the command line for root compiling via ACLiC
 
-if (${analysisTag} == 'bin_drop' || ${analysisTag} == 'stat_err_scaling' || ${analysisTag} == 'unfold') then
+if (${analysisTag} == 'bin_drop' || ${analysisTag} == 'stat_err_scaling' || ${analysisTag} == 'unfold' || ${analysisTag} == 'closure') then
 
     echo 'radius is '$afterburner_radius'!'
     if ($groom_flag == 'g') then

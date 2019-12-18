@@ -1,0 +1,10 @@
+/tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum0.root
+/tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum1.root
+/tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum2.root
+/tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum3.root
+/tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum4.root
+/tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum5.root
+/tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum6.root
+/tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum7.root
+/tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum8.root
+/tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum9.root

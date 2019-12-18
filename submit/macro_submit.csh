@@ -7,8 +7,8 @@
 
 # command line arguments
     #1: the executable; this also doubles as the "analysisTag", i.e. the generic action taken on the files, e.g. "unfolded", or "closure"
-    #2: the input type, e.g. 'data', 'QA', 'sim'
-    #3: the collision species: pp, pA, or AA
+    #2: the input type, e.g. 'data', 'QA', 'sim', 'toy_embedding', ...
+    #3: the collision species: pp, pA, or AA; also pppA to denote pp embedded in pA
     #4: the jet radius. Options: any number > 0 & <= 9.9; passed in without the decimal, e.g. "06" for 0.6.        
     #5: an analysis-specific wildcard (not required)
 
@@ -45,8 +45,8 @@ echo 'Species is '${species}'!'
 #setting input files based on command-line arguments
 if (${species} == 'pp') then 
     if (${inputType} == 'data') then
-	#set base = out/${inputType}/pp12Pico_pass #this is for HT! Comment this out and uncomment the next line for ppJP2 instead!
-	set base = out/${inputType}/sum #Be careful! This also catches charged jets in its net, if the files exist. But later, using $tag makes it work fine.
+	set base = out/${inputType}/pp12Pico_pass #this is for HT! Comment this out and uncomment the next line for ppJP2 instead!
+	#set base = out/${inputType}/sum #Be careful! This also catches charged jets in its net, if the files exist. But later, using $tag makes it work fine.
     else if (${inputType} == 'sim') then
 	set base = out/${inputType}/Cleanpp12Pico
     endif
@@ -55,6 +55,8 @@ else if (${species} == 'pA') then
 else if (${species} == 'AA') then
     echo 'Error: AA is not ready yet! Be patient!'
     exit
+else if (${species} == 'pppA') then
+    set base = out/${inputType}/ppJP2embedpAuBBCMB_
 else
     if (${analysisTag} != 'bin_drop' && ${analysisTag} != 'stat_err_scaling' && ${analysisTag} != 'unfold' && ${analysisTag} != 'closure') then
 	echo 'Error: unrecognized collision species!'
@@ -97,7 +99,7 @@ else #anything but procedures which don't need any args or input/output help
 	mkdir -p log/${inputType}/${analysisTag} #making log directory
     endif
 
-    foreach input ( ${base}*_${tag}_R${radius}* )
+    foreach input ( ${base}${tag}_R${radius}* ) #pAuHT2_${tag}_R${radius}* ) #this is specifically for pAuHT2, remove once you've run it! Or pass in the trigger so you don't have to keep doing this
     
 	set OutBase = `basename $input | sed 's/.root//g'` #this removes the filetype so we can append to the filename
 	set OutBase = `basename $OutBase | sed 's:out/::g'` #this removes the out/ from the input since it is unnecessary

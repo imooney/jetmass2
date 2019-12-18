@@ -144,20 +144,28 @@ int main (int argc, const char** argv) {
   const string data_file = "data_hists_ppJP2";
   
   //input files
-  TFile *fres = new TFile((match_path+match_file+radius+"_bindropped.root").c_str(),"READ");
+  TFile *fres = new TFile((match_path+match_file+radius+"_test_bindropped.root").c_str(),"READ");
   TFile *fdat = new TFile((data_path+data_file+radius+"_bindropped.root").c_str(),"READ");
   cout << "A" << endl;
   //systematics responses (rnom is nominal response for unfolding)
-  RooUnfoldResponse *rnom = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_nom").c_str()); //!
-  RooUnfoldResponse *rTS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_TS").c_str()); //!
-  RooUnfoldResponse *rTU = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_TU").c_str()); //!
-  RooUnfoldResponse *rHC50 = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_HC50").c_str()); //!
-  RooUnfoldResponse *rDS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_DS").c_str()); //!
-  RooUnfoldResponse *rGS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_GS").c_str()); //!
-  RooUnfoldResponse *rMS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_MS").c_str()); //!
+  RooUnfoldResponse *rnom = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_nom").c_str());
+  RooUnfoldResponse *rTS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_TS").c_str()); 
+  RooUnfoldResponse *rTU = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_TU").c_str()); 
+  RooUnfoldResponse *rHC50 = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_HC50").c_str()); 
+  RooUnfoldResponse *rDS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_DS").c_str()); 
+  RooUnfoldResponse *rGS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_GS").c_str()); 
+  //  RooUnfoldResponse *rMS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_MS").c_str());
+  RooUnfoldResponse *rMS_2030_nom = (RooUnfoldResponse*) fres->Get((hname+"_res2030_nom").c_str());
+  RooUnfoldResponse *rMS_2030_h7smear = (RooUnfoldResponse*) fres->Get((hname+"_res2030_h7smear").c_str());
+  RooUnfoldResponse *rMS_2030_p8smear = (RooUnfoldResponse*) fres->Get((hname+"_res2030_p8smear").c_str());
+  RooUnfoldResponse *rMS_3045_nom = (RooUnfoldResponse*) fres->Get((hname+"_res3045_nom").c_str());
+  RooUnfoldResponse *rMS_3045_h7smear = (RooUnfoldResponse*) fres->Get((hname+"_res3045_h7smear").c_str());
+  RooUnfoldResponse *rMS_3045_p8smear = (RooUnfoldResponse*) fres->Get((hname+"_res3045_p8smear").c_str());
   
   //data spectrum
   TH2D* m_pt_dat = (TH2D*) fdat->Get((hname+"_v_pt").c_str());
+  TH1D* m_dat_2030 = (TH1D*) fdat->Get((hname+"_2030_d").c_str());
+  TH1D* m_dat_3045 = (TH1D*) fdat->Get((hname+"_3045_d").c_str());
   
   cout << "B" << endl;
   
@@ -169,7 +177,16 @@ int main (int argc, const char** argv) {
   RooUnfoldBayes *unfold_HC50 = new RooUnfoldBayes(rHC50, m_pt_dat, 4, false, "unfold_HC50","");
   RooUnfoldBayes *unfold_DS = new RooUnfoldBayes(rDS, m_pt_dat, 4, false, "unfold_DS","");
   RooUnfoldBayes *unfold_GS = new RooUnfoldBayes(rGS, m_pt_dat, 4, false, "unfold_GS","");
-  RooUnfoldBayes *unfold_MS = new RooUnfoldBayes(rMS, m_pt_dat, 4, false, "unfold_MS","");
+  //RooUnfoldBayes *unfold_MS = new RooUnfoldBayes(rMS, m_pt_dat, 4, false, "unfold_MS","");
+  RooUnfoldBayes *unfold_nom1D_2030 = new RooUnfoldBayes(rMS_2030_nom,m_dat_2030,4,false,"unfold_nom1D_2030","");
+  RooUnfoldBayes *unfold_nom1D_3045 = new RooUnfoldBayes(rMS_3045_nom,m_dat_3045,4,false,"unfold_nom1D_3045","");
+  RooUnfoldBayes *unfold_h7smear1D_2030 = new RooUnfoldBayes(rMS_2030_h7smear,m_dat_2030,4,false,"unfold_h7smear1D_2030","");
+  RooUnfoldBayes *unfold_h7smear1D_3045 = new RooUnfoldBayes(rMS_3045_h7smear,m_dat_3045,4,false,"unfold_h7smear1D_3045","");
+  RooUnfoldBayes *unfold_p8smear1D_2030 = new RooUnfoldBayes(rMS_2030_p8smear,m_dat_2030,4,false,"unfold_p8smear1D_2030","");
+  RooUnfoldBayes *unfold_p8smear1D_3045 = new RooUnfoldBayes(rMS_3045_p8smear,m_dat_3045,4,false,"unfold_p8smear1D_3045","");
+
+
+
   cout << "C" << endl;
   TH2D *reco_nom = (TH2D*) unfold_nom->Hreco((RooUnfold::ErrorTreatment) 3);
   TH2D *reco_IP2 = (TH2D*) unfold_IP2->Hreco((RooUnfold::ErrorTreatment) 3);
@@ -179,16 +196,23 @@ int main (int argc, const char** argv) {
   TH2D *reco_HC50 = (TH2D*) unfold_HC50->Hreco((RooUnfold::ErrorTreatment) 3);
   TH2D *reco_DS = (TH2D*) unfold_DS->Hreco((RooUnfold::ErrorTreatment) 3);
   TH2D *reco_GS = (TH2D*) unfold_GS->Hreco((RooUnfold::ErrorTreatment) 3);
-  TH2D *reco_MS = (TH2D*) unfold_MS->Hreco((RooUnfold::ErrorTreatment) 3);
+  //TH2D *reco_MS = (TH2D*) unfold_MS->Hreco((RooUnfold::ErrorTreatment) 3);
+  TH1D *reco_nom1D_2030 = (TH1D*) unfold_nom1D_2030->Hreco((RooUnfold::ErrorTreatment) 3);
+  TH1D *reco_nom1D_3045 = (TH1D*) unfold_nom1D_3045->Hreco((RooUnfold::ErrorTreatment) 3);
+  TH1D *reco_h7smear1D_2030 = (TH1D*) unfold_h7smear1D_2030->Hreco((RooUnfold::ErrorTreatment) 3);
+  TH1D *reco_h7smear1D_3045 = (TH1D*) unfold_h7smear1D_3045->Hreco((RooUnfold::ErrorTreatment) 3);
+  TH1D *reco_p8smear1D_2030 = (TH1D*) unfold_p8smear1D_2030->Hreco((RooUnfold::ErrorTreatment) 3);
+  TH1D *reco_p8smear1D_3045 = (TH1D*) unfold_p8smear1D_3045->Hreco((RooUnfold::ErrorTreatment) 3);
 
+  
   //These ranges are okay now that Projection2D has the plotting bug removed.
-  const int nBins = 3;
+  const int nBins = 2; //change back to 3 if you show a different range
   const int nBins_m = 14;
   TAxis* reco_axis = reco_nom->GetYaxis(); TAxis* det_axis = m_pt_dat->GetYaxis();
   
-  double ranges[nBins + 1] = {(double) reco_axis->FindBin(20), (double) reco_axis->FindBin(25), (double) reco_axis->FindBin(30), (double) reco_axis->FindBin(40)};
-  double ranges_d[nBins + 1] = {(double) det_axis->FindBin(20), (double) det_axis->FindBin(25), (double) det_axis->FindBin(30), (double) det_axis->FindBin(40)};
-  string pts[nBins + 1] = {"20","25","30","40"};
+  double ranges[nBins + 1] = {(double) reco_axis->FindBin(20),/* (double) reco_axis->FindBin(25),*/ (double) reco_axis->FindBin(30), (double) reco_axis->FindBin(45)/*(40)*/};
+  double ranges_d[nBins + 1] = {(double) det_axis->FindBin(20),/* (double) det_axis->FindBin(25),*/ (double) det_axis->FindBin(30), (double) det_axis->FindBin(45)/*(40)*/};
+  string pts[nBins + 1] = {"20"/*,"25",*/"30","45"/*"40"*/};
   
   vector<TH1D*> reco_noms = Projection2D(reco_nom,nBins,ranges,"x");
   vector<TH1D*> reco_IP2s = Projection2D(reco_IP2,nBins,ranges,"x");
@@ -198,7 +222,7 @@ int main (int argc, const char** argv) {
   vector<TH1D*> reco_HC50s = Projection2D(reco_HC50,nBins,ranges,"x");
   vector<TH1D*> reco_DSs = Projection2D(reco_DS,nBins,ranges,"x");
   vector<TH1D*> reco_GSs = Projection2D(reco_GS,nBins,ranges,"x");
-  vector<TH1D*> reco_MSs = Projection2D(reco_MS,nBins,ranges,"x");
+  //vector<TH1D*> reco_MSs = Projection2D(reco_MS,nBins,ranges,"x");
 
   vector<TH1D*> reco_noms_copy;
   vector<TH1D*> reco_IP2s_copy;
@@ -208,7 +232,7 @@ int main (int argc, const char** argv) {
   vector<TH1D*> reco_HC50s_copy;
   vector<TH1D*> reco_DSs_copy;
   vector<TH1D*> reco_GSs_copy;
-  vector<TH1D*> reco_MSs_copy;
+  //vector<TH1D*> reco_MSs_copy;
 
   
   for (int i = 0; i < nBins; ++ i) {
@@ -220,7 +244,7 @@ int main (int argc, const char** argv) {
     reco_HC50s_copy.push_back((TH1D*) reco_HC50s[i]->Clone(("HC50_"+to_string(i)).c_str()));
     reco_DSs_copy.push_back((TH1D*) reco_DSs[i]->Clone(("DS_"+to_string(i)).c_str()));
     reco_GSs_copy.push_back((TH1D*) reco_GSs[i]->Clone(("GS_"+to_string(i)).c_str()));
-    reco_MSs_copy.push_back((TH1D*) reco_MSs[i]->Clone(("MS_"+to_string(i)).c_str()));
+    //reco_MSs_copy.push_back((TH1D*) reco_MSs[i]->Clone(("MS_"+to_string(i)).c_str()));
 
   }
 
@@ -233,7 +257,7 @@ int main (int argc, const char** argv) {
     reco_HC50s[i]->Scale(1/(double)reco_HC50s[i]->Integral());
     reco_DSs[i]->Scale(1/(double)reco_DSs[i]->Integral());
     reco_GSs[i]->Scale(1/(double)reco_GSs[i]->Integral());
-    reco_MSs[i]->Scale(1/(double)reco_MSs[i]->Integral());
+    //reco_MSs[i]->Scale(1/(double)reco_MSs[i]->Integral());
     
     reco_IP2s[i]->Divide(reco_noms[i]);
     reco_IP6s[i]->Divide(reco_noms[i]);
@@ -242,11 +266,43 @@ int main (int argc, const char** argv) {
     reco_HC50s[i]->Divide(reco_noms[i]);
     reco_DSs[i]->Divide(reco_noms[i]);
     reco_GSs[i]->Divide(reco_noms[i]);
-    reco_MSs[i]->Divide(reco_noms[i]);
+    //reco_MSs[i]->Divide(reco_noms[i]);
+  }
+  
+  //1D mass smearing systematic ratio and bookkeeping
+  
+  reco_nom1D_2030->Scale(1/(double)reco_nom1D_2030->Integral());
+  reco_nom1D_3045->Scale(1/(double)reco_nom1D_3045->Integral());
+  reco_h7smear1D_2030->Scale(1/(double)reco_h7smear1D_2030->Integral());
+  reco_h7smear1D_3045->Scale(1/(double)reco_h7smear1D_3045->Integral());
+  reco_p8smear1D_2030->Scale(1/(double)reco_p8smear1D_2030->Integral());
+  reco_p8smear1D_3045->Scale(1/(double)reco_p8smear1D_3045->Integral());
+
+  reco_h7smear1D_2030->Divide(reco_nom1D_2030);
+  reco_p8smear1D_2030->Divide(reco_nom1D_2030);
+  reco_h7smear1D_3045->Divide(reco_nom1D_3045);
+  reco_p8smear1D_3045->Divide(reco_nom1D_3045);
+
+  Double_t stats[5] ={0,0,0,0,0};
+  
+  reco_h7smear1D_2030->PutStats(stats);
+  reco_p8smear1D_2030->PutStats(stats);
+  reco_h7smear1D_3045->PutStats(stats);
+  reco_p8smear1D_3045->PutStats(stats);
+
+  reco_h7smear1D_2030->Sumw2(0);
+  reco_p8smear1D_2030->Sumw2(0);
+  reco_h7smear1D_3045->Sumw2(0);
+  reco_p8smear1D_3045->Sumw2(0);
+  
+  for (int j = 1; j <= nBins_m; ++ j) {
+    reco_h7smear1D_2030->SetBinContent(j,fabs(reco_h7smear1D_2030->GetBinContent(j) - 1));
+    reco_p8smear1D_2030->SetBinContent(j,fabs(reco_p8smear1D_2030->GetBinContent(j) - 1));
+    reco_h7smear1D_3045->SetBinContent(j,fabs(reco_h7smear1D_3045->GetBinContent(j) - 1));
+    reco_p8smear1D_3045->SetBinContent(j,fabs(reco_p8smear1D_3045->GetBinContent(j) - 1));
   }
   
   for (int i = 0; i < nBins; ++ i) {
-    Double_t stats[5] = {0,0,0,0,0};
     reco_IP2s[i]->PutStats(stats);
     reco_IP6s[i]->PutStats(stats);
     reco_TSs[i]->PutStats(stats);
@@ -254,8 +310,8 @@ int main (int argc, const char** argv) {
     reco_HC50s[i]->PutStats(stats);
     reco_DSs[i]->PutStats(stats);
     reco_GSs[i]->PutStats(stats);
-    reco_MSs[i]->PutStats(stats);
-
+    //reco_MSs[i]->PutStats(stats);
+    
     reco_IP2s[i]->Sumw2(0);
     reco_IP6s[i]->Sumw2(0);
     reco_TSs[i]->Sumw2(0);
@@ -263,9 +319,9 @@ int main (int argc, const char** argv) {
     reco_HC50s[i]->Sumw2(0);
     reco_DSs[i]->Sumw2(0);
     reco_GSs[i]->Sumw2(0);
-    reco_MSs[i]->Sumw2(0);
-
-  
+    //reco_MSs[i]->Sumw2(0);
+    
+    
     for (int j = 1; j <= nBins_m; ++ j) {
       //turning the ratio into a percentage.
       reco_IP2s[i]->SetBinContent(j,fabs(reco_IP2s[i]->GetBinContent(j) - 1));
@@ -275,7 +331,7 @@ int main (int argc, const char** argv) {
       reco_HC50s[i]->SetBinContent(j,fabs(reco_HC50s[i]->GetBinContent(j) - 1));
       reco_DSs[i]->SetBinContent(j,fabs(reco_DSs[i]->GetBinContent(j) - 1));
       reco_GSs[i]->SetBinContent(j,fabs(reco_GSs[i]->GetBinContent(j) - 1));
-      reco_MSs[i]->SetBinContent(j,fabs(reco_MSs[i]->GetBinContent(j) - 1));
+      //reco_MSs[i]->SetBinContent(j,fabs(reco_MSs[i]->GetBinContent(j) - 1));
     }
     
   }
@@ -297,10 +353,18 @@ int main (int argc, const char** argv) {
     reco_DSs[i]->SetFillColor(8); reco_DSs[i]->SetFillStyle(3944);
     Prettify1DwLineStyle(reco_GSs[i],9, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
     reco_GSs[i]->SetFillColor(9); reco_GSs[i]->SetFillStyle(3544);
-    Prettify1DwLineStyle(reco_MSs[i],11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
-    reco_MSs[i]->SetFillColor(11); reco_MSs[i]->SetFillStyle(3690);
-
+    //  Prettify1DwLineStyle(reco_MSs[i],11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
+    //reco_MSs[i]->SetFillColor(11); reco_MSs[i]->SetFillStyle(3690);
   }
+  Prettify1DwLineStyle(reco_h7smear1D_2030, 11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
+  reco_h7smear1D_2030->SetFillColor(11); reco_h7smear1D_2030->SetFillStyle(3690);
+  Prettify1DwLineStyle(reco_h7smear1D_3045, 11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
+  reco_h7smear1D_3045->SetFillColor(11); reco_h7smear1D_3045->SetFillStyle(3690);
+  Prettify1DwLineStyle(reco_p8smear1D_2030, 11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
+  reco_p8smear1D_2030->SetFillColor(11); reco_p8smear1D_2030->SetFillStyle(3444);
+  Prettify1DwLineStyle(reco_p8smear1D_3045, 11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
+  reco_p8smear1D_3045->SetFillColor(11); reco_p8smear1D_3045->SetFillStyle(3444);
+  
 
   //taking maximum envelopes!
   TH2D* env_HC = new TH2D("env_HC","",14,0,14,15,5,80);
@@ -323,9 +387,14 @@ int main (int argc, const char** argv) {
       set<double>::iterator hc = hc_sort.end(); hc --;
       double hc_envelope = *hc;
       env_HCs[i]->SetBinContent(j, hc_envelope);
+      //a clunky way of doing this for both current ranges of 1D mass responses: 20-30, 30-45:
+      TH1D* reco_h7_1D = new TH1D("reco_h7_1D","",14,0,14);
+      TH1D* reco_p8_1D = new TH1D("reco_p8_1D","",14,0,14);
+      if (i == 0) {reco_h7_1D = reco_h7smear1D_2030; reco_p8_1D = reco_p8smear1D_2030;}
+      if (i == 1) {reco_h7_1D = reco_h7smear1D_3045; reco_p8_1D = reco_p8smear1D_3045;}
       //unfolding envelope - using an ordered set here to automatically get the largest value
-      double uns [5] = {reco_DSs[i]->GetBinContent(j), reco_GSs[i]->GetBinContent(j), reco_MSs[i]->GetBinContent(j), reco_IP2s[i]->GetBinContent(j), reco_IP6s[i]->GetBinContent(j)};
-      set<double> un_sort (uns, uns+5);
+      double uns [6] = {reco_DSs[i]->GetBinContent(j), reco_GSs[i]->GetBinContent(j), /*reco_MSs[i]->GetBinContent(j),*/ reco_h7_1D->GetBinContent(j), reco_p8_1D->GetBinContent(j), reco_IP2s[i]->GetBinContent(j), reco_IP6s[i]->GetBinContent(j)};
+      set<double> un_sort (uns, uns+6);
       set<double>::iterator un = un_sort.end(); un --;
       double un_envelope = *un;
       env_uns[i]->SetBinContent(j, un_envelope);
@@ -377,10 +446,10 @@ int main (int argc, const char** argv) {
       double scaling = -1;
       TAxis *scalex = scalefactors->GetXaxis();
       //will access the scalefactors histogram for pt values 20, 25, 30, 35, so if you change the ranges you show, change the FindBin calls, too.   
-      if (i == 0) {scaling = /*max(*/scalefactors->GetBinContent(scalex->FindBin(20)/*),scalefactors->GetBinContent(scalex->FindBin(25))*/);/*old: 1.122;*/} //these numbers are calculated using the bin content of the ratio of gen. matched spectrum to gen. inclusive (unmatched). See macros/stat_err_scaling.cxx.
-      if (i == 1) {scaling = scalefactors->GetBinContent(scalex->FindBin(25));/*old: 1.082;*/}
+      if (i == 0) {scaling = max(scalefactors->GetBinContent(scalex->FindBin(20)),scalefactors->GetBinContent(scalex->FindBin(25)));/*old: 1.122;*/} //these numbers are calculated using the bin content of the ratio of gen. matched spectrum to gen. inclusive (unmatched). See macros/stat_err_scaling.cxx.
+      //if (i == 1) {scaling = scalefactors->GetBinContent(scalex->FindBin(25));/*old: 1.082;*/}
       //function from algorithm.h is max(a,b). Can't take 3 arguments, so have to do max(max(a,b),c).
-      if (i == 1) {scaling = /*max(*/max(scalefactors->GetBinContent(scalex->FindBin(30)),scalefactors->GetBinContent(scalex->FindBin(35))/*),scalefactors->GetBinContent(scalex->FindBin(40))*/);/*old: 1.062;*/}
+      if (i == 1) {scaling = max(max(scalefactors->GetBinContent(scalex->FindBin(30)),scalefactors->GetBinContent(scalex->FindBin(35))),scalefactors->GetBinContent(scalex->FindBin(40)));/*old: 1.062;*/}
       double binerror = reco_noms_copy[i]->GetBinError(j);
       reco_noms_copy[i]->SetBinError(j,(double) binerror*scaling);
       cout << "bin " << j << " error: " << binerror << endl;
@@ -397,7 +466,7 @@ int main (int argc, const char** argv) {
     ftitle = "groomed_"+ftitle;
   }
 
-  TFile *fout = new TFile(("~/jetmass2/out/unfold/"+ftitle+radius+"_forpaper.root").c_str(),"RECREATE");
+  TFile *fout = new TFile(("~/jetmass2/out/unfold/"+ftitle+radius+"_test.root").c_str(),"RECREATE");
   fout->cd();
     
   for (int i = 0; i < nBins; ++ i) {
@@ -408,8 +477,12 @@ int main (int argc, const char** argv) {
     reco_HC50s[i]->Write();
     reco_DSs[i]->Write();
     reco_GSs[i]->Write();
-    reco_MSs[i]->Write();
-      
+    //reco_MSs[i]->Write();
+    reco_h7smear1D_2030->Write();
+    reco_h7smear1D_3045->Write();
+    reco_p8smear1D_2030->Write();
+    reco_p8smear1D_3045->Write();
+    
     env_HCs[i]->Write(); //systematic envelopes
     env_uns[i]->Write();
     nets[i]->Write();

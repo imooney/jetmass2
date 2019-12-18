@@ -60,9 +60,10 @@ namespace Analysis {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~triggerIDs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
   
   const int tppJP2 = 370621; //ppY12 JP2
-  const int tppHTa = 370521, tppHTb = 370522, tppHTc = 370531; //ppY12 BHT2*BBCMB, BHT2*BBCMB, BHT2
+  const int tppHT2a = 370521, tppHT2b = 370522, tppHT2c = 370531; //ppY12 BHT2*BBCMB, BHT2*BBCMB, BHT2
   const int tppVPDMB_nobsmd = 370011; //ppY12 VPDMB-nobsmd
-  const int tpAuJP2a = 500401, tpAuJP2b = 500411; //pAuY15 JP2
+  const int tpAuJP2a = 500401, tpAuJP2b = 500411; //pAuY15 JP2 //CAUTION USING THIS - ABNORMAL JP2 THRESHOLD FOR NEGATIVE RAPIDITY
+  const int tpAuHT2a = 500205, tpAuHT2b = 500215; //pAuY15 BHT2*BBCMB
   const int tpAuBBCMBa = 500008, tpAuBBCMBb = 500018; //pAuY15 BBCMB
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//

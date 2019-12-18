@@ -13,9 +13,152 @@
 using namespace std;
 
 //when running functions with arguments in an interactive root session, do e.g. root "plot_result(4, 0, 0)" - the quotation marks are necessary
+/*
+//this function plots a 1x1 plot of mass and groomed mass for a single pT range with a ratio
+void plot_result () {
+  gROOT->ForceStyle(); //forces use of ~/rootlogon.C's style settings
+
+  TCanvas *cgun = new TCanvas("cgun","cgun",800,500);
+  
+  //open files from which to pull curves                                                                                              
+  TFile *funfold = new TFile("~/jetmass2/out/unfold/unfolded_R04_forpaper.root","READ");
+  TFile *funfoldg = new TFile("~/jetmass2/out/unfold/groomed_unfolded_R04_forpaper.root","READ");
+  
+  //get histograms from the files
+  vector<TH1D*> recos_g = {(TH1D*) funfoldg->Get("nom_0"),(TH1D*) funfoldg->Get("nom_1"),(TH1D*) funfoldg->Get("nom_2")};
+  vector<TH1D*> w_systs_g = {(TH1D*) funfoldg->Get("w_systs_0"),(TH1D*) funfoldg->Get("w_systs_1"),(TH1D*) funfoldg->Get("w_systs_2")};
+  vector<TH1D*> reco_clones_g = {(TH1D*) recos_g[0]->Clone("nom_g_0"),(TH1D*) recos_g[1]->Clone("nom_g_1"),(TH1D*) recos_g[2]->Clone("nom_g_2")};
+  vector<TH1D*> w_syst_clones_g = {(TH1D*) w_systs_g[0]->Clone("w_systs_g_0"),(TH1D*) w_systs_g[1]->Clone("w_systs_g_1"),(TH1D*) w_systs_g[2]->Clone("w_systs_g_2")};
+  vector<TH1D*> recos = {(TH1D*) funfold->Get("nom_0"),(TH1D*) funfold->Get("nom_1"),(TH1D*) funfold->Get("nom_2")};
+  vector<TH1D*> w_systs = {(TH1D*) funfold->Get("w_systs_0"),(TH1D*) funfold->Get("w_systs_1"),(TH1D*) funfold->Get("w_systs_2")};  
+  //got all three hists, but only going to plot 1 (the middle pT range). Can change that everywhere below this line if I want a different pT range
+
+    
+  //for using a different style in the ratio than the histogram
+  TH1D* recos_clone = (TH1D*) recos[2]->Clone(("recos_clone"+to_string(2)).c_str());
+
+      
+  TH1D* dummy = new TH1D("dummy","",10,0,9.999);
+
+  //this will be the first "hist" drawn on the lower pad so needs to have correct axis properties
+  dummy->GetYaxis()->SetRangeUser(0,1.999);
+  
+  dummy->GetYaxis()->SetTitle("M / M_{g}");
+  dummy->GetYaxis()->SetTitleSize(0.15);
+  dummy->GetYaxis()->SetTitleOffset(0.26);
+  dummy->GetYaxis()->SetNdivisions(505);
+  dummy->GetYaxis()->SetLabelSize(0.13);
+  
+  dummy->GetXaxis()->SetTitle("M_{(g)} [GeV/c^{2}]");
+  dummy->GetXaxis()->SetTitleSize(0.15);
+  dummy->GetXaxis()->SetTitleOffset(0.8);
+  dummy->GetXaxis()->SetLabelSize(0.13);
+  dummy->GetXaxis()->SetNdivisions(505);
+  
+  //this will be the first hist drawn on the upper pad so needs to have correct axis properties
+  w_systs[2]->GetYaxis()->SetTitleOffset(0.55);
+  w_systs[2]->GetYaxis()->SetLabelSize(0.07);
+  
+  Prettify1D(recos[2],kRed,kFullStar,2,kRed,"M [GeV/c^{2}]","1/N dN/dM",0,10,0,0.3);
+  Prettify1D(w_systs[2],kRed,kFullStar,0,kRed,"M [GeV/c^{2}]","1/N dN/dM_{(g)}",0,10,0.001,0.3);
+  w_systs[2]->SetFillColor(kRed - 10); w_systs[2]->SetFillStyle(1001);
+  Prettify1D(reco_clones_g[2],kBlue,kFullStar,2,kBlue,"M_{g} [GeV/c^{2}]","1/N dN/dM_{g}",0,10,0,0.3);
+  Prettify1D(w_syst_clones_g[2],kBlue,kFullStar,0,kBlue,"M_{g} [GeV/c^{2}]","1/N dN/dM_{g}",0,10,0.001,0.3);
+  w_syst_clones_g[2]->SetFillColor(kBlue - 10); w_syst_clones_g[2]->SetFillStyle(1001);
+  
+  Prettify1DwLineStyle(recos_clone, kViolet, kSolid,2,"M_{(g)} [GeV/c^{2}]","M / M_{g}",0,10,0,0.3);
+  recos_clone->Scale(1/(double)recos_clone->Integral());
+  
+  w_systs[2]->Sumw2();
+  w_syst_clones_g[2]->Sumw2();
+  recos[2]->Sumw2();
+  recos_clone->Sumw2();
+  reco_clones_g[2]->Sumw2();
+  
+  TH1D* ratio_systematics = (TH1D*) w_systs[2]->Clone(("ratio_systs"+to_string(2)).c_str());
+  //TH1D* ratio_systematics_g = (TH1D*) w_syst_clones_g[2]->Clone(("ratio_systs_g"+to_string(2)).c_str());
+  TH1D* ratio_bars;
+  
+  ratio_systematics->Divide(w_syst_clones_g[2]);//recos[2]);
+  recos_clone->Divide(reco_clones_g[2]);
+  ratio_bars = (TH1D*) recos_clone->Clone("ratio_bars");
+  ratio_bars->SetMarkerColor(kViolet); ratio_bars->SetLineColor(kViolet);
+  
+  recos_clone->Sumw2(0);
+  //ratio_systematics_g->Divide(reco_clones_g[2]);
+  
+  //uncertainty propagation on division [root does this automatically if both histograms have sumw2() called prior to division. I checked, it's the same as my way. Yay.
+  //for (int i = 1; i <= ratio_systematics->GetNbinsX(); ++ i) {
+  // double rel_syst_un = w_systs[2]->GetBinError(i) / (double) w_systs[2]->GetBinContent(i);
+  //  double rel_syst_g = w_syst_clones_g[2]->GetBinError(i) / (double) w_syst_clones_g[2]->GetBinContent(i);
+  //  double quad_sum = rel_syst_un*rel_syst_un + rel_syst_g*rel_syst_g;
+  //  double rel_net_syst = sqrt(quad_sum);
+  //  double abs_net_syst = rel_net_syst*ratio_systematics->GetBinContent(i); //multiplying the fractional error by the value of the bin after division
+  //  ratio_systematics->SetBinError(i,abs_net_syst);
+  //}
+  
+  
+  ratio_systematics->GetYaxis()->SetRangeUser(0,2);
+  //ratio_systematics_g->GetYaxis()->SetRangeUser(0,2);
+  
+  ratio_systematics->SetFillColor(kViolet - 9);
+
+
+  TLegend *tleg = new TLegend(0.38,0.05,0.48,0.2); tleg->SetBorderSize(0);
+  TH1D* for_legend = (TH1D*) w_systs[2]->Clone("for_legend"); for_legend->SetMarkerSize(2);
+  TH1D* for_legend_g = (TH1D*) w_syst_clones_g[2]->Clone("for_legend_g"); for_legend_g->SetMarkerSize(2);
+  tleg->AddEntry(for_legend,"STAR jets","pf");
+  tleg->AddEntry(for_legend_g,"STAR SD jets","pf");
+    
+  TLatex *ttitle = new TLatex(); TLatex *slice = new TLatex();
+  ttitle->SetTextSize(0.07); slice->SetTextSize(0.07);
+
+  
+  TLine *one = new TLine(0,1,10,1); one->SetLineStyle(kDashed);
+  
+  TPad *padup = new TPad(("padup"+to_string(2)).c_str(),("padup"+to_string(2)).c_str(),0,0.4,1,1.0);
+  padup->SetBottomMargin(0);
+  padup->SetTopMargin(0.1);
+  //padup->SetLeftMargin(0);
+  //padup->SetRightMargin(0);
+  padup->Draw();
+  padup->cd();
+  w_systs[2]->Draw("E3same");
+  recos[2]->Draw("same");
+  w_syst_clones_g[2]->Draw("E3same");
+  reco_clones_g[2]->Draw("same");
+  tleg->Draw("same");
+  
+  ttitle->DrawLatex(0.5,0.27, "pp 200 GeV run12 JP2");
+  ttitle->DrawLatex(0.5,0.25, "anti-k_{T} R = 0.4, |#eta| < 1 - R");
+  ttitle->DrawLatex(5,0.27,"SoftDrop z_{cut} = 0.1, #beta = 0");
+  slice->DrawLatex(5.8,0.22, "30 < p_{T} < 40 GeV/c");
+  
+  cgun->cd();
+  TPad *paddown = new TPad(("paddown"+to_string(2)).c_str(),("paddown"+to_string(2)).c_str(),0,0.05,1,0.4);
+  paddown->SetTopMargin(0);
+  paddown->SetBottomMargin(0.3);
+  //paddown->SetRightMargin(0);
+  //paddown->SetLeftMargin(0);
+  //paddown->SetLeftMargin(0.2);
+  paddown->Draw();
+  paddown->cd();
+  dummy->Draw();
+  ratio_systematics->Draw("E3same");
+  recos_clone->Draw("same");
+  ratio_bars->Draw("E1same");
+  //ratio_systematics_g->Draw("E3same");
+  
+  one->Draw("same");
+
+  cgun->SaveAs("~/jetmass2/plots/pp_paper/singlepT_and_R_mass_groomed_v_ungroomed.pdf");
+  
+  return;
+} 
+*/
 
 //this function plots a 1x3 plot of mass as a function of pT, but with ratios of MC to data
-TH1D* plot_result(int radius, bool groom, int dummy) {
+vector<TH1D*> plot_result(int radius, bool groom, int dummy) {
   gROOT->ForceStyle(); //forces use of ~/rootlogon.C's style settings 
   
   string radstring = to_string(radius);
@@ -280,7 +423,7 @@ TH1D* plot_result(int radius, bool groom, int dummy) {
   }
   
 
-  cws->SaveAs(("~/jetmass2/plots/pp_paper/"+fstart+"jet_mass_3panel_w_ratios_nominalpythia.pdf").c_str());
+  //  cws->SaveAs(("~/jetmass2/plots/pp_paper/"+fstart+"jet_mass_3panel_w_ratios_nominalpythia.pdf").c_str());
 
   //MEAN v. pT:
 
@@ -299,6 +442,9 @@ TH1D* plot_result(int radius, bool groom, int dummy) {
   for (int i = 0; i < nCols; ++ i) {
     reco_m->SetBinContent(i+1, w_systs[i]->GetMean());
     reco_m->SetBinError(i+1, w_systs[i]->GetMeanError());
+
+    reco_m_copy->SetBinContent(i+1, recos[i]->GetMean());
+    reco_m_copy->SetBinError(i+1, recos[i]->GetMeanError());
     
     p6_m->SetBinContent(i+1, p6_clones[i]->GetMean());
     p6_m->SetBinError(i+1, p6_clones[i]->GetMeanError());
@@ -311,22 +457,23 @@ TH1D* plot_result(int radius, bool groom, int dummy) {
 
   }
   
-  reco_m_copy = (TH1D*) reco_m->Clone("reco_m_copy");
-  for (int i = 0; i < nCols; ++ i) {
-    reco_m_copy->SetBinError(i,0);
-  }
+  //reco_m_copy = (TH1D*) reco_m->Clone("reco_m_copy");
+  //for (int i = 0; i < nCols; ++ i) {
+    //    reco_m_copy->SetBinError(i,0);
+  //}
 
+  reco_m->Sumw2();
   reco_m_copy->Sumw2();
   p6_m->Sumw2();
   p8_m->Sumw2();
   h7_m->Sumw2();
   
-  Prettify1D(reco_m_copy,kRed,kFullStar,2.5,kRed,"p_{T} [GeV/c]",("<"+htitle+">"+" [GeV/c^{2}]").c_str(),20,40,0,10);
-  Prettify1D(reco_m,kRed,kFullStar,0,kRed,"p_{T} [GeV/c]",("<"+htitle+">"+" [GeV/c^{2}]").c_str(),20,40,0,10);
+  Prettify1D(reco_m_copy,kRed,kFullStar,2.5,kRed,"p_{T} [GeV/c]",("\\langle \\text{"+htitle+"}\\rangle"+" \\text{ [GeV}/c^{2}\\text{]}").c_str(),20,40,0,10);
+  Prettify1D(reco_m,kRed,kFullStar,0,kRed,"p_{T} [GeV/c]",/*("\\langle \\text{"+htitle+"}\\rangle"+" \\text{ [GeV}/c^{2}\\text{]}").c_str()*/"\\langle \\text{M}_{(\\text{g})}\\rangle \\text{ [GeV}/c^{2}\\text{]}",20,40,0,10);
   reco_m->SetFillColor(kRed - 10); reco_m->SetFillStyle(1001);
-  Prettify1D(p6_m, kBlue, kOpenSquare,2,kBlue,"p_{T} [GeV/c]",("<"+htitle+">"+" [GeV/c^{2}]").c_str(),20,40,0,10);
-  Prettify1D(p8_m,kBlack,kFullCircle,2,kBlack,"p_{T} [GeV/c]",("<"+htitle+">"+" [GeV/c^{2}]").c_str(),20,40,0,10);
-  Prettify1D(h7_m,kMagenta,kOpenCircle,2,kMagenta,"p_{T} [GeV/c]",("<"+htitle+">"+" [GeV/c^{2}]").c_str(),20,40,0,10);
+  Prettify1D(p6_m, kBlue, kOpenSquare,2,kBlue,"p_{T} [GeV/c]",("\\langle \\text{"+htitle+"}\\rangle"+" \\text{ [GeV}/c^{2}\\text{]}").c_str(),20,40,0,10);
+  Prettify1D(p8_m,kBlack,kFullCircle,2,kBlack,"p_{T} [GeV/c]",("\\langle \\text{"+htitle+"}\\rangle"+" \\text{ [GeV}/c^{2}\\text{]}").c_str(),20,40,0,10);
+  Prettify1D(h7_m,kMagenta,kOpenCircle,2,kMagenta,"p_{T} [GeV/c]",("\\langle \\text{"+htitle+"}\\rangle"+" \\text{ [GeV}/c^{2}\\text{]}").c_str(),20,40,0,10);
   
   gStyle->SetErrorX();
 
@@ -345,6 +492,7 @@ TH1D* plot_result(int radius, bool groom, int dummy) {
   
   reco_m->Draw("E2");
   reco_m_copy->Draw("same");
+  cout << reco_m_copy->GetBinError(1) << " " << reco_m_copy->GetBinError(2) << " " << reco_m_copy->GetBinError(3) << endl;
   p6_m->Draw("same");
   p8_m->Draw("same");
   h7_m->Draw("same");
@@ -359,7 +507,10 @@ TH1D* plot_result(int radius, bool groom, int dummy) {
 
   //  cm->SaveAs(("~/jetmass2/plots/pp_paper/"+fstart+"mean_jet_mass.pdf").c_str());
   
-  return reco_m;
+  //syst, statist
+  vector<TH1D*> means = {reco_m, reco_m_copy};
+  
+  return means;
 }
 
 
@@ -367,23 +518,22 @@ TH1D* plot_result(int radius, bool groom, int dummy) {
 void plot_result() {
   const int nCols = 3; //(number of pT bins)
   
-  TH1D* reco_m = (TH1D*) plot_result(4,0,0);
-  TH1D* reco_mg = (TH1D*) plot_result(4,1,0);
+  vector<TH1D*> recos_m = (vector<TH1D*>) plot_result(4,0,0);
+  vector<TH1D*> recos_mg = (vector<TH1D*>) plot_result(4,1,0);
+
+  TH1D* reco_m = (TH1D*) recos_m[0];
+  TH1D* reco_mg = (TH1D*) recos_mg[0];
   
   TCanvas *ccomp = new TCanvas("ccomp","ccomp",800,500);
   ccomp->cd();
 
-  TH1D* reco_m_copy = (TH1D*) reco_m->Clone("reco_m_copy");
-  TH1D* reco_mg_copy = (TH1D*) reco_mg->Clone("reco_mg_copy");
-  for (int i = 0; i < nCols; ++ i) {
-    reco_m_copy->SetBinError(i,0);
-    reco_mg_copy->SetBinError(i,0);
-  }
+  TH1D* reco_m_copy = (TH1D*) recos_m[1];//reco_m->Clone("reco_m_copy");
+  TH1D* reco_mg_copy = (TH1D*) recos_mg[1];//reco_mg->Clone("reco_mg_copy");
 
   reco_m_copy->Sumw2();
   reco_mg_copy->Sumw2();
-  Prettify1D(reco_m_copy,kRed,kFullStar,2.5,kRed,"p_{T} [GeV/c]","<M> [GeV/c^{2}]",20,40,3,6);
-  Prettify1D(reco_mg_copy,kBlue,kFullStar,2.5,kBlue,"p_{T} [GeV/c]","<M_{g}> [GeV/c^{2}]",20,40,3,6);
+  Prettify1D(reco_m_copy,kRed,kFullStar,2.5,kRed,"p_{T} [GeV/c]","\\langle \\text{M}_{(\\text{g})}\\rangle \\text{ [GeV}/c^{2}\\text{]}",20,40,3,6);
+  Prettify1D(reco_mg_copy,kBlue,kFullStar,2.5,kBlue,"p_{T} [GeV/c]",/*"\\langle \\text{M}_{\\text{g}}\\rangle \\text{ [GeV}/c^{2}\\text{]}"*/"",20,40,3,6);
   reco_m->GetYaxis()->SetRangeUser(3,6);
   reco_mg->GetYaxis()->SetRangeUser(3,6);
   reco_mg->SetMarkerColor(kBlue);
@@ -397,9 +547,10 @@ void plot_result() {
   raxis->SetLabelSize(0.05);
   raxis->SetTitleFont(42);
   raxis->SetTitleSize(0.05);
-  raxis->SetTitle("<M_{g}> [GeV/c^{2}]");
+  // raxis->SetTitle("\\langle \\text{M}_{\\text{g}}\\rangle \\text{ [GeV}/c^{2}\\text{]}");
 
   reco_m->GetXaxis()->SetNdivisions(504);
+  reco_m->GetXaxis()->SetTitleOffset(1);
   
   //legends
   TLatex *title = new TLatex();
@@ -413,16 +564,18 @@ void plot_result() {
   
   reco_m->Draw("E2");
   reco_m_copy->Draw("same");
-  reco_mg->Draw("E2sameY+");
+  reco_mg->Draw("E2same");
   reco_mg_copy->Draw("same");
   tm->Draw("same");
   raxis->Draw("same");
+  
+  cout << reco_m_copy->GetBinError(1) << " " << reco_m_copy->GetBinError(2) << " " << reco_m_copy->GetBinError(3) << endl;
   
   title->DrawLatex(21,5.75, "pp 200 GeV run12 JP2");
   title->DrawLatex(21,5.55, "anti-k_{T} jets, |#eta| < 1 - R");
   title->DrawLatex(21,5.35,"SoftDrop z_{cut} = 0.1, #beta = 0");
 
-  //  ccomp->SaveAs("~/jetmass2/plots/pp_paper/mean_jetmass_groom_v_ungroom.pdf");
+  //  ccomp->SaveAs("~/jetmass2/plots/pp_paper/mean_jetmass_groom_v_ungroom.gif");
   
   return;
 }
@@ -587,7 +740,7 @@ void plot_result(bool groom) {
     }
   }
 
-  cws->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"jet_mass_6panel.pdf").c_str());
+  //cws->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"jet_mass_6panel.pdf").c_str());
 
   return;
 }
@@ -724,7 +877,7 @@ void plot_result (int radius, bool groom) {
     if (i == 1) { tleg2->Draw("same");}
   }
 
-  cws->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"mass_result"+radstring+".pdf").c_str());
+  // cws->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"mass_result"+radstring+".pdf").c_str());
 
   return;
 }
@@ -862,7 +1015,7 @@ void plot_result (bool groom,int dummy1,int dummy2,int dummy3) {
     }
   }
   
-  cws->SaveAs(("~/jetmass2/plots/pp_paper/"+fstart+"mass_result_radscan.pdf").c_str());
+  // cws->SaveAs(("~/jetmass2/plots/pp_paper/"+fstart+"mass_result_radscan.pdf").c_str());
 
   return;
 }

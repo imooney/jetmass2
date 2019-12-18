@@ -3,7 +3,7 @@ inputIsPythia = TRUE
 #Sets the jet radius parameter for clustering
 jetRadius = 04
 #If hadronic final state, turns weak decays on or off; otherwise, partonic FS
-decayFlag = decayed
+decayFlag = undecayed
 
 
 #Isaac Mooney, WSU - July 2019

@@ -34,7 +34,7 @@ void rawdata(TFile *fdat, TFile *fsim ) {
   hdummyg->GetYaxis()->SetRangeUser(0,0.5);
   hdummy->GetXaxis()->SetTitle("M [GeV/c^{2}]");
   hdummyg->GetXaxis()->SetTitle("M_{g} [GeV/c^{2}]");
-  hdummy->GetYaxis()->SetTitle("1/N dN/dM");
+  hdummy->GetYaxis()->SetTitle("1/N dN/dM_{(g)}");
   hdummyg->GetYaxis()->SetTitle("1/N dN/dM_{g}");
   
   
@@ -61,7 +61,7 @@ void rawdata(TFile *fdat, TFile *fsim ) {
   t->SetBorderSize(0);
   t->AddEntry(hpy_1D,"PYTHIA-6","l");
   t->AddEntry(hge_1D,"PYTHIA-6+GEANT","p");
-  t->AddEntry(hdat_1D,"Raw STAR data","p");
+  t->AddEntry(hdat_1D,"STAR","p");
   t->SetTextSize(0.045);
   
   
@@ -87,7 +87,7 @@ void rawdata(TFile *fdat, TFile *fsim ) {
   lleft->DrawLatex(0.5,0.45,"pp #sqrt{s_{NN}} = 200 GeV, JP2");
   lleft->DrawLatex(0.5,0.41,"anti-k_{t} R = 0.4 jets, |#eta|<1-R_{jet}");
   pright->cd();
-  hdummyg->Draw("Y+");
+  hdummyg->Draw();
   hgeg_1D->Draw("same");
   hdatg_1D->Draw("same");
   hpyg_1D->Draw("Csame");
@@ -105,8 +105,8 @@ void rawdata(TFile *fdat, TFile *fsim ) {
 //plots the mass resolution for different pT ranges on the same panel
 void resolution(TFile* fp6match) {
     //get 2Ds
-  TH2D* hmres = (TH2D*) fp6match->Get("ratioMvGePt");
-  TH2D* hmresg = (TH2D*) fp6match->Get("ratioMgvGePt");
+  TH2D* hmres = (TH2D*) fp6match->Get("ratioMvGePt");//PyPt");
+  TH2D* hmresg = (TH2D*) fp6match->Get("ratioMgvGePt");//PyPt");
 
   //project onto 1Ds
   const int nCols = 3;
@@ -116,13 +116,13 @@ void resolution(TFile* fp6match) {
   vector<TH1D*> hmresg_1D = Projection2D(hmresg,nCols,ranges,"x");
 
   //define dummies and prettify them
-  TH1D* hdummy = new TH1D("hdummy","",20,0,1.999);
-  TH1D* hdummyg = new TH1D("hdummyg","",20,0.001,2);
-  hdummy->GetYaxis()->SetRangeUser(0.0001,0.25);
-  hdummyg->GetYaxis()->SetRangeUser(0.0001,0.25);
+  TH1D* hdummy = new TH1D("hdummy","",15,0,1.499);
+  TH1D* hdummyg = new TH1D("hdummyg","",15,0.001,1.5);
+  hdummy->GetYaxis()->SetRangeUser(0.0001,0.26);
+  hdummyg->GetYaxis()->SetRangeUser(0.0001,0.26);
   hdummy->GetXaxis()->SetTitle("r = M^{det} / M^{part}");
   hdummyg->GetXaxis()->SetTitle("r = M_{g}^{det} / M_{g}^{part}");
-  hdummy->GetYaxis()->SetTitle("1/N_{pair} dN/dr");
+  hdummy->GetYaxis()->SetTitle("1/N_{jets} dN/dr");
   //hdummyg->GetYaxis()->SetTitle("a.u.");
   
   for (int i = 0; i < nCols; ++ i) {
@@ -131,16 +131,16 @@ void resolution(TFile* fp6match) {
   }
   
   //prettify
-  Prettify1D(hmres_1D[0],kBlue,kOpenCircle,2,kBlue,"M^{det} / M^{part}","a.u.",0,2,0.0001,0.25);
-  Prettify1D(hmres_1D[1],kMagenta+1,kOpenSquare,2,kMagenta+1,"M^{det} / M^{part}","a.u.",0,2,0.0001,0.25);
-  Prettify1D(hmres_1D[2],kGreen+2, kOpenCross,2,kGreen+2, "M^{det} / M^{part}", "a.u.",0,2,0.0001,0.25);
-  Prettify1D(hmresg_1D[0],kBlue,kOpenCircle,2,kBlue,"M_{g}^{det} / M_{g}^{part}","a.u.",0,2,0.0001,0.25);
-  Prettify1D(hmresg_1D[1],kMagenta+1,kOpenSquare,2,kBlue,"M_{g}^{det} / M_{g}^{part}","a.u.",0,2,0.0001,0.25);
-  Prettify1D(hmresg_1D[2],kGreen+2, kOpenCross,2,kGreen+2, "M_{g}^{det} / M_{g}^{part}", "a.u.",0,2,0.0001,0.25); 
-
+  Prettify1D(hmres_1D[0],kBlack,kOpenCircle,2,kBlack,"M^{det} / M^{part}","a.u.",0,1.5,0.0001,0.25);
+  Prettify1D(hmres_1D[1],kRed,kOpenSquare,2,kRed,"M^{det} / M^{part}","a.u.",0,1.5,0.0001,0.25);
+  Prettify1D(hmres_1D[2],kBlue, kOpenCross,2,kBlue, "M^{det} / M^{part}", "a.u.",0,1.5,0.0001,0.25);
+  Prettify1D(hmresg_1D[0],kBlack,kOpenCircle,2,kBlack,"M_{g}^{det} / M_{g}^{part}","a.u.",0,1.5,0.0001,0.25);
+  Prettify1D(hmresg_1D[1],kRed,kOpenSquare,2,kRed,"M_{g}^{det} / M_{g}^{part}","a.u.",0,1.5,0.0001,0.25);
+  Prettify1D(hmresg_1D[2],kBlue, kOpenCross,2,kBlue, "M_{g}^{det} / M_{g}^{part}", "a.u.",0,1.5,0.0001,0.25); 
+ 
   hdummy->GetXaxis()->SetNdivisions(505);
   hdummyg->GetXaxis()->SetNdivisions(505);
-  hdummy->GetYaxis()->SetTitleOffset(0.7);
+  hdummy->GetYaxis()->SetTitleOffset(1);
   hdummyg->GetYaxis()->SetTitleOffset(1.1);
   hdummyg->GetXaxis()->SetTitleSize(0.07);
   hdummy->GetXaxis()->SetTitleSize(0.07);
@@ -149,18 +149,19 @@ void resolution(TFile* fp6match) {
   //legends
   TLatex *lleft = new TLatex();
   TLatex *lright = new TLatex();
-  TLegend *t = new TLegend(0.55,0.45,0.75,0.65);
+  TLatex *lsim = new TLatex(); lsim->SetTextColor(kRed);
+  TLegend *t = new TLegend(0.1,0.55,0.75,0.72);
   t->SetBorderSize(0);
   t->AddEntry(hmres_1D[0],"p_{T}^{det.} #in (20,25) GeV/c","p");
   t->AddEntry(hmres_1D[1],"p_{T}^{det.} #in (25,30) GeV/c","p");
   t->AddEntry(hmres_1D[2],"p_{T}^{det.} #in (30,40) GeV/c","p");
-  t->SetTextSize(0.035);
+  t->SetTextSize(0.048);
   
   
   //draw
   TCanvas *cres = new TCanvas("cres","cres",800,500);
-  cres->cd();
-  /*  TPad *pleft = new TPad("pleft","",0,0,0.5,1);
+  cres->cd();//
+  TPad *pleft = new TPad("pleft","",0,0,0.5,1);
   TPad *pright = new TPad("pright","",0.5,0,1,1);
   pleft->SetRightMargin(0);
   pleft->SetLeftMargin(0.2);
@@ -170,25 +171,26 @@ void resolution(TFile* fp6match) {
   pright->SetBottomMargin(0.17);
   pleft->Draw();
   pright->Draw();
-  pleft->cd();
-  */hdummy->Draw();//so the axes will be slightly shifted so 0/10 don't overlap
+  pleft->cd();//
+  hdummy->Draw();//so the axes will be slightly shifted so 0/10 don't overlap
   hmres_1D[0]->Draw("same");
   hmres_1D[1]->Draw("same");
   hmres_1D[2]->Draw("Csame");
-  lleft->DrawLatex(0.1,0.23,"pp #sqrt{s} = 200 GeV, 2012");
-  lleft->DrawLatex(0.1,0.21,"PYTHIA-6+GEANT");
-  lright->DrawLatex(0.1,0.19,"anti-k_{t} R = 0.4 jets, |#eta|<1-R_{jet}");
-  t->Draw("same");
-  /* pright->cd();
+  lleft->DrawLatex(0.1,0.24,"pp #sqrt{s} = 200 GeV");
+  lleft->DrawLatex(0.1,0.222,"PYTHIA-6+GEANT");
+  lright->DrawLatex(0.1,0.204,"anti-k_{T}, R = 0.4, |#eta_{jet}|<1-R");
+  pright->cd();
   hdummyg->Draw();
   hmresg_1D[0]->Draw("same");
   hmresg_1D[1]->Draw("same");
   hmresg_1D[2]->Draw("Csame");
-  lright->DrawLatex(0.1,0.23,"SoftDrop z_{cut} = 0.1, #beta = 0");
-  */
+  t->Draw("same"); //
+  lright->DrawLatex(0.1,0.222,"SoftDrop z_{cut} = 0.1, #beta = 0");
+  lsim->DrawLatex(0.1,0.24,"STAR Simulation");
+  //
   cout << "Finished drawing resolution plots" << endl;
   
-  cres->SaveAs("~/jetmass2/plots/DNP_talk/mass_resolution_v_detpt.pdf");
+  cres->SaveAs("~/jetmass2/plots/pp_paper/mass_resolution_v_detpt.pdf");
   
   return;
 }
@@ -326,10 +328,20 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
   RooUnfoldResponse *rHC50 = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_HC50").c_str());                                                          
   RooUnfoldResponse *rDS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_DS").c_str());                                                           
   RooUnfoldResponse *rGS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_GS").c_str());                                                           
-  RooUnfoldResponse *rMS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_MS").c_str());                                                                       
+  //RooUnfoldResponse *rMS = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_MS").c_str());                                                                     
 
+  RooUnfoldResponse *rMS_2030_nom = (RooUnfoldResponse*) fres->Get((hname+"_res2030_nom").c_str());
+  RooUnfoldResponse *rMS_2030_h7smear = (RooUnfoldResponse*) fres->Get((hname+"_res2030_h7smear").c_str());
+  RooUnfoldResponse *rMS_2030_p8smear = (RooUnfoldResponse*) fres->Get((hname+"_res2030_p8smear").c_str());
+  RooUnfoldResponse *rMS_3045_nom = (RooUnfoldResponse*) fres->Get((hname+"_res3045_nom").c_str());
+  RooUnfoldResponse *rMS_3045_h7smear = (RooUnfoldResponse*) fres->Get((hname+"_res3045_h7smear").c_str());
+  RooUnfoldResponse *rMS_3045_p8smear = (RooUnfoldResponse*) fres->Get((hname+"_res3045_p8smear").c_str());
+
+  //data spectrum                                             
   TH2D* m_pt_dat = (TH2D*) fdat->Get((hname+"_v_pt").c_str());
-
+  TH1D* m_dat_2030 = (TH1D*) fdat->Get((hname+"_2030_d").c_str());
+  TH1D* m_dat_3045 = (TH1D*) fdat->Get((hname+"_3045_d").c_str());
+  
   RooUnfoldBayes *unfold_nom = new RooUnfoldBayes(rnom, m_pt_dat, 4, false, "unfold_nom","");
   RooUnfoldBayes *unfold_IP2 = new RooUnfoldBayes(rnom, m_pt_dat, 2, false, "unfold_IP2","");
   RooUnfoldBayes *unfold_IP6 = new RooUnfoldBayes(rnom, m_pt_dat, 6, false, "unfold_IP6","");
@@ -338,8 +350,14 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
   RooUnfoldBayes *unfold_HC50 = new RooUnfoldBayes(rHC50, m_pt_dat, 4, false, "unfold_HC50","");
   RooUnfoldBayes *unfold_DS = new RooUnfoldBayes(rDS, m_pt_dat, 4, false, "unfold_DS","");
   RooUnfoldBayes *unfold_GS = new RooUnfoldBayes(rGS, m_pt_dat, 4, false, "unfold_GS","");
-  RooUnfoldBayes *unfold_MS = new RooUnfoldBayes(rMS, m_pt_dat, 4, false, "unfold_MS","");
-
+  //RooUnfoldBayes *unfold_MS = new RooUnfoldBayes(rMS, m_pt_dat, 4, false, "unfold_MS","");
+  RooUnfoldBayes *unfold_nom1D_2030 = new RooUnfoldBayes(rMS_2030_nom,m_dat_2030,4,false,"unfold_nom1D_2030","");
+  RooUnfoldBayes *unfold_nom1D_3045 = new RooUnfoldBayes(rMS_3045_nom,m_dat_3045,4,false,"unfold_nom1D_3045","");
+  RooUnfoldBayes *unfold_h7smear1D_2030 = new RooUnfoldBayes(rMS_2030_h7smear,m_dat_2030,4,false,"unfold_h7smear1D_2030","");
+  RooUnfoldBayes *unfold_h7smear1D_3045 = new RooUnfoldBayes(rMS_3045_h7smear,m_dat_3045,4,false,"unfold_h7smear1D_3045","");
+  RooUnfoldBayes *unfold_p8smear1D_2030 = new RooUnfoldBayes(rMS_2030_p8smear,m_dat_2030,4,false,"unfold_p8smear1D_2030","");
+  RooUnfoldBayes *unfold_p8smear1D_3045 = new RooUnfoldBayes(rMS_3045_p8smear,m_dat_3045,4,false,"unfold_p8smear1D_3045","");
+  
   TH2D *reco_nom = (TH2D*) unfold_nom->Hreco((RooUnfold::ErrorTreatment) 3);
   TH2D *reco_IP2 = (TH2D*) unfold_IP2->Hreco((RooUnfold::ErrorTreatment) 3);
   TH2D *reco_IP6 = (TH2D*) unfold_IP6->Hreco((RooUnfold::ErrorTreatment) 3);
@@ -348,10 +366,18 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
   TH2D *reco_HC50 = (TH2D*) unfold_HC50->Hreco((RooUnfold::ErrorTreatment) 3);
   TH2D *reco_DS = (TH2D*) unfold_DS->Hreco((RooUnfold::ErrorTreatment) 3);
   TH2D *reco_GS = (TH2D*) unfold_GS->Hreco((RooUnfold::ErrorTreatment) 3);
-  TH2D *reco_MS = (TH2D*) unfold_MS->Hreco((RooUnfold::ErrorTreatment) 3);
+  //TH2D *reco_MS = (TH2D*) unfold_MS->Hreco((RooUnfold::ErrorTreatment) 3);
+  TH1D *reco_nom1D_2030 = (TH1D*) unfold_nom1D_2030->Hreco((RooUnfold::ErrorTreatment) 3);
+  TH1D *reco_nom1D_3045 = (TH1D*) unfold_nom1D_3045->Hreco((RooUnfold::ErrorTreatment) 3);
+  TH1D *reco_h7smear1D_2030 = (TH1D*) unfold_h7smear1D_2030->Hreco((RooUnfold::ErrorTreatment) 3);
+  TH1D *reco_h7smear1D_3045 = (TH1D*) unfold_h7smear1D_3045->Hreco((RooUnfold::ErrorTreatment) 3);
+  TH1D *reco_p8smear1D_2030 = (TH1D*) unfold_p8smear1D_2030->Hreco((RooUnfold::ErrorTreatment) 3);
+  TH1D *reco_p8smear1D_3045 = (TH1D*) unfold_p8smear1D_3045->Hreco((RooUnfold::ErrorTreatment) 3);
+
   
   //These ranges are okay now that Projection2D has the plotting bug removed.                                                                                   
   const int nBins = 2/*3*/;
+  const int nBins_m = 14;
   TAxis* reco_axis = reco_nom->GetYaxis(); TAxis* det_axis = m_pt_dat->GetYaxis();
   double ranges[nBins + 1] = {(double) reco_axis->FindBin(20), /*(double) reco_axis->FindBin(25),*/ (double) reco_axis->FindBin(30), (double) reco_axis->FindBin(45)/*(40)*/};                                                                                                                                           
   double ranges_d[nBins + 1] = {(double) det_axis->FindBin(20),/* (double) det_axis->FindBin(25),*/ (double) det_axis->FindBin(30), (double) det_axis->FindBin(45)/*(40)*/};                                                                                                                                              
@@ -365,8 +391,50 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
   vector<TH1D*> reco_HC50s = Projection2D(reco_HC50,nBins,ranges,"x");
   vector<TH1D*> reco_DSs = Projection2D(reco_DS,nBins,ranges,"x");
   vector<TH1D*> reco_GSs = Projection2D(reco_GS,nBins,ranges,"x");
-  vector<TH1D*> reco_MSs = Projection2D(reco_MS,nBins,ranges,"x");
+  //vector<TH1D*> reco_MSs = Projection2D(reco_MS,nBins,ranges,"x");
 
+  
+  //1D mass smearing systematic ratio and bookkeeping
+  reco_nom1D_2030->Scale(1/(double)reco_nom1D_2030->Integral());
+  reco_nom1D_3045->Scale(1/(double)reco_nom1D_3045->Integral());
+  reco_h7smear1D_2030->Scale(1/(double)reco_h7smear1D_2030->Integral());
+  reco_h7smear1D_3045->Scale(1/(double)reco_h7smear1D_3045->Integral());
+  reco_p8smear1D_2030->Scale(1/(double)reco_p8smear1D_2030->Integral());
+  reco_p8smear1D_3045->Scale(1/(double)reco_p8smear1D_3045->Integral());
+
+  reco_h7smear1D_2030->Divide(reco_nom1D_2030);
+  reco_p8smear1D_2030->Divide(reco_nom1D_2030);
+  reco_h7smear1D_3045->Divide(reco_nom1D_3045);
+  reco_p8smear1D_3045->Divide(reco_nom1D_3045);
+
+  Double_t stat[5] ={0,0,0,0,0};
+
+  reco_h7smear1D_2030->PutStats(stat);
+  reco_p8smear1D_2030->PutStats(stat);
+  reco_h7smear1D_3045->PutStats(stat);
+  reco_p8smear1D_3045->PutStats(stat);
+
+  reco_h7smear1D_2030->Sumw2(0);
+  reco_p8smear1D_2030->Sumw2(0);
+  reco_h7smear1D_3045->Sumw2(0);
+  reco_p8smear1D_3045->Sumw2(0);
+
+  for (int j = 1; j <= nBins_m; ++ j) {
+    reco_h7smear1D_2030->SetBinContent(j,fabs(reco_h7smear1D_2030->GetBinContent(j) - 1));
+    reco_p8smear1D_2030->SetBinContent(j,fabs(reco_p8smear1D_2030->GetBinContent(j) - 1));
+    reco_h7smear1D_3045->SetBinContent(j,fabs(reco_h7smear1D_3045->GetBinContent(j) - 1));
+    reco_p8smear1D_3045->SetBinContent(j,fabs(reco_p8smear1D_3045->GetBinContent(j) - 1));
+  }
+  
+  Prettify1DwLineStyle(reco_h7smear1D_2030, 11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
+  reco_h7smear1D_2030->SetFillColor(11); reco_h7smear1D_2030->SetFillStyle(3690);
+  Prettify1DwLineStyle(reco_h7smear1D_3045, 11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
+  reco_h7smear1D_3045->SetFillColor(11); reco_h7smear1D_3045->SetFillStyle(3690);
+  Prettify1DwLineStyle(reco_p8smear1D_2030, 11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
+  reco_p8smear1D_2030->SetFillColor(11); reco_p8smear1D_2030->SetFillStyle(3444);
+  Prettify1DwLineStyle(reco_p8smear1D_3045, 11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
+  reco_p8smear1D_3045->SetFillColor(11); reco_p8smear1D_3045->SetFillStyle(3444);
+  
   vector<TH1D*> reco_noms_copy;
   
   for (int i = 0; i < nBins; ++ i) {
@@ -380,7 +448,7 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
     reco_HC50s[i]->Scale(1/(double)reco_HC50s[i]->Integral());
     reco_DSs[i]->Scale(1/(double)reco_DSs[i]->Integral());
     reco_GSs[i]->Scale(1/(double)reco_GSs[i]->Integral());
-    reco_MSs[i]->Scale(1/(double)reco_MSs[i]->Integral());
+    //reco_MSs[i]->Scale(1/(double)reco_MSs[i]->Integral());
 
     reco_IP2s[i]->Divide(reco_noms[i]);
     reco_IP6s[i]->Divide(reco_noms[i]);
@@ -389,17 +457,17 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
     reco_HC50s[i]->Divide(reco_noms[i]);
     reco_DSs[i]->Divide(reco_noms[i]);
     reco_GSs[i]->Divide(reco_noms[i]);
-    reco_MSs[i]->Divide(reco_noms[i]);
+    //reco_MSs[i]->Divide(reco_noms[i]);
     
-    Double_t stats[5] = {0,0,0,0,0};
-    reco_IP2s[i]->PutStats(stats);
-    reco_IP6s[i]->PutStats(stats);
-    reco_TSs[i]->PutStats(stats);
-    reco_TUs[i]->PutStats(stats);
-    reco_HC50s[i]->PutStats(stats);
-    reco_DSs[i]->PutStats(stats);
-    reco_GSs[i]->PutStats(stats);
-    reco_MSs[i]->PutStats(stats);
+    //stats[5] = {0,0,0,0,0};
+    reco_IP2s[i]->PutStats(stat);
+    reco_IP6s[i]->PutStats(stat);
+    reco_TSs[i]->PutStats(stat);
+    reco_TUs[i]->PutStats(stat);
+    reco_HC50s[i]->PutStats(stat);
+    reco_DSs[i]->PutStats(stat);
+    reco_GSs[i]->PutStats(stat);
+    //reco_MSs[i]->PutStats(stat);
 
     reco_IP2s[i]->Sumw2(0);
     reco_IP6s[i]->Sumw2(0);
@@ -408,9 +476,9 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
     reco_HC50s[i]->Sumw2(0);
     reco_DSs[i]->Sumw2(0);
     reco_GSs[i]->Sumw2(0);
-    reco_MSs[i]->Sumw2(0);
+    //reco_MSs[i]->Sumw2(0);
     
-    for (int j = 1; j <= 14; ++ j) {
+    for (int j = 1; j <= nBins_m; ++ j) {
       //turning the ratio into a percentage.                                                                                                                   
       reco_IP2s[i]->SetBinContent(j,fabs(reco_IP2s[i]->GetBinContent(j) - 1));
       reco_IP6s[i]->SetBinContent(j,fabs(reco_IP6s[i]->GetBinContent(j) - 1));
@@ -419,7 +487,7 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
       reco_HC50s[i]->SetBinContent(j,fabs(reco_HC50s[i]->GetBinContent(j) - 1));
       reco_DSs[i]->SetBinContent(j,fabs(reco_DSs[i]->GetBinContent(j) - 1));
       reco_GSs[i]->SetBinContent(j,fabs(reco_GSs[i]->GetBinContent(j) - 1));
-      reco_MSs[i]->SetBinContent(j,fabs(reco_MSs[i]->GetBinContent(j) - 1));
+      //reco_MSs[i]->SetBinContent(j,fabs(reco_MSs[i]->GetBinContent(j) - 1));
     }
     
     Prettify1DwLineStyle(reco_IP2s[i],2, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
@@ -436,8 +504,8 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
     reco_DSs[i]->SetFillColor(8); reco_DSs[i]->SetFillStyle(3944);
     Prettify1DwLineStyle(reco_GSs[i],9, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
     reco_GSs[i]->SetFillColor(9); reco_GSs[i]->SetFillStyle(3544);
-    Prettify1DwLineStyle(reco_MSs[i],11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
-    reco_MSs[i]->SetFillColor(11); reco_MSs[i]->SetFillStyle(3690);
+    //Prettify1DwLineStyle(reco_MSs[i],11, kSolid, 2,(htitle+" [GeV/c^{2}]").c_str(),"relative uncertainty",0,14,0,1);
+    //reco_MSs[i]->SetFillColor(11); reco_MSs[i]->SetFillStyle(3690);
   }
   
   TLegend *l1 = new TLegend(0.5,0.3,0.7,0.6); l1->SetBorderSize(0);
@@ -450,8 +518,10 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
   l2->AddEntry(reco_HC50s[0],"HC50","f");
   l2->AddEntry(reco_DSs[0],"DS","f");
   l2->AddEntry(reco_GSs[0],"GS","f");
-  l2->AddEntry(reco_MSs[0],"MS","f");
-
+  //l2->AddEntry(reco_MSs[0],"MS","f");
+  l2->AddEntry(reco_p8smear1D_2030,"P8","f");
+  l2->AddEntry(reco_h7smear1D_2030,"H7","f");
+  
 
   TLatex *slice = new TLatex();
 
@@ -479,17 +549,24 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
     reco_GSs[i]->Draw("LF2same");
     reco_IP2s[i]->Draw("LF2same");
     reco_IP6s[i]->Draw("LF2same");
-    reco_MSs[i]->Draw("LF2same");
+    //reco_MSs[i]->Draw("LF2same");
     if (i == 0) {
+      reco_p8smear1D_2030->Draw("LF2same");
+      reco_h7smear1D_2030->Draw("LF2same");
       p->DrawLatexNDC(0.3,0.9, "pp 200 GeV run12 JP2");
       p->DrawLatexNDC(0.3,0.85, "anti-k_{T}, R = 0.4");
       p->DrawLatexNDC(0.3,0.8, "Ch+Ne jets, |#eta| < 0.4");
     }
-    if (i==0) {l1->Draw("same");} if (i==1) {l2->Draw("same");}
+    if (i==0) {l1->Draw("same");}
+    if (i==1) {
+      reco_p8smear1D_3045->Draw("LF2same");
+      reco_h7smear1D_3045->Draw("LF2same");
+      l2->Draw("same");
+    }
     slice->DrawLatexNDC(0.3,0.7,(pts[i]+" < p_{T} < "+pts[i+1]+" GeV/c").c_str());
   }
 
-  //csys->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"systematics.pdf").c_str());
+  csys->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"systematics_new.pdf").c_str());
   
   
   //taking maximum envelopes!                                                                                                                                  
@@ -499,10 +576,10 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
   vector<TH1D*> env_uns = Projection2D(env_un,nBins,ranges,"x");
   TH2D* net = new TH2D("net","",14,0,14,15,5,80);
   vector<TH1D*> nets = Projection2D(net,nBins,ranges,"x");
-  TH2D* stat = new TH2D("stat","",14,0,14,15,5,80);
-  vector<TH1D*> stats = Projection2D(stat,nBins,ranges,"x");
+  TH2D* stat2D = new TH2D("stat","",14,0,14,15,5,80);
+  vector<TH1D*> stats = Projection2D(stat2D,nBins,ranges,"x");
   
-  const int nBins_m = 14;
+  //  const int nBins_m = 14;
 
   vector<vector< double> > syst_errs2D;
 
@@ -517,12 +594,18 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
       set<double>::iterator hc = hc_sort.end(); hc --;
       double hc_envelope = *hc;
       env_HCs[i]->SetBinContent(j, hc_envelope);
-      //unfolding envelope                                                                                                                                     
-      double uns [5] = {reco_DSs[i]->GetBinContent(j), reco_GSs[i]->GetBinContent(j), reco_MSs[i]->GetBinContent(j), reco_IP2s[i]->GetBinContent(j), reco_IP6s[i]->GetBinContent(j)};
-      set<double> un_sort (uns, uns+5);
+      
+      TH1D* reco_h7_1D = new TH1D("reco_h7_1D","",14,0,14);
+      TH1D* reco_p8_1D = new TH1D("reco_p8_1D","",14,0,14);
+      if (i == 0) {reco_h7_1D = reco_h7smear1D_2030; reco_p8_1D = reco_p8smear1D_2030;}
+      if (i == 1) {reco_h7_1D = reco_h7smear1D_3045; reco_p8_1D = reco_p8smear1D_3045;}
+      //unfolding envelope - using an ordered set here to automatically get the largest value
+      double uns [6] = {reco_DSs[i]->GetBinContent(j), reco_GSs[i]->GetBinContent(j), /*reco_MSs[i]->GetBinContent(j),*/ reco_h7_1D->GetBinContent(j), reco_p8_1D->GetBinContent(j), reco_IP2s[i]->GetBinContent(j), reco_IP6s[i]->GetBinContent(j)};
+      set<double> un_sort (uns, uns+6);
       set<double>::iterator un = un_sort.end(); un --;
       double un_envelope = *un;
       env_uns[i]->SetBinContent(j, un_envelope);
+
       //total uncertainty = TU + TS + un envelope + hc envelope   
       double square = pow(hc_envelope,2) + pow(un_envelope,2) + pow(reco_TUs[i]->GetBinContent(j),2) + pow(reco_TSs[i]->GetBinContent(j),2);
       nets[i]->SetBinContent(j,sqrt(square));
@@ -579,7 +662,7 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
   }
   */
   
-  cenvs->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"systematic_envelopes.pdf").c_str());
+  //cenvs->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"systematic_envelopes_new.pdf").c_str());
   
 }
 
@@ -603,7 +686,7 @@ void AN_plots(int radius, bool groom) {
   //~~~~~~//
 
   //~~~OPEN NECESSARY FILES~~~//
-  TFile *fdat = new TFile(("~/jetmass2/out/data/hists/data_hists_ppJP2"+radstring+".root").c_str(),"READ");
+  TFile *fdat = new TFile(("~/jetmass2/out/data/hists/data_hists_ppJP2"+radstring+"_bindropped.root").c_str(),"READ");
   TFile *fp6unmatch = new TFile(("~/jetmass2/out/sim/hists/unmatched_hists"+radstring+".root").c_str(),"READ");
   TFile *fp6match = new TFile(("~/jetmass2/out/sim/hists/matched_hists"+radstring+".root").c_str(),"READ");
   TFile *fp8 = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
@@ -611,10 +694,10 @@ void AN_plots(int radius, bool groom) {
   //  TFile *fPL = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_FSR_only_undecayed_hists.root").c_str(),"READ");
   
   TFile *fclos = new TFile(("~/jetmass2/out/closure/closure"+radstring+".root").c_str(),"READ");
-  TFile *fsysts = new TFile(("~/jetmass2/out/sim/sim_matched"+radstring+"_bindropped.root").c_str(),"READ");
+  TFile *fsysts = new TFile(("~/jetmass2/out/sim/sim_matched"+radstring+"_test_bindropped.root").c_str(),"READ");
 
   //plots the uncorrected jet mass for a bin of pT and compares to MC
-  //  rawdata(fdat, fp6unmatch);
+  rawdata(fdat, fp6unmatch);
   
   //plots the mass resolution for different pT ranges on the same panel
   //  resolution(fp6match);
@@ -623,7 +706,7 @@ void AN_plots(int radius, bool groom) {
   //  closure(fclos);
   
   //plots the systematic uncertainties
-    systematics(fsysts, fdat, hname, htitle, fstart);
+  //  systematics(fsysts, fdat, hname, htitle, fstart);
   
   //~~~~~~//
   

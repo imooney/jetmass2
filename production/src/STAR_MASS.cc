@@ -1,4 +1,4 @@
-//! Isaac Mooney, WSU - June, 2019OAOAOA
+//! Isaac Mooney, WSU - June, 2019
 //! Jet mass analysis at RHIC kinematics
 
 #include "Rivet/Analysis.hh"
@@ -196,44 +196,78 @@ namespace Rivet {
       //handles the output for each pt-hat bin
       if(_mode == 0){
 	//! For P6: "../out/py6_decayed_jewel_pthatbin580_R%s.root"
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_5pthatbin10_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_5pthatbin10_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }    
       else if(_mode == 1){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_10pthatbin15_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_10pthatbin15_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 2){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_15pthatbin20_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_15pthatbin20_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 3){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_20pthatbin25_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_20pthatbin25_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 4){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_25pthatbin30_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_25pthatbin30_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 5){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_30pthatbin35_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_30pthatbin35_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 6){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_35pthatbin40_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_35pthatbin40_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 7){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_40pthatbin45_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_40pthatbin45_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 8){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_45pthatbin50_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_45pthatbin50_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 9){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_50pthatbin60_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_50pthatbin60_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 10){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_60pthatbin80_R"+radiusText+"_"+decays+".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_60pthatbin80_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }
       
       //! book desired histograms here
       //...
+      
+      pthat = -9999;
+      mcweight = -9999;
+      
+      //~~~FOR RAGHAV/HANSEUL~~~//
+      EventTree = new TTree("EventTree", "Event");
+      EventTree->Branch("pthat",&pthat,"pthat/d");
+      EventTree->Branch("mcweight",&mcweight,"mcweight/d");
 
+      
+      //! final state charged particles from events with a 5 GeV jet
+      ChParticleTree = new TTree("ChParticleTree","Ch particles");
+      ch_pt.clear();
+      ch_eta.clear();
+      ch_phi.clear();
+      ch_m.clear();
+      
+      ChParticleTree->Branch("pt",&ch_pt);
+      ChParticleTree->Branch("eta",&ch_eta);
+      ChParticleTree->Branch("phi",&ch_phi);
+      ChParticleTree->Branch("m",&ch_m);
+      
+      NeParticleTree = new TTree("NeParticleTree","Ne particles");
+      ne_pt.clear();
+      ne_eta.clear();
+      ne_phi.clear();
+      ne_m.clear();
+      
+      NeParticleTree->Branch("pt",&ne_pt);
+      NeParticleTree->Branch("eta",&ne_eta);
+      NeParticleTree->Branch("phi",&ne_phi);
+      NeParticleTree->Branch("m",&ne_m);
+      
+      //~~~                ~~~//
+      
       //! partonic final state jets
       PartonTree=new TTree("PartonTree","Parton Jets");
       //! clear the vectors for each event!
@@ -250,9 +284,6 @@ namespace Rivet {
       PLconsM.clear();
       PLconspT.clear();
       PLconsEta.clear();
-      
-      pthat = -9999;
-      mcweight = -9999;
       
       PartonTree->Branch("PLpt",&PLpt);
       PartonTree->Branch("PLm",&PLm);
@@ -354,6 +385,18 @@ namespace Rivet {
       const double weight = handler().crossSection();
 
       //! clear the vectors for each event!
+      
+      //~~~FOR RAGHAV/HANSEUL~~~//
+      ch_pt.clear();
+      ch_eta.clear();
+      ch_phi.clear();
+      ch_m.clear();
+      
+      ne_pt.clear();
+      ne_eta.clear();
+      ne_phi.clear();
+      ne_m.clear();
+      //~~~                 ~~~//
       
       //parton jets
       PLpt.clear();
@@ -557,6 +600,31 @@ namespace Rivet {
       }
       if (bad_event) {return;}
       
+
+      //~~~FOR RAGHAV/HANSEUL~~~//
+      //requiring a 5 GeV jet in the event, fill particle vectors
+      if (recoJets_bkgsub.size() != 0) {
+	if (recoJets_bkgsub[0].pt() > 5) {
+	  foreach ( const Particle& p, FS) {
+	    if (p.charge() != 0 && p.pt() > _pTCut && p.pt() < _pTconsMax) {
+	      ch_pt.push_back(p.pt());
+	      ch_eta.push_back(p.eta());
+	      ch_phi.push_back(p.phi());
+	      ch_m.push_back((double) pdg->GetParticle(p.pid())->Mass()); //pdg masses
+	      //ch_m.push_back(m_chpion);
+	    }
+	    if (p.charge() == 0 && p.pt() > _pTCut && p.pt() < _pTconsMax) {
+	      ne_pt.push_back(p.pt());
+	      ne_eta.push_back(p.eta());
+	      ne_phi.push_back(p.phi());
+	      ne_m.push_back((double) pdg->GetParticle(p.pid())->Mass()); //pdg masses
+	      //ne_m.push_back(0.0);
+	    }
+	  }
+	}
+      }
+      
+      //~~~                 ~~~//
       
       //loop over good parton-level jets, filling vectors with observables
       foreach(const PseudoJet jet, recoJets_PL) {
@@ -757,6 +825,13 @@ namespace Rivet {
       if (recoJets_bkgsub.size() != 0) {
 	ResultTree->Fill();
       }
+      
+      if (ch_pt.size() != 0 || ne_pt.size() != 0) {
+	EventTree->Fill();
+	ChParticleTree->Fill();
+	NeParticleTree->Fill();
+      }
+      
     }//! analyze function
     
     /// Normalise histograms etc., after the run
@@ -792,6 +867,18 @@ namespace Rivet {
     double mcweight;
     double pthat;
     double eventID;
+    
+    //charged particles
+    vector<double> ch_pt;
+    vector<double> ch_eta;
+    vector<double> ch_phi;
+    vector<double> ch_m;
+    
+    //neutral particles
+    vector<double> ne_pt;
+    vector<double> ne_eta;
+    vector<double> ne_phi;
+    vector<double> ne_m;
     
     //parton-level jets
     vector<double> PLpt;
@@ -857,7 +944,10 @@ namespace Rivet {
     TTree * PartonTree;
     TTree * MatchTree;
     TTree * ResultTree;
-  
+    TTree * EventTree;
+    TTree * ChParticleTree;
+    TTree * NeParticleTree;
+    
     TDatabasePDG * pdg;
     
   };

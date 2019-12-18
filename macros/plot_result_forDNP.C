@@ -12,11 +12,288 @@ using namespace std;
 
 //when running functions with arguments in an interactive root session, do e.g. root "plot_result(4, 0, 0)" - the quotation marks are necessary
 
-//this function plots a 1x2 plot of mass as a function of pT, but with ratios of MC to data
-TH1D* plot_result_forDNP(int radius, bool groom, int dummy) {
+/*
+//this is a temp function to produce a plot for Raghav -- delete it!
+void plot_result_forDNP(int radius, bool groom, int anim) {
   gROOT->ForceStyle(); //forces use of ~/rootlogon.C's style settings 
   
   string radstring = to_string(radius);
+  string animstring = to_string(anim);
+  
+  radstring = "_R0"+radstring;//to obtain e.g. _R04 as in filenames
+  string fstart = "";
+  string hname = "m";
+  string htitle = "M";
+  if (groom) {
+    fstart = "groomed_";
+    hname = "mg";
+    htitle = "M_{g}";
+  }
+  
+  const int nRows = 1; //0.4
+  const int nCols = 1;//2; //20-30,30-45 //!@!
+  
+  TCanvas *cws = new TCanvas("cws","cws",600,600);
+  //  DivideCanvas(cws,"0",nCols,nRows);
+  
+  //open files from which to pull lots of curves                                                        
+  //will use this file for a side-by-side comparison of groomed to ungroomed
+  TFile *funfold_ungroom = new TFile(("~/jetmass2/out/unfold/unfolded"+radstring+".root").c_str(),"READ");
+  TFile *funfold;
+  if (radstring == "_R04") {funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+".root").c_str(),"READ");}//keeping the systematics for R = 0.4 consistent with the old method, since it already had preliminary status
+  else {funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+"_test.root").c_str(),"READ");}
+  TFile *fp6 = new TFile(("~/jetmass2/out/sim/hists/unmatched_hists"+radstring+"_bindropped.root").c_str(),"READ");
+  TFile *fp8 = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
+  TFile *fh7 = new TFile(("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved"+radstring+".root").c_str(),"READ");//temporarily using the old files (they're the same, but will point to new ones later)
+
+  //get histograms from the files
+  vector<TH1D*> recos = {(TH1D*) funfold->Get("nom_0"),(TH1D*) funfold->Get("nom_1")};
+  vector<TH1D*> w_systs = {(TH1D*) funfold->Get("w_systs_0"),(TH1D*) funfold->Get("w_systs_1")};
+  vector<TH1D*> recos_ungroom = {(TH1D*) funfold_ungroom->Get("nom_0"),(TH1D*) funfold_ungroom->Get("nom_1")};
+  vector<TH1D*> w_systs_ungroom = {(TH1D*) funfold_ungroom->Get("w_systs_0"),(TH1D*) funfold_ungroom->Get("w_systs_1")};
+  TH2D* p6_2D = (TH2D*) fp6->Get(("PL_"+hname+"_v_pt").c_str());
+  TH2D* p8_2D = (TH2D*) fp8->Get((hname+"vpt").c_str());
+  TH2D* h7_2D = (TH2D*) fh7->Get((hname+"vpt_h7off").c_str());//internal name will be changed later
+  TH2D* PL_2D = (TH2D*) fp8->Get("PLmvpt");//fPL->Get("PLmvHLpt");
+  TH2D* PL_g_2D = (TH2D*) fp8->Get("PLmgvpt");//fPL->Get("PLmgvHLpt");
+  TH2D* p8_q_2D = (TH2D*) fp8->Get("mvpt_q");
+  TH2D* p8_g_2D = (TH2D*) fp8->Get("mvpt_g");
+  TH2D* p8_n_2D = (TH2D*) fp8->Get("mvpt_n");
+
+  TH1D* dummy_left = new TH1D("dummy_left","",10,0,9.999);
+
+  TAxis* p8_axis = p8_2D->GetYaxis();
+  double ranges[nCols + 1] = {(double) p8_axis->FindBin(20), (double) p8_axis->FindBin(30)}; //!@!
+  string pts[nCols + 1] = {"20","30"}; //!@!
+  
+  vector<TH1D*> p6s = Projection2D(p6_2D,nCols,ranges,"x");
+  vector<TH1D*> p8s = Projection2D(p8_2D,nCols,ranges,"x");
+  vector<TH1D*> h7s = Projection2D(h7_2D,nCols,ranges,"x");
+  vector<TH1D*> PLs = Projection2D(PL_2D,nCols,ranges,"x");
+  vector<TH1D*> PL_gs = Projection2D(PL_g_2D,nCols,ranges,"x");
+  vector<TH1D*> p8_qs = Projection2D(p8_q_2D,nCols,ranges,"x");
+  vector<TH1D*> p8_gs = Projection2D(p8_g_2D,nCols,ranges,"x");
+  vector<TH1D*> p8_ns = Projection2D(p8_n_2D,nCols,ranges,"x");
+  
+  //get qvg content fractions
+  //vector<double> qs = {(double) p8_qs[0]->Integral()/(double)(p8_qs[0]->Integral()+p8_gs[0]->Integral()+p8_ns[0]->Integral()),
+  //(double) p8_qs[1]->Integral()/(double)(p8_qs[1]->Integral()+p8_gs[1]->Integral()+p8_ns[1]->Integral())}; //!@!
+  //vector<double> gs = {(double) p8_gs[0]->Integral()/(double)(p8_qs[0]->Integral()+p8_gs[0]->Integral()+p8_ns[0]->Integral()),
+  //(double) p8_gs[1]->Integral()/(double)(p8_qs[1]->Integral()+p8_gs[1]->Integral()+p8_ns[1]->Integral())}; //!@!
+  //cout << "Q AND G FRACS: " << qs[0] << " " << qs[1] << " " << gs[0] << " " << gs[1] << endl; //!@!
+
+  //clones for proper error bars for the mean mass later
+  vector<TH1D*> p6_clones;
+  vector<TH1D*> p8_clones;
+  vector<TH1D*> h7_clones;
+  
+  vector<TH1D*> p6_ratios;
+  vector<TH1D*> p8_ratios;
+  vector<TH1D*> h7_ratios;
+  vector<TH1D*> PL_ratios;
+  vector<TH1D*> PL_g_ratios;
+  vector<TH1D*> p8_q_ratios;
+  vector<TH1D*> p8_g_ratios;
+
+  vector<TH1D*> p6_ratios_bar;
+  vector<TH1D*> p8_ratios_bar;
+  vector<TH1D*> h7_ratios_bar;
+  vector<TH1D*> PL_ratios_bar;
+  vector<TH1D*> PL_g_ratios_bar;
+  vector<TH1D*> p8_q_ratios_bar;
+  vector<TH1D*> p8_g_ratios_bar;
+
+  vector<TH1D*> ratio_systematics;
+
+  //this will be the first "hist" drawn so needs to have correct axis properties
+  dummy_left->GetYaxis()->SetRangeUser(0,1.999);
+  
+  dummy_left->GetYaxis()->SetTitle("MC / data");
+  dummy_left->GetYaxis()->SetTitleSize(0.15);
+  dummy_left->GetYaxis()->SetTitleOffset(0.6);
+  dummy_left->GetYaxis()->SetNdivisions(505);
+  dummy_left->GetYaxis()->SetLabelSize(0.17);
+
+  dummy_left->GetXaxis()->SetTitle((htitle+" [GeV/c^{2}]").c_str());
+  dummy_left->GetXaxis()->SetTitleSize(0.2);
+  dummy_left->GetXaxis()->SetTitleOffset(0.8);
+  dummy_left->GetXaxis()->SetLabelSize(0.17);
+  dummy_left->GetXaxis()->SetNdivisions(505);
+  
+  for (unsigned i = 0; i < nCols; ++ i) {    
+    cout << "UNFOLDED DATA MEAN " << i << ": " << w_systs[i]->GetMean() << endl;
+    Prettify1D(recos[i],kRed,kFullStar,2,kRed,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1D(w_systs[i],kRed,kFullStar,0,kRed,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0.001,0.4999);
+    Prettify1D(recos_ungroom[i],kBlue,kFullStar,2,kBlue,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1D(w_systs_ungroom[i],kBlue,kFullStar,0,kBlue,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0.001,0.4999);
+
+    w_systs[i]->SetFillColor(kRed - 10); w_systs[i]->SetFillStyle(1001);
+    
+    Prettify1DwLineStyle(p6s[i], kBlue, kSolid,2, (htitle+" [GeV/c^{2}]").c_str(), ("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1DwLineStyle(p8s[i],kBlack,kSolid,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1DwLineStyle(p8_qs[i],kOrange-1,kSolid,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1DwLineStyle(p8_gs[i],kGreen+2,kSolid,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1DwLineStyle(h7s[i],kMagenta,kSolid,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1DwLineStyle(PLs[i],kBlack,kDotted,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1DwLineStyle(PL_gs[i],kBlack,kDashed,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    
+    p6_ratios.push_back((TH1D*) p6s[i]->Clone(("p6ratio"+to_string(i)).c_str()));
+    p8_ratios.push_back((TH1D*) p8s[i]->Clone(("p8ratio"+to_string(i)).c_str()));
+    h7_ratios.push_back((TH1D*) h7s[i]->Clone(("h7ratio"+to_string(i)).c_str()));
+    PL_ratios.push_back((TH1D*) PLs[i]->Clone(("PLratio"+to_string(i)).c_str()));
+    PL_g_ratios.push_back((TH1D*) PL_gs[i]->Clone(("PL_gratio"+to_string(i)).c_str()));
+    p8_q_ratios.push_back((TH1D*) p8_qs[i]->Clone(("p8_qratio"+to_string(i)).c_str()));
+    p8_g_ratios.push_back((TH1D*) p8_gs[i]->Clone(("p8_gratio"+to_string(i)).c_str()));
+    
+    p6_clones.push_back((TH1D*) p6s[i]->Clone(("p6clone"+to_string(i)).c_str()));
+    p8_clones.push_back((TH1D*) p8s[i]->Clone(("p8clone"+to_string(i)).c_str()));
+    h7_clones.push_back((TH1D*) h7s[i]->Clone(("h7clone"+to_string(i)).c_str()));
+    
+    ratio_systematics.push_back((TH1D*) w_systs[i]->Clone(("ratio_systs"+to_string(i)).c_str()));
+    
+    p6s[i]->Sumw2(0);
+    p8s[i]->Sumw2(0);
+    h7s[i]->Sumw2(0);
+    PLs[i]->Sumw2(0);
+    PL_gs[i]->Sumw2(0);
+    p8_qs[i]->Sumw2(0);
+    p8_gs[i]->Sumw2(0);
+    recos[i]->Sumw2();
+
+    p6_ratios[i]->Divide(recos[i]);
+    p8_ratios[i]->Divide(recos[i]);
+    h7_ratios[i]->Divide(recos[i]);
+    PL_ratios[i]->Divide(recos[i]);
+    PL_g_ratios[i]->Divide(recos[i]);    
+    p8_q_ratios[i]->Divide(recos[i]);
+    p8_g_ratios[i]->Divide(recos[i]);
+    
+    ratio_systematics[i]->Divide(recos[i]);
+    
+    p6_ratios[i]->GetYaxis()->SetRangeUser(0,2);
+    p8_ratios[i]->GetYaxis()->SetRangeUser(0,2);
+    h7_ratios[i]->GetYaxis()->SetRangeUser(0,2);
+    PL_ratios[i]->GetYaxis()->SetRangeUser(0,2);
+    PL_g_ratios[i]->GetYaxis()->SetRangeUser(0,2);
+    p8_q_ratios[i]->GetYaxis()->SetRangeUser(0,2);
+    p8_g_ratios[i]->GetYaxis()->SetRangeUser(0,2);
+    ratio_systematics[i]->GetYaxis()->SetRangeUser(0,2);
+
+    w_systs[i]->GetYaxis()->SetLabelSize(0.065);
+    
+    p6_ratios_bar.push_back((TH1D*) p6_ratios[i]->Clone(("p6ratio_bar"+to_string(i)).c_str()));
+    p8_ratios_bar.push_back((TH1D*) p8_ratios[i]->Clone(("p8ratio_bar"+to_string(i)).c_str()));
+    h7_ratios_bar.push_back((TH1D*) h7_ratios[i]->Clone(("h7ratio_bar"+to_string(i)).c_str()));
+    PL_ratios_bar.push_back((TH1D*) PL_ratios[i]->Clone(("PLratio_bar"+to_string(i)).c_str()));
+    PL_g_ratios_bar.push_back((TH1D*) PL_g_ratios[i]->Clone(("PL_gratio_bar"+to_string(i)).c_str()));
+    p8_q_ratios_bar.push_back((TH1D*) p8_q_ratios[i]->Clone(("p8_qratio_bar"+to_string(i)).c_str()));
+    p8_g_ratios_bar.push_back((TH1D*) p8_g_ratios[i]->Clone(("p8_gratio_bar"+to_string(i)).c_str()));
+    
+    p6_ratios_bar[i]->Sumw2(0);
+    p8_ratios_bar[i]->Sumw2(0);
+    h7_ratios_bar[i]->Sumw2(0);
+    PL_ratios_bar[i]->Sumw2(0);
+    PL_g_ratios_bar[i]->Sumw2(0);
+    p8_q_ratios_bar[i]->Sumw2(0);
+    p8_g_ratios_bar[i]->Sumw2(0);
+
+    //    p8_qs[i]->Scale((double)qs[i]); p8_gs[i]->Scale((double)gs[i]); //!@!
+    p8_qs[i]->Sumw2(0); p8_gs[i]->Sumw2(0);
+    
+  }
+
+  TLegend *tleg = new TLegend(0.55,0.3,0.75,0.4); tleg->SetBorderSize(0);
+  TLegend *tleg2 = new TLegend(0.45,0.45,0.7,0.6); tleg2->SetBorderSize(0);
+  TLegend *tleg3 = new TLegend(0.45,0.4,0.7,0.45); tleg3->SetBorderSize(0);
+  TH1D* for_legend = (TH1D*) w_systs[0]->Clone("for_legend"); for_legend->SetMarkerSize(2);
+  tleg->AddEntry(for_legend,"STAR","pf");
+  
+  tleg->SetTextSize(0.04); tleg2->SetTextSize(0.04); tleg3->SetTextSize(0.04);
+  
+  if (anim == 3 || anim == 4) {tleg2->AddEntry(p6s[0],"PYTHIA-6 Perugia","l");} //!@!
+  if (anim == 4) {
+    tleg2->AddEntry(h7s[0],"HERWIG-7 EE4C","l");
+    tleg2->AddEntry(p8s[0],"PYTHIA-8 Monash","l");
+    tleg3->AddEntry(PLs[0],"PYTHIA-8 parton jets","l");
+  }
+  
+  TLatex *ttitle = new TLatex(); TLatex *slice = new TLatex();
+  ttitle->SetTextSize(0.05); slice->SetTextSize(0.05);
+  TLatex *tprelim = new TLatex();
+  tprelim->SetTextSize(0.05); tprelim->SetTextColor(kRed);
+  
+  TLine *one = new TLine(0,1,10,1); one->SetLineStyle(kDashed);
+  
+  for (int i = 0; i < nCols; ++ i) {
+    //cws->cd(i+1); //!@!
+    TPad *padup = new TPad(("padup"+to_string(i)).c_str(),("padup"+to_string(i)).c_str(),0,0.3,1,1.0);
+    padup->SetBottomMargin(0);
+    padup->SetTopMargin(0.1);
+    padup->SetRightMargin(0.2);
+    padup->SetLeftMargin(0.2);
+    padup->Draw();
+    padup->cd();
+    w_systs[i]->Draw("E3same");
+    if (anim == 3 || anim == 4) {p6s[i]->Draw("Csame");} //!@!                                                 
+    if (anim == 4) {
+      p8s[i]->Draw("Csame");
+      h7s[i]->Draw("Csame");
+      PLs[i]->Draw("Csame");
+    }                   
+    
+    recos[i]->Draw("same");
+    tleg->Draw("same");
+    tleg2->Draw("same");
+    tleg3->Draw("same");
+    
+    slice->DrawLatex(0.5,0.33,(pts[i]+" < p_{T} < "+pts[i+1]+" GeV/c").c_str());
+    
+    ttitle->DrawLatex(0.5,0.41, "pp #sqrt{s} = 200 GeV");
+    ttitle->DrawLatex(0.5,0.37, "anti-k_{T}, R = 0.4, |#eta_{jet}| < 1-R");
+    tprelim->DrawLatex(0.5,0.45, "STAR Preliminary");
+    
+    
+    cws->cd(); //!@!
+    TPad *paddown = new TPad(("paddown"+to_string(i)).c_str(),("paddown"+to_string(i)).c_str(),0,0.05,1,0.3);
+    paddown->SetTopMargin(0);
+    paddown->SetBottomMargin(0.4);
+    paddown->SetRightMargin(0.2);
+    paddown->SetLeftMargin(0.2);
+    
+    paddown->Draw();
+    paddown->cd();
+    if (i==0) {dummy_left->Draw();}
+    ratio_systematics[i]->Draw("E3same");
+    
+    if (anim == 3 || anim == 4) { //!@!
+      p6_ratios[i]->Draw("E1same");
+      p6_ratios_bar[i]->Draw("same");
+    }
+    if (anim == 4) {
+      p8_ratios[i]->Draw("E1same");
+      p8_ratios_bar[i]->Draw("same");
+      h7_ratios[i]->Draw("E1same");
+      h7_ratios_bar[i]->Draw("same");
+      PL_ratios[i]->Draw("E1same");
+      PL_ratios_bar[i]->Draw("same");
+    }
+    
+    one->Draw("same");
+    
+  }
+  
+  cws->SaveAs("~/jetmass2/plots/single_pt_groomed_mass_for_raghav.pdf");
+  
+  return;
+}
+*/
+
+//this function plots a 1x2 plot of mass as a function of pT, but with ratios of MC to data
+TH1D* plot_result_forDNP(int radius, bool groom, int anim) {
+  gROOT->ForceStyle(); //forces use of ~/rootlogon.C's style settings 
+  
+  string radstring = to_string(radius);
+  string animstring = to_string(anim);
   
   radstring = "_R0"+radstring;//to obtain e.g. _R04 as in filenames
   string fstart = "";
@@ -34,8 +311,12 @@ TH1D* plot_result_forDNP(int radius, bool groom, int dummy) {
   TCanvas *cws = new TCanvas("cws","cws",800,500);
   DivideCanvas(cws,"0",nCols,nRows);
   
-  //open files from which to pull lots of curves                                                                                              
-  TFile *funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+".root").c_str(),"READ");
+  //open files from which to pull lots of curves                                                        
+  //will use this file for a side-by-side comparison of groomed to ungroomed
+  TFile *funfold_ungroom = new TFile(("~/jetmass2/out/unfold/unfolded"+radstring+".root").c_str(),"READ");
+  TFile *funfold;
+  if (radstring == "_R04") {funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+".root").c_str(),"READ");}//keeping the systematics for R = 0.4 consistent with the old method, since it already had preliminary status
+  else {funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+"_test.root").c_str(),"READ");}
   TFile *fp6 = new TFile(("~/jetmass2/out/sim/hists/unmatched_hists"+radstring+"_bindropped.root").c_str(),"READ");
   TFile *fp8 = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
   TFile *fh7 = new TFile(("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved"+radstring+".root").c_str(),"READ");//temporarily using the old files (they're the same, but will point to new ones later)
@@ -44,6 +325,8 @@ TH1D* plot_result_forDNP(int radius, bool groom, int dummy) {
   //get histograms from the files
   vector<TH1D*> recos = {(TH1D*) funfold->Get("nom_0"),(TH1D*) funfold->Get("nom_1")};
   vector<TH1D*> w_systs = {(TH1D*) funfold->Get("w_systs_0"),(TH1D*) funfold->Get("w_systs_1")};
+  vector<TH1D*> recos_ungroom = {(TH1D*) funfold_ungroom->Get("nom_0"),(TH1D*) funfold_ungroom->Get("nom_1")};
+  vector<TH1D*> w_systs_ungroom = {(TH1D*) funfold_ungroom->Get("w_systs_0"),(TH1D*) funfold_ungroom->Get("w_systs_1")};
   TH2D* p6_2D = (TH2D*) fp6->Get(("PL_"+hname+"_v_pt").c_str());
   TH2D* p8_2D = (TH2D*) fp8->Get((hname+"vpt").c_str());
   TH2D* h7_2D = (TH2D*) fh7->Get((hname+"vpt_h7off").c_str());//internal name will be changed later
@@ -114,28 +397,36 @@ TH1D* plot_result_forDNP(int radius, bool groom, int dummy) {
   dummy_right->GetYaxis()->SetLabelSize(0.13);
 
   dummy_left->GetXaxis()->SetTitle((htitle+" [GeV/c^{2}]").c_str());
-  dummy_left->GetXaxis()->SetTitleSize(0.15);
-  dummy_left->GetXaxis()->SetTitleOffset(0.7);
+  //  dummy_left->GetXaxis()->SetTitle("M_{(g)} [GeV/c^{2}]");
+  dummy_left->GetXaxis()->SetTitleSize(0.2);
+  dummy_left->GetXaxis()->SetTitleOffset(0.8);
   dummy_left->GetXaxis()->SetLabelSize(0.13);
   dummy_left->GetXaxis()->SetNdivisions(505);
   dummy_right->GetXaxis()->SetTitle((htitle+" [GeV/c^{2}]").c_str());
-  dummy_right->GetXaxis()->SetTitleSize(0.15);
-  dummy_right->GetXaxis()->SetTitleOffset(0.7);
+  //dummy_right->GetXaxis()->SetTitle("M_{(g)} [GeV/c^{2}]");
+  dummy_right->GetXaxis()->SetTitleSize(0.2);
+  dummy_right->GetXaxis()->SetTitleOffset(0.8);
   dummy_right->GetXaxis()->SetLabelSize(0.13);
   dummy_right->GetXaxis()->SetNdivisions(505);
   
   
   for (unsigned i = 0; i < nCols; ++ i) {    
-    Prettify1D(recos[i],kRed,kFullStar,2,kRed,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.75);
-    Prettify1D(w_systs[i],kRed,kFullStar,0,kRed,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0.001,0.75);
+    cout << "UNFOLDED DATA MEAN " << i << ": " << w_systs[i]->GetMean() << endl;
+    Prettify1D(recos[i],kRed,kFullStar,2,kRed,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1D(w_systs[i],kRed,kFullStar,0,kRed,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0.001,0.4999);
+    Prettify1D(recos_ungroom[i],kBlue,kFullStar,2,kBlue,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1D(w_systs_ungroom[i],kBlue,kFullStar,0,kBlue,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0.001,0.4999);
+
     w_systs[i]->SetFillColor(kRed - 10); w_systs[i]->SetFillStyle(1001);
-    Prettify1DwLineStyle(p6s[i], kBlue, kSolid,2, (htitle+" [GeV/c^{2}]").c_str(), ("1/N dN/d"+htitle).c_str(),0,10,0,0.75);
-    Prettify1DwLineStyle(p8s[i],kBlack,kSolid,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.75);
-    Prettify1DwLineStyle(p8_qs[i],kOrange-1,kSolid,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.75);
-    Prettify1DwLineStyle(p8_gs[i],kGreen+2,kSolid,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.75);
-    Prettify1DwLineStyle(h7s[i],kMagenta,kSolid,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.75);
-    Prettify1DwLineStyle(PLs[i],kBlack,kDotted,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.75);
-    Prettify1DwLineStyle(PL_gs[i],kBlack,kDashed,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.75);
+    w_systs_ungroom[i]->SetFillColor(kBlue - 10); w_systs_ungroom[i]->SetFillStyle(1001);
+    
+    Prettify1DwLineStyle(p6s[i], kBlue, kSolid,2, (htitle+" [GeV/c^{2}]").c_str(), ("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1DwLineStyle(p8s[i],kBlack,kSolid,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1DwLineStyle(p8_qs[i],kOrange-1,kSolid,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1DwLineStyle(p8_gs[i],kGreen+2,kSolid,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1DwLineStyle(h7s[i],kMagenta,kSolid,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1DwLineStyle(PLs[i],kBlack,kDotted,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
+    Prettify1DwLineStyle(PL_gs[i],kBlack,kDashed,2,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,10,0,0.5);
     
     p6_ratios.push_back((TH1D*) p6s[i]->Clone(("p6ratio"+to_string(i)).c_str()));
     p8_ratios.push_back((TH1D*) p8s[i]->Clone(("p8ratio"+to_string(i)).c_str()));
@@ -199,32 +490,38 @@ TH1D* plot_result_forDNP(int radius, bool groom, int dummy) {
 
     p8_qs[i]->Scale((double)qs[i]); p8_gs[i]->Scale((double)gs[i]);
     p8_qs[i]->Sumw2(0); p8_gs[i]->Sumw2(0);
+    
   }
 
   TLegend *tleg = new TLegend(0.6,0.45,0.9,0.6); tleg->SetBorderSize(0);
-  TLegend *tleg2 = new TLegend(0.45,0.5,0.85,0.65); tleg2->SetBorderSize(0);
-  TLegend *tleg3 = new TLegend(0.05,0.4,0.5,0.45); tleg3->SetBorderSize(0);
+  TLegend *tleg2 = new TLegend(0.25,0.5,0.65,0.65); tleg2->SetBorderSize(0);
+  TLegend *tleg3 = new TLegend(0.25,0.53,0.65,0.65); tleg3->SetBorderSize(0);
   TH1D* for_legend = (TH1D*) w_systs[0]->Clone("for_legend"); for_legend->SetMarkerSize(2);
+  TH1D* for_legend_ungroom = (TH1D*) w_systs_ungroom[0]->Clone("for_legend_ungroom"); for_legend_ungroom->SetMarkerSize(2);
   tleg->AddEntry(for_legend,"STAR","pf");
-  tleg->AddEntry(p6s[0],"PYTHIA-6","l");
-  tleg2->AddEntry(h7s[0],"HERWIG-7","l");
-  tleg2->AddEntry(p8s[0],"PYTHIA-8","l");
-    
-    
-  tleg3->AddEntry(PLs[0],"PYTHIA-8 parton jets","l");
-  if (groom) {
-    //    tleg3->AddEntry(PL_gs[0],"PYTHIA-8 SD parton jets","l");
-  }
-  /*
-  if (!groom) {
+  //  tleg->AddEntry(for_legend_ungroom,"STAR M","pf");
+  if (anim == 1) {tleg3->AddEntry(PLs[0],"PYTHIA-8 parton jets","l");}
+  
+  if ((!groom) && (anim == 2)) {
     tleg2->AddEntry(p8_qs[0],"PYTHIA-8 q jets","l");
     tleg2->AddEntry(p8_gs[0],"PYTHIA-8 g jets","l");
   }
-  */
+  
+  if (anim == 3) {tleg2->AddEntry(p6s[0],"PYTHIA-6 Perugia","l");}
+  if (anim == 4) {
+    tleg2->AddEntry(h7s[0],"HERWIG-7 EE4C","l");
+    tleg2->AddEntry(p8s[0],"PYTHIA-8 Monash","l");
+  }
+  
+  if (groom) {
+    //    tleg3->AddEntry(PL_gs[0],"PYTHIA-8 SD parton jets","l");
+  }
   
   TLatex *ttitle = new TLatex(); TLatex *slice = new TLatex();
   ttitle->SetTextSize(0.07); slice->SetTextSize(0.07);
-
+  TLatex *tprelim = new TLatex();
+  tprelim->SetTextSize(0.07); tprelim->SetTextColor(kRed);
+  
   TLine *one = new TLine(0,1,14,1); one->SetLineStyle(kDashed);
   
   for (int i = 0; i < nCols; ++ i) {
@@ -237,33 +534,37 @@ TH1D* plot_result_forDNP(int radius, bool groom, int dummy) {
     padup->Draw();
     padup->cd();
     w_systs[i]->Draw("E3same");
-    p6s[i]->Draw("Csame");                                                                                                                            
-    p8s[i]->Draw("Csame");
-    h7s[i]->Draw("Csame");                                                                                                                                
-    PLs[i]->Draw("Csame");
-    if (groom) {
-      //      PL_gs[i]->Draw("Csame");
-    }/*
-    if (!groom) {
+    //w_systs_ungroom[i]->Draw("E3same");
+    if (anim == 1) {PLs[i]->Draw("Csame");}
+    if ((!groom) && (anim == 2)) {
       p8_qs[i]->Draw("Csame");
       p8_gs[i]->Draw("Csame");
     }
-     */
+    if (anim == 3) {p6s[i]->Draw("Csame");}                                                 
+    if (anim == 4) {
+      p8s[i]->Draw("Csame");
+      h7s[i]->Draw("Csame");
+    }                   
+    if (groom) {
+      //      PL_gs[i]->Draw("Csame");
+    }
     recos[i]->Draw("same");
+    //recos_ungroom[i]->Draw("same");
     if (i == 0) {tleg->Draw("same");}
     if (i == 1) {tleg2->Draw("same");}
-    if (i == 1) {tleg3->Draw("same");}
+    if (i == 1 && anim == 1) {tleg3->Draw("same");}
     
     slice->DrawLatexNDC(0.4,0.7,(pts[i]+" < p_{T} < "+pts[i+1]+" GeV/c").c_str());
-
+    
     if (i == 0) {
-      ttitle->DrawLatex(2.2,0.66, "pp 200 GeV 2012");
+      ttitle->DrawLatex(2.2,0.45, "pp #sqrt{s} = 200 GeV");
+      ttitle->DrawLatex(2.2,0.41, "anti-k_{T}, R = 0.4, |#eta_{jet}| < 1-R");
     }
     if (i == 1) {
-      ttitle->DrawLatex(2.2,0.66, "anti-k_{T} jets, R = 0.4, |#eta| < 0.6");
+      tprelim->DrawLatex(2.2,0.45, "STAR Preliminary");
     }
     if (i == 1 && groom) {
-      ttitle->DrawLatex(2.2,0.6,"SoftDrop z_{cut} = 0.1, #beta = 0");
+      ttitle->DrawLatex(2.2,0.4,"SoftDrop z_{cut} = 0.1, #beta = 0");
     }
     
     
@@ -279,27 +580,33 @@ TH1D* plot_result_forDNP(int radius, bool groom, int dummy) {
     if (i==0) {dummy_left->Draw();}
     else if (i!=0) {dummy_right->Draw();}
     ratio_systematics[i]->Draw("E3same");
-    /*if(!groom){
+    if (anim == 1) {
+      PL_ratios[i]->Draw("E1same");
+      PL_ratios_bar[i]->Draw("same");
+    }
+    if ((!groom) && (anim == 2)) {
       p8_q_ratios[i]->Draw("E1same");
       p8_q_ratios_bar[i]->Draw("same");
       p8_g_ratios[i]->Draw("E1same");
       p8_g_ratios_bar[i]->Draw("same");
-      }*/
-    p6_ratios[i]->Draw("E1same");
-    p6_ratios_bar[i]->Draw("same");
-    p8_ratios[i]->Draw("E1same");
-    p8_ratios_bar[i]->Draw("same");
-    h7_ratios[i]->Draw("E1same");
-    h7_ratios_bar[i]->Draw("same");
-    /*if(!groom) {*/PL_ratios[i]->Draw("E1same");PL_ratios_bar[i]->Draw("same");//}
+    }
+    if (anim == 3) {
+      p6_ratios[i]->Draw("E1same");
+      p6_ratios_bar[i]->Draw("same");
+    }
+    if (anim == 4) {
+      p8_ratios[i]->Draw("E1same");
+      p8_ratios_bar[i]->Draw("same");
+      h7_ratios[i]->Draw("E1same");
+      h7_ratios_bar[i]->Draw("same");
+    }
+    //if(!groom) {//}
     //if(groom) {PL_g_ratios[i]->Draw("E1same");PL_g_ratios_bar[i]->Draw("same");}
     
     one->Draw("same");
     
   }
-  
-
-  cws->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"jet_mass_2panel_w_ratios_nominalpythia_4.pdf").c_str());
+  //cws->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"jet_mass_2panel_w_ratios_"+animstring+"_prelim.pdf").c_str());
   
   //MEAN v. pT:
 
@@ -310,6 +617,7 @@ TH1D* plot_result_forDNP(int radius, bool groom, int dummy) {
   double bin_edges[nBins+1] = {20,30,45};
   
   TH1D *reco_m = new TH1D("reco_m","",nBins,bin_edges);
+  //BLOCK COMMENT STARTS HERE
   /*TH1D *reco_m_copy = new TH1D("reco_m_copy","",nBins,bin_edges);
   TH1D *p6_m = new TH1D("p6_m","",nBins,bin_edges);
   TH1D *p8_m = new TH1D("p8_m","",nBins,bin_edges);
@@ -377,7 +685,7 @@ TH1D* plot_result_forDNP(int radius, bool groom, int dummy) {
   }
 
   //  cm->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"mean_jet_mass.pdf").c_str());
-  */
+*/  //BLOCK COMMENT ENDS HERE
   return reco_m;
 }
 
@@ -610,7 +918,7 @@ void plot_result_forDNP() {
 }
 */
 //this function plots a 3x2 plot of mass as a function of radius and pT
-void plot_result_forDNP(bool groom) {
+void plot_result_forDNP(bool groom, int anim) {
   gROOT->ForceStyle();
 
   string fstart = "";
@@ -623,6 +931,7 @@ void plot_result_forDNP(bool groom) {
   }
   
   string radstring;
+  string animstring = to_string(anim);
   
   const int nRows = 3; //0.2, 0.4, 0.6
   const int nCols = 2/*3*/;//now: 20-30,30-45 //other times: 20-25,25-30,30-40
@@ -634,8 +943,10 @@ void plot_result_forDNP(bool groom) {
     if (iRow == 0) {radstring = "_R02";}
     if (iRow == 1) {radstring = "_R04";}
     if (iRow == 2) {radstring = "_R06";}
-    //open files from which to pull lots of curves                                                                                              
-    TFile *funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+".root").c_str(),"READ");//change back if you change pt ranges!
+    //open files from which to pull lots of curves                                   
+    TFile *funfold;
+    if (iRow == 1) {funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+".root").c_str(),"READ"); }//this keeps the R = 0.4 net systematic consistent with the mass preliminary for now
+    else {funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+"_test.root").c_str(),"READ");}//change back if you change pt ranges!
     TFile *fp6 = new TFile(("~/jetmass2/out/sim/hists/unmatched_hists"+radstring+"_bindropped.root").c_str(),"READ");
     TFile *fp8 = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
     TFile *fh7 = new TFile(("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved"+radstring+".root").c_str(),"READ");//temporarily using the old files (they're the same, but will point to new ones later)
@@ -683,16 +994,23 @@ void plot_result_forDNP(bool groom) {
     
     TH1D* ldummy = new TH1D("ldummy","",14,0,13.999);
     TH1D* rdummy = new TH1D("rdummy","",14,0.0001,13.999);
-    ldummy->GetXaxis()->SetTitle((htitle+" [GeV/c^{2}]").c_str());
-    rdummy->GetXaxis()->SetTitle((htitle+" [GeV/c^{2}]").c_str());
+    //ldummy->GetXaxis()->SetTitle((htitle+" [GeV/c^{2}]").c_str());
+    //rdummy->GetXaxis()->SetTitle((htitle+" [GeV/c^{2}]").c_str());
     ldummy->GetYaxis()->SetTitle(("1/N dN/d"+htitle).c_str());
-    ldummy->GetYaxis()->SetRangeUser(0.001,0.74999);
-    rdummy->GetYaxis()->SetRangeUser(0,0.74999);
+    ldummy->GetYaxis()->SetRangeUser(0.0001,0.4999);
+    rdummy->GetYaxis()->SetRangeUser(0.0001,0.4999);
     ldummy->GetYaxis()->SetLabelSize(0.075);
     ldummy->GetXaxis()->SetLabelSize(0.075);
     rdummy->GetXaxis()->SetLabelSize(0.075);
-    
+    ldummy->GetYaxis()->SetNdivisions(505);
+    rdummy->GetYaxis()->SetNdivisions(505);
+    /* ldummy->GetXaxis()->SetTitleOffset(1.2);
+    rdummy->GetXaxis()->SetTitleOffset(1.2);
+    ldummy->GetXaxis()->SetTitleSize(0.1);
+    rdummy->GetXaxis()->SetTitleSize(0.1);
+    */
     for (unsigned i = 0; i < nCols; ++ i) {
+      cout << "UNFOLDED DATA MEAN " << i << ": " << w_systs[i]->GetMean() << endl;
       Prettify1D(recos[i],kRed,kFullStar,2,kRed,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,14,0,0.75);
       Prettify1D(w_systs[i],kRed,kFullStar,0,kRed,(htitle+" [GeV/c^{2}]").c_str(),("1/N dN/d"+htitle).c_str(),0,14,0,0.75);
       w_systs[i]->SetFillColor(kRed - 10); w_systs[i]->SetFillStyle(1001);
@@ -722,38 +1040,48 @@ void plot_result_forDNP(bool groom) {
     TLegend *tleg3 = new TLegend(0.1,0.5,0.55,0.65); tleg3->SetBorderSize(0);
     TH1D* for_legend = (TH1D*) w_systs[0]->Clone("for_legend"); for_legend->SetMarkerSize(2);
     tleg->AddEntry(for_legend,"STAR","pf");
-    tleg->AddEntry(p6s[0],"PYTHIA-6","l");
-    tleg2->AddEntry(h7s[0],"HERWIG-7","l");
-    tleg2->AddEntry(p8s[0],"PYTHIA-8","l");
-    tleg3->AddEntry(PLs[0],"PYTHIA-8 parton jets","l");
-    if (groom) {
-      //tleg3->AddEntry(PL_gs[0],"PYTHIA-8 SD parton jets","l");
+    if (anim == 1) {
+      tleg3->AddEntry(PLs[0],"PYTHIA-8 parton jets","l");
+    }
+    if ((!groom) && (anim == 2)) {
+      tleg2->AddEntry(p8_qs[0],"PYTHIA-8 q jets","l");
+      tleg2->AddEntry(p8_gs[0],"PYTHIA-8 g jets","l");
+    }
+    if (anim == 3/* || anim == 5*/) {
+      tleg->AddEntry(p6s[0],"PYTHIA-6 Perugia","l");
+    }
+    if (anim == 4 /*|| anim == 5*/) {
+      tleg2->AddEntry(h7s[0],"HERWIG-7 EE4C","l");
+    } 
+    if (anim == 5) {
+      tleg2->AddEntry(p8s[0],"PYTHIA-8 Monash","l");
     }
     
-    if (!groom) {
-      //      tleg2->AddEntry(p8_qs[0],"PYTHIA-8 q jets","l");
-      //tleg2->AddEntry(p8_gs[0],"PYTHIA-8 g jets","l");
+    if (groom) {
+      //tleg3->AddEntry(PL_gs[0],"PYTHIA-8 SD parton jets","l");
     }
     
 
     TLatex *ttitle = new TLatex(); TLatex *slice = new TLatex();
     ttitle->SetTextSize(0.08); slice->SetTextSize(0.07);
+    TLatex *tprelim = new TLatex();
+    tprelim->SetTextSize(0.08); tprelim->SetTextColor(kRed);
+
     for (int i = 0; i < nCols; ++ i) {
       cws->cd((i+1)+nCols*iRow);
       if (i == 0) {ldummy->Draw();} if (i == 1) {rdummy->Draw();}
       w_systs[i]->Draw("E3same");
-      
-      p6s[i]->Draw("Csame");                                                                                                                            
-      p8s[i]->Draw("Csame");
-      h7s[i]->Draw("Csame");                                                                                                                                
-      PLs[i]->Draw("Csame");
+      if (anim == 1) {PLs[i]->Draw("Csame");}
+      if ((!groom) && (anim == 2)) {
+	p8_qs[i]->Draw("Csame");
+	p8_gs[i]->Draw("Csame");
+      }
+      if (anim == 3 /*|| anim == 5*/) {p6s[i]->Draw("Csame");}
+      if (anim == 4 /*|| anim == 5*/) {h7s[i]->Draw("Csame");}                                                        
+      if (anim == 5) {p8s[i]->Draw("Csame");}
       
       if (groom) {
 	//PL_gs[i]->Draw("Csame");
-      }
-      if (!groom) {
-	//p8_qs[i]->Draw("Csame");
-	//p8_gs[i]->Draw("Csame");
       }
       
       recos[i]->Draw("same");
@@ -763,13 +1091,16 @@ void plot_result_forDNP(bool groom) {
       slice->DrawLatexNDC(0.4,0.67,("R = 0."+to_string(rad_int)).c_str());
 
       if (i == 0 && iRow == 0) {
-	ttitle->DrawLatex(2.2,0.66, "pp 200 GeV 2012");
+	ttitle->DrawLatex(4,0.45, "pp #sqrt{s} = 200 GeV");
+      }
+      if (i == 0 && iRow == 1) {
+	ttitle->DrawLatex(4,0.45, "anti-k_{T}, |#eta_{jet}| < 1-R");
+      }
+      if (i == 1 && iRow == 1 && groom) {
+	ttitle->DrawLatex(4,0.45,"SoftDrop z_{cut} = 0.1, #beta = 0");
       }
       if (i == 1 && iRow == 0) {
-	ttitle->DrawLatex(2.2,0.66, "anti-k_{T} jets, |#eta| < 1 - R");
-      }
-      if (i == 2 && iRow == 1 && groom) {
-	ttitle->DrawLatex(2.2,0.66,"SoftDrop z_{cut} = 0.1, #beta = 0");
+	tprelim->DrawLatex(4,0.45,"STAR Preliminary");
       }
       if (i == 1 && iRow == 0) {
 	tleg->Draw("same");
@@ -777,17 +1108,17 @@ void plot_result_forDNP(bool groom) {
       if (i == 1 && iRow == 1) {
 	tleg2->Draw("same");
       }
-      if (i == 1 && iRow == 2) {
+      if (i == 1 && iRow == 2 && anim == 1) {
 	tleg3->Draw("same");
       }
     }
   }
 
-  cws->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"jet_mass_6panel_noPLgroom_5.pdf").c_str());
+  cws->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"jet_mass_6panel_"+animstring+"_prelim.pdf").c_str());
 
   return;
 }
-
+/*
 //this file plots a 1x3 of the (groomed) mass result with additional MC curves (e.g. quark & gluon jet discrimination)
 //radius format: 4 = 0.4, ...
 void plot_result_forDNP (int radius, bool groom) {
@@ -882,12 +1213,12 @@ void plot_result_forDNP (int radius, bool groom) {
   if (groom) {
     tleg2->AddEntry(PL_gs[0],"PYTHIA-8 SD parton jets","l");
   }
-  /*
+  
   if (!groom) {
     tleg2->AddEntry(p8_qs[0],"PYTHIA-8 q jets","l");
     tleg2->AddEntry(p8_gs[0],"PYTHIA-8 g jets","l");
   }
-  */
+  
   
   TLatex *ttitle = new TLatex(); ttitle->SetTextAlign(11); ttitle->SetTextSize(0.05);
   TLatex *slice = new TLatex();
@@ -903,12 +1234,12 @@ void plot_result_forDNP (int radius, bool groom) {
     if (groom) {
       PL_gs[i]->Draw("Csame");
     }
-    /*
+    
     if (!groom) {
       p8_qs[i]->Draw("Csame");
       p8_gs[i]->Draw("Csame");
     }
-    */
+    
     recos[i]->Draw("same");
     slice->DrawLatexNDC(0.5,0.77,(pts[i]+" < p_{T} < "+pts[i+1]+" GeV/c").c_str());
     if (i == 0) {
@@ -924,7 +1255,7 @@ void plot_result_forDNP (int radius, bool groom) {
 
   return;
 }
-
+*/
 //this file plots a 1x3 of the (groomed) mass result for various jet radii (and fixed pT)
 void plot_result_forDNP (bool groom,int dummy1,int dummy2,int dummy3) {
   gROOT->ForceStyle();

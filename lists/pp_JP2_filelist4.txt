@@ -1,0 +1,1 @@
+/tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum4.root

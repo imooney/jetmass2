@@ -30,7 +30,7 @@ void TreetoHist (TFile *f, string treestr, vector<TH1D*> h1Ds, vector<TH2D*> h2D
   vector<double> *tau0 = 0; vector<double> *tau05 = 0; vector<double> *tau_05 = 0; vector<double> *tau_1 = 0;
   vector<double> *tau0_g = 0; vector<double> *tau05_g = 0; vector<double> *tau_05_g = 0; vector<double> *tau_1_g = 0;
 
-  double weight = 1, n_jets = -1, bbc_east_rate = -1, bbc_east_sum = -1;
+  double weight = 1, n_jets = -1, bbc_east_rate_pp = -1, bbc_east_rate_pAu = -1, bbc_east_sum_pp = -1, bbc_east_sum_pAu = -1;//bbc_east_rate = -1, bbc_east_sum = -1;
     
   string append;
   
@@ -64,8 +64,14 @@ void TreetoHist (TFile *f, string treestr, vector<TH1D*> h1Ds, vector<TH2D*> h2D
   
   //branches that only apply to data
   if (dataflag == 1) {
-    t->SetBranchAddress("bbc_east_rate",&bbc_east_rate);
-    t->SetBranchAddress("bbc_east_sum",&bbc_east_sum);
+    //TEMP FOR TOY_EMBEDDING!
+    t->SetBranchAddress("bbc_east_rate_pp",&bbc_east_rate_pp);
+    t->SetBranchAddress("bbc_east_sum_pp",&bbc_east_sum_pp);
+    t->SetBranchAddress("bbc_east_rate_pAu",&bbc_east_rate_pAu);
+    t->SetBranchAddress("bbc_east_sum_pAu",&bbc_east_sum_pAu);
+    
+    //t->SetBranchAddress("bbc_east_rate",&bbc_east_rate);
+    //t->SetBranchAddress("bbc_east_sum",&bbc_east_sum);
     
     //just haven't stuck the corresponding analysis snippet into my sim.cxx, so these are only within the purview of data for now
     t->SetBranchAddress((append+"tau0").c_str(),&tau0);
@@ -139,8 +145,8 @@ void TreetoHist (TFile *f, string treestr, vector<TH1D*> h1Ds, vector<TH2D*> h2D
 	h2Ds[14]->Fill(log10(tau_05->at(j)), Pt->at(j), weight);
 	h2Ds[15]->Fill(log10(tau_1->at(j)), Pt->at(j), weight);
       
-	h3Ds[0]->Fill(bbc_east_rate, Pt->at(j), M->at(j), weight);
-	h3Ds[1]->Fill(bbc_east_sum, Pt->at(j), M->at(j), weight);
+	h3Ds[0]->Fill(bbc_east_rate_pAu, Pt->at(j), M->at(j), weight);
+	h3Ds[1]->Fill(bbc_east_sum_pAu, Pt->at(j), M->at(j), weight);
       }
     }//!jet loop
   }//!event loop
@@ -238,7 +244,7 @@ int main (int argc, const char ** argv) {
   //analysis type is either data or sim.
   string data_string = (string) argv[4];
   bool data_bool = 1;
-  if (data_string == "data") {data_bool = 1;}
+  if (data_string == "data" || data_string == "toy_embedding") {data_bool = 1;}
   else {data_bool = 0;}
   
   std::cout << "DEBUG: data_string: " << data_string << std::endl;
@@ -362,10 +368,10 @@ int main (int argc, const char ** argv) {
   //jet mass dependence on event activity
   //these two are actually dummies
   TH3D* PL_bbc_east_rate_v_pt_v_m = new TH3D("PL_bbc_east_rate_v_pt_v_m","",70,0,7e6,PL_ptbins,PL_ptlow,PL_pthigh,14,0,14); //luminosity dependence
-  TH3D* PL_bbc_east_sum_v_pt_v_m = new TH3D("PL_bbc_east_sum_v_pt_v_m","",100,0,6.5e4,PL_ptbins,PL_ptlow,PL_pthigh,14,0,14); //centrality dependence
+  TH3D* PL_bbc_east_sum_v_pt_v_m = new TH3D("PL_bbc_east_sum_v_pt_v_m","",100,0,1e5/*6.5e4*/,PL_ptbins,PL_ptlow,PL_pthigh,14,0,14); //centrality dependence
   
   TH3D* bbc_east_rate_v_pt_v_m = new TH3D("bbc_east_rate_v_pt_v_m","",70,0,7e6,ptbins,ptlow,pthigh,14,0,14); //luminosity dependence
-  TH3D* bbc_east_sum_v_pt_v_m = new TH3D("bbc_east_sum_v_pt_v_m","",100,0,6.5e4,ptbins,ptlow,pthigh,14,0,14); //centrality dependence
+  TH3D* bbc_east_sum_v_pt_v_m = new TH3D("bbc_east_sum_v_pt_v_m","",100,0,1e5/*6.5e4*/,ptbins,ptlow,pthigh,14,0,14); //centrality dependence
   
   //angularities
   TH2D* PL_tau0_v_pt = new TH2D("PL_tau0_v_pt","",30,-8,0,PL_ptbins,PL_ptlow,PL_pthigh);

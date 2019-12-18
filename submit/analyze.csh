@@ -5,7 +5,7 @@
 
 #args:
 #1: the analysis type. Current options: QA, data, sim
-#2: the trigger. Current options for pp: JP2, HT, VPDMB(-nobsmd); for pA: JP2, BBCMB. For MC analysis, only JP2 is allowed at the moment.
+#2: the trigger. Current options for pp: JP2, HT2, VPDMB(-nobsmd); for pA: JP2, HT2, BBCMB. For MC analysis, only JP2 is allowed at the moment.
 #3: the species. Current options: pp, pA, AA
 #4: the jet radius. Options: any number > 0 & <= 9.9; passed in without the decimal, e.g. "06" for 0.6.
 #5: an analysis-specific wildcard (not required). Currently being used in data to take either full (full) or charged (ch) jets.
@@ -57,10 +57,10 @@ if (${analysisType} != 'sim') then
 	set trigger = "ppJP2"
 	set base = /tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum	
 	echo "Running on the ppJP2-triggered data!"
-    else if (${trigger} == 'HT' && ${species} == 'pp') then
-	set trigger = "ppHT"
+    else if (${trigger} == 'HT2' && ${species} == 'pp') then
+	set trigger = "ppHT2"
 	set base = /tier2/home/groups/rhi/STAR/Data/ppHT2Run12/pp12Pico
-	echo "Running on the ppHT-triggered data!"
+	echo "Running on the ppHT2-triggered data!"
     else if (${trigger} == 'VPDMB' && ${species} == 'pp') then
 	set trigger = "ppVPDMB"
 	set base = /tier2/home/groups/rhi/STAR/Data/ppMBRun12/sum
@@ -69,6 +69,10 @@ if (${analysisType} != 'sim') then
 	set trigger = "pAuJP2"
 	set base = /tier2/home/groups/rhi/STAR/Data/P16id/production_pAu200_2015/HT/pAu_2015_200_HT_1
 	echo "Running on the pAuJP2-triggered data!"
+    else if (${trigger} == 'HT2' && ${species} == 'pA') then
+	set trigger = "pAuHT2"
+	set base = /tier2/home/groups/rhi/STAR/Data/P16id/production_pAu200_2015/HT/pAu_2015_200_HT_1
+	echo "Running on the pAuHT2-triggered data!"	
     else if (${trigger} == 'BBCMB' && ${species} == 'pA') then
 	set trigger = "pAuBBCMB"
 	set base = /tier2/home/groups/rhi/STAR/Data/P16id/production_pAu200_2015/MB/pAu_2015_200_MB_1
@@ -114,7 +118,7 @@ foreach input ( ${base}* )
 
     #input files
     set Files = ${input}
-
+    
     #log files
     set LogFile = log/${outFile}/${OutBase}.log
     set ErrFile = log/${outFile}/${OutBase}.err

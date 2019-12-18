@@ -26,7 +26,7 @@ set DECAYS = $2
 set RADIUS = $3
 set TEST = $4
 set nHardBins = 11
-set nEvents = "_100Events_"
+set nEvents = "_50000Events_"
 set base = `pwd`
 set ExecPath = ${base}/submit
 set P6Path = /tier2/home/groups/rhi/STAR/Data/RhicJEWEL
@@ -53,7 +53,7 @@ else if ($TYPE == "P8") then
     #writing flags to the file
     echo "#Determines whether Herwig or Pythia HepMC files will be the input\ninputIsPythia = TRUE\n#Sets the jet radius parameter for clustering\njetRadius = "$RADIUS"\n#If hadronic final state, turns weak decays on or off; otherwise, partonic FS\ndecayFlag = "$DECAYS"\n" > submit/rivet_flags.txt
     set inpath = $P8Path
-    set Filename = "PYTHIA8"#"FSR_only_PYTHIA8"
+    set Filename = "HeavyIonsPYTHIA8"#"PYTHIA8"#"FSR_only_PYTHIA8"
     if ($DECAYS == "decayed") then
 	set whichdir = "wDecay"
         set Fileend = ${nEvents}"200GeV_decays_on.hepmc"
@@ -130,9 +130,9 @@ while ($i < $nHardBins)
     
     #basic format:
     #qsub [basic args] -N ~nameOfJob~ -o ~nameOfLogFile~ -e ~nameOfErrorFile~ -- ~QwrapFileName~ ~pathToAnalysisSharedLibrary~ rivet -a ~analysisClassName~ --pwd ~inputFileName~ -H ~yodaOutputFileName~
-    echo "DEBUG: "qsub -V -p 10 -q erhiq -l mem=4gb -W umask=0022 -N rivet_${TYPE}${DECAYS}_${i} -o log/rivet_${TYPE}${DECAYS}_${i}.log -e log/rivet_${TYPE}${DECAYS}_${i}.err -- ${ExecPath}/qwrap.sh ${ExecPath} rivet -a STAR_MASS${low_alt}${analysis_string}${high_alt} --pwd ${inpath}/${whichdir}/${Filename}${low}pthat${high}${Fileend} -H yoda/${TYPE}${low}pthat${high}${nEvents}${DECAYS}.yoda
+    echo "DEBUG: "qsub -V -p 10 -q erhiq -l mem=4gb -W umask=0022 -N rivet_${TYPE}${DECAYS}_${i} -o log/rivet_${TYPE}${DECAYS}_${i}.log -e log/rivet_${TYPE}${DECAYS}_${i}.err -- ${ExecPath}/qwrap.sh ${ExecPath} rivet -a STAR_MASS${low_alt}${analysis_string}${high_alt} -n 50000 --pwd ${inpath}/${whichdir}/${Filename}${low}pthat${high}${Fileend} -H yoda/HeavyIons_${TYPE}${low}pthat${high}${nEvents}${DECAYS}.yoda
 
-    qsub -V -p 10 -q erhiq -l mem=4gb -W umask=0022 -N rivet_${TYPE}${DECAYS}_${i} -o log/rivet_${TYPE}${DECAYS}_${i}.log -e log/rivet_${TYPE}${DECAYS}_${i}.err -- ${ExecPath}/qwrap.sh ${ExecPath} rivet -a STAR_MASS${low_alt}${analysis_string}${high_alt} --pwd ${inpath}/${whichdir}/${Filename}${low}pthat${high}${Fileend} -H yoda/${TYPE}${low}pthat${high}${nEvents}${DECAYS}.yoda
+    qsub -V -p 10 -q erhiq -l mem=4gb -W umask=0022 -N rivet_${TYPE}${DECAYS}_${i} -o log/rivet_${TYPE}${DECAYS}_${i}.log -e log/rivet_${TYPE}${DECAYS}_${i}.err -- ${ExecPath}/qwrap.sh ${ExecPath} rivet -a STAR_MASS${low_alt}${analysis_string}${high_alt} -n 50000 --pwd ${inpath}/${whichdir}/${Filename}${low}pthat${high}${Fileend} -H yoda/HeavyIons_${TYPE}${low}pthat${high}${nEvents}${DECAYS}.yoda
 
     @ i ++ #increments the current job number
 end

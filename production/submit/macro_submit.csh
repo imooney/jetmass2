@@ -63,7 +63,7 @@ if ( ! -d log/${inputType}/${analysisTag}) then
 mkdir -p log/${inputType}/${analysisTag} #making log directory
 endif
  
-foreach input ( ${base}*R${radius}_${finalstate}.root )
+foreach input ( ${base}*R${radius}_${finalstate}_HeavyIons.root )
 
     set OutBase = `basename $input | sed 's/.root//g'` #this removes the filetype so we can append to the filename
     set OutBase = `basename $OutBase | sed 's:out/::g'` #this removes the out/ from the input since it is unnecessary
@@ -71,7 +71,7 @@ foreach input ( ${base}*R${radius}_${finalstate}.root )
 #    set OutBase = "$OutBase$uscore$tag" #appending what we did to produce this file, e.g. "unfolded"
 
     set outLocation = out/${inputType}/${analysisTag}/ #producing a separate folder for output of different steps of the analysis
-    set outName = ${OutBase}_test.root
+    set outName = ${OutBase}.root
 
     set inFiles = ${input}
 

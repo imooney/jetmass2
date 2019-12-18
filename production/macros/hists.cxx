@@ -21,6 +21,8 @@ using namespace std;
 
 //self explanatory: takes branches in a tree, "treestr", in file f, and fills histograms with them
 void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH1D*> h1Ds, vector<TH2D*> h2Ds, vector<TH3D*> h3Ds, bool hadronic) {  
+  cout << "STARTING TREETOHIST" << endl;
+  
   //initializing the variables that will be filled by the values in the branches later
   vector<double> *Pt = 0; vector<double> *Eta = 0; vector<double> *Phi = 0;
   vector<double> *M = 0; vector<double> *zg = 0; vector<double> *rg = 0; vector<double> *mg = 0;
@@ -28,6 +30,8 @@ void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH
   vector<vector<double> > *PID = 0; vector<vector<double> > *consPt = 0;
   
   double weight = -1;
+  
+  cout << "INITIALIZED BRANCH VARIABLES!" << endl;
   
   //getting the tree and linking the branches with the variables
   TTree *t = (TTree*) f->Get(treestr.c_str());
@@ -38,7 +42,7 @@ void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH
   t->SetBranchAddress(branchnames[4].c_str(),&mg);
   t->SetBranchAddress(branchnames[5].c_str(),&zg);
   t->SetBranchAddress(branchnames[6].c_str(),&rg);
-  
+
   if (hadronic) {
     t->SetBranchAddress("qvg",&qvg);
     t->SetBranchAddress("consPID",&PID);
@@ -47,24 +51,32 @@ void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH
   
   t->SetBranchAddress("mcweight", &weight);
 
+  cout << "ASSIGNED VARIABLES TO BRANCHES!" << endl;
   
   vector<double> JEF_pi(15),JEF_K(15),JEF_p(15),JEF_other(15),JEF_tot(15);
   
-  cout << ("RUNNING OVER TREE "+treestr+"! Entries: ").c_str() << t->GetEntries() << endl;
+  cout << "BOOKED SPACE FOR JEF VECTORS" << endl;
+  
+  cout << /*(*/"RUNNING OVER TREE ResultTree"/*+treestr+*/ << "! Entries: "/*).c_str()*/ << t->GetEntries() << endl;
   const clock_t begin_time = clock(); //timing - for debugging and for fun
   for (unsigned i = 0; i < t->GetEntries(); ++ i) { //"event" loop
+    //cout << "IN EVENT LOOP" << endl;
     if (i % 1000 == 0 && i != 0) { //can change this to a frequency of your preference (for real data I use 1e5 or 1e6)
       cout << "Still chuggin. On event " << i << endl;
       cout << "Total time passed: " << fixed << setprecision(5) << double(clock() - begin_time) /(double) CLOCKS_PER_SEC << " secs" << endl;
     }
+    //    cout << "GETTING ENTRY " << i << endl;
     t->GetEntry(i);
+    cout << "GOT ENTRY " << i << endl;
     
     //filling "event" observables
     //
-    //looping over "tracks" and filling histograms
+    //looping over jets and filling histograms
     for (unsigned j = 0; j < Pt->size(); ++ j) { //all vectors of doubles in the branches should have the same size
+      /*      //cout << "IN JET LOOP" << endl;
       if (hadronic) {//don't have the following branches coded in the parton-tree
 	for (unsigned k = 0; k < PID->at(j).size(); ++ k) { //constituent loop
+	  //	  cout << "IN CONSTITUENT LOOP" << endl;
 	  //~~~this block will handle the pi/K/p jet energy fraction calculation~~~//
 	  if (fabs(PID->at(j).at(k)) == (double) 211 || PID->at(j).at(k) == (double) 111) {
 	    //cout << "DEBUG: PIONS: PID = " << PID->at(j).at(k) << " should be |211| or 111" << endl;
@@ -92,7 +104,7 @@ void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH
 	  //~~~          ~~~//
 	}//for loop over constituents
       }//hadronic conditional
-      //2Ds!                                                                                                                                           
+      *///2Ds!                                                                                                                                           
       h2Ds[0]->Fill(M->at(j), Pt->at(j), weight);
       //quark v. gluon jets
       if (hadronic && qvg->at(j) == 0) {//q jet!                                                                                                                           
@@ -121,8 +133,10 @@ void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH
 	h3Ds[5]->Fill(zg->at(j),rg->at(j),Pt->at(j),weight);
       } 
     }//!jet loop
+    //    cout << "DONE WITH JET LOOP" << endl;
   }//!event loop
-
+  cout << "DONE WITH EVENT LOOP" << endl;
+  /*
   if (hadronic) {//normalizing the JEFs
     for (unsigned i = 0; i < JEF_tot.size(); ++ i) {
       cout << "DEBUG: " << JEF_pi[i] << " " << JEF_K[i] << " " << JEF_p[i] << " " << JEF_other[i] << " " << JEF_tot[i] << endl;
@@ -144,8 +158,11 @@ void TreetoHist (TFile *f, string treestr, vector<string> branchnames, vector<TH
       h1Ds[3]->Fill(5*i+5,JEF_other[i]);
     }
   }
+*/
+  cout << "HeLP!" << endl;
   //!needs to be outside the event loop; not sure exactly what it does
   t->ResetBranchAddresses();
+  cout << "HeLP2!" << endl;
   return;
 }
 
@@ -200,9 +217,10 @@ void MatchedTreetoHist (TFile *f, string treestr, vector<TH2D*> h2Ds) {
 	//      }//CHANGE BACK LATER!!!!!!!!! 
     }//!jet loop
   }//!event loop
-  
+  cout << "HELP!" << endl;
   //!needs to be outside the event loop; not sure exactly what it does
   t->ResetBranchAddresses();
+  cout << "HELP2!" << endl;
   return;
 }
 
@@ -223,9 +241,11 @@ int main (int argc, const char ** argv) {
 
   //opening file containing some example trees
   //argv[3] should be the name of the input file
-  string fin_name = (string) argv[3];
+  //string fin_name = (string) argv[3];
+  cout << "WHAT ARE YOUUUUUUUUU? " << (string) argv[3] << endl;
+  string fin_name; fin_name.assign((string) argv[3]);//strcpy(fin_name,(string) argv[3]);
   TFile *fin = new TFile(fin_name.c_str(),"READ");
-  //cout << "DEBUG: input file name is " << fin->GetName() << endl;
+  cout << "DEBUG: input file name is " << fin->GetName() << endl;
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~hists~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
@@ -315,19 +335,26 @@ int main (int argc, const char ** argv) {
   vector<TH2D*> matchh2Ds = {PLmvHLpt,PLmgvHLpt};
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-    
+  
+  cout << "HISTS DONE!" << endl;
+  
   //inelegant way to reuse the same function twice: hardcode the branch names
   //order of appearance: pt, eta, phi, m, mg, zg, rg
   vector<string> HLbranches = {"jetpT","jeteta","jetphi","jetM","sdjetM","zg","rg"};
   vector<string> PLbranches = {"PLpt","PLeta","PLphi","PLm","PLmg","PLzg","PLrg"};
   
+  //  cout << "VECTORS OF (STRING) BRANCHES DONE!" << endl;
+  
   //calling analysis function(s)! "event" here is the internal name of the tree in "fin"  
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
   TreetoHist (fin, "ResultTree", HLbranches, h1Ds, h2Ds, h3Ds, 1); //1 = hadronic
+  cout << "HeLP3!" << endl;
   TreetoHist (fin, "PartonTree", PLbranches, PLh1Ds, PLh2Ds, PLh3Ds, 0); //0 = partonic
   //MatchedTreetoHist (fin, "MatchTree", matchh2Ds);
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
+  cout << "HeLP4!" << endl;
+  
   //outro
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
   //creating output file in which to deposit histograms
@@ -357,6 +384,8 @@ int main (int argc, const char ** argv) {
   //closing file
   fout->Close();
   cout << "Closed " << fout->GetName() << endl;
+  fin->Close();
+  cout << "Closed " << fin->GetName() << endl;
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
   return 0;
 }

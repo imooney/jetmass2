@@ -43,7 +43,7 @@ void temp_pA_pp_w_ratios() {
   TH1D* pAuhighEA_East_high = new TH1D("pAuhighEA_East_high","",10,0,10);
   TH1D* pAuhighEA_West_low = new TH1D("pAuhighEA_West_low","",10,0,10);
   TH1D* pAuhighEA_West_high = new TH1D("pAuhighEA_West_high","",10,0,10);
-  
+  /*
   tpp->Draw("M>>ppEast_low","Eta < 0 && Pt > 20 && Pt < 25");
   tpp->Draw("M>>ppWest_low","Eta > 0 && Pt > 20 && Pt < 25");
   tpp->Draw("M>>ppEast_high","Eta < 0 && Pt > 30");
@@ -59,7 +59,25 @@ void temp_pA_pp_w_ratios() {
   tpAu->Draw("M>>pAuhighEA_West_low","Eta > 0 && Pt > 20 && Pt < 25 && bbc_east_sum > 30000");
   tpAu->Draw("M>>pAuhighEA_East_high","Eta < 0 && Pt > 30 && bbc_east_sum > 30000");
   tpAu->Draw("M>>pAuhighEA_West_high","Eta > 0 && Pt > 30 && bbc_east_sum > 30000");
+  */
+  tpp->Draw("mg>>ppEast_low","Eta < 0 && Pt > 20 && Pt < 25 && zg > 0.1");
+  tpp->Draw("mg>>ppWest_low","Eta > 0 && Pt > 20 && Pt < 25 && zg > 0.1");
+  tpp->Draw("mg>>ppEast_high","Eta < 0 && Pt > 30 && zg > 0.1");
+  tpp->Draw("mg>>ppWest_high","Eta > 0 && Pt > 30 && zg > 0.1");
+ 
+  //tpAu->Draw("mg");
+  tpAu->Draw("mg>>pAulowEA_East_low","Eta < 0 && Pt > 20 && Pt < 25 && bbc_east_sum < 20000 && zg > 0.1");
+  tpAu->Draw("mg>>pAulowEA_West_low","Eta > 0 && Pt > 20 && Pt < 25 && bbc_east_sum < 20000 && zg > 0.1");
+  tpAu->Draw("mg>>pAulowEA_East_high","Eta < 0 && Pt > 30 && bbc_east_sum < 20000 && zg > 0.1");
+  tpAu->Draw("mg>>pAulowEA_West_high","Eta > 0 && Pt > 30 && bbc_east_sum < 20000 && zg > 0.1");
   
+  tpAu->Draw("mg>>pAuhighEA_East_low","Eta < 0 && Pt > 20 && Pt < 25 && bbc_east_sum > 30000 && zg > 0.1");
+  tpAu->Draw("mg>>pAuhighEA_West_low","Eta > 0 && Pt > 20 && Pt < 25 && bbc_east_sum > 30000 && zg > 0.1");
+  tpAu->Draw("mg>>pAuhighEA_East_high","Eta < 0 && Pt > 30 && bbc_east_sum > 30000 && zg > 0.1");
+  tpAu->Draw("mg>>pAuhighEA_West_high","Eta > 0 && Pt > 30 && bbc_east_sum > 30000 && zg > 0.1");
+
+
+
   TCanvas *clow = new TCanvas("clow","clow",800,500);
   DivideCanvas(clow,"0",nCols,nRows);
 
@@ -102,32 +120,32 @@ void temp_pA_pp_w_ratios() {
   dummy_right->GetYaxis()->SetNdivisions(505);
   dummy_right->GetYaxis()->SetLabelSize(0.13);
 
-  dummy_left->GetXaxis()->SetTitle("M [GeV/c^{2}]");
+  dummy_left->GetXaxis()->SetTitle("M_{g} [GeV/c^{2}]");
   dummy_left->GetXaxis()->SetTitleSize(0.2);
   dummy_left->GetXaxis()->SetTitleOffset(0.8);
   dummy_left->GetXaxis()->SetLabelSize(0.13);
   dummy_left->GetXaxis()->SetNdivisions(505);
-  dummy_right->GetXaxis()->SetTitle("M [GeV/c^{2}]");
+  dummy_right->GetXaxis()->SetTitle("M_{g} [GeV/c^{2}]");
   dummy_right->GetXaxis()->SetTitleSize(0.2);
   dummy_right->GetXaxis()->SetTitleOffset(0.8);
   dummy_right->GetXaxis()->SetLabelSize(0.13);
   dummy_right->GetXaxis()->SetNdivisions(505);
     
   
-  Prettify1D(ppEast_low,kGreen+2,kOpenCircle,2,kGreen+2,"M [GeV/c^{2}]","1/N_{j}dN/dM",0,10,0,0.45);
-  Prettify1D(ppEast_high,kGreen+2,kOpenCircle,2,kGreen+2,"M [GeV/c^{2}]","1/N_{j}dN/dM",0,10,0,0.45);
-  Prettify1D(ppWest_low,kRed+2,kOpenSquare,2,kRed+2,"M [GeV/c^{2}]","1/N_{j}dN/dM",0,10,0,0.45);
-  Prettify1D(ppWest_high,kRed+2,kOpenSquare,2,kRed+2,"M [GeV/c^{2}]","1/N_{j}dN/dM",0,10,0,0.45);
+  Prettify1D(ppEast_low,kGreen+2,kOpenCircle,2,kGreen+2,"M_{g} [GeV/c^{2}]","1/N_{j}dN/dM_{g}",0,10,0,0.45);
+  Prettify1D(ppEast_high,kGreen+2,kOpenCircle,2,kGreen+2,"M_{g} [GeV/c^{2}]","1/N_{j}dN/dM_{g}",0,10,0,0.45);
+  Prettify1D(ppWest_low,kRed+2,kOpenSquare,2,kRed+2,"M_{g} [GeV/c^{2}]","1/N_{j}dN/dM_{g}",0,10,0,0.45);
+  Prettify1D(ppWest_high,kRed+2,kOpenSquare,2,kRed+2,"M_{g} [GeV/c^{2}]","1/N_{j}dN/dM_{g}",0,10,0,0.45);
      
-  Prettify1D(pAulowEA_East_low,kGreen+2,kFullCircle,2,kGreen+2,"M [GeV/c^{2}]","1/N_{j}dN/dM",0,10,0,0.45);
-  Prettify1D(pAulowEA_East_high,kGreen+2,kFullCircle,2,kGreen+2,"M [GeV/c^{2}]","1/N_{j}dN/dM",0,10,0,0.45);
-  Prettify1D(pAulowEA_West_low,kRed+2,kFullSquare,2,kRed+2,"M [GeV/c^{2}]","1/N_{j}dN/dM",0,10,0,0.45);
-  Prettify1D(pAulowEA_West_high,kRed+2,kFullSquare,2,kRed+2,"M [GeV/c^{2}]","1/N_{j}dN/dM",0,10,0,0.45);
+  Prettify1D(pAulowEA_East_low,kGreen+2,kFullCircle,2,kGreen+2,"M_{g} [GeV/c^{2}]","1/N_{j}dN/dM_{g}",0,10,0,0.45);
+  Prettify1D(pAulowEA_East_high,kGreen+2,kFullCircle,2,kGreen+2,"M_{g} [GeV/c^{2}]","1/N_{j}dN/dM_{g}",0,10,0,0.45);
+  Prettify1D(pAulowEA_West_low,kRed+2,kFullSquare,2,kRed+2,"M_{g} [GeV/c^{2}]","1/N_{j}dN/dM_{g}",0,10,0,0.45);
+  Prettify1D(pAulowEA_West_high,kRed+2,kFullSquare,2,kRed+2,"M_{g} [GeV/c^{2}]","1/N_{j}dN/dM_{g}",0,10,0,0.45);
   
-  Prettify1D(pAuhighEA_East_low,kGreen+2,kFullCross,2,kGreen+2,"M [GeV/c^{2}]","1/N_{j}dN/dM",0,10,0,0.45);
-  Prettify1D(pAuhighEA_East_high,kGreen+2,kFullCross,2,kGreen+2,"M [GeV/c^{2}]","1/N_{j}dN/dM",0,10,0,0.45);
-  Prettify1D(pAuhighEA_West_low,kRed+2,kFullDiamond,2,kRed+2,"M [GeV/c^{2}]","1/N_{j}dN/dM",0,10,0,0.45);
-  Prettify1D(pAuhighEA_West_high,kRed+2,kFullDiamond,2,kRed+2,"M [GeV/c^{2}]","1/N_{j}dN/dM",0,10,0,0.45);
+  Prettify1D(pAuhighEA_East_low,kGreen+2,kFullCross,2,kGreen+2,"M_{g} [GeV/c^{2}]","1/N_{j}dN/dM_{g}",0,10,0,0.45);
+  Prettify1D(pAuhighEA_East_high,kGreen+2,kFullCross,2,kGreen+2,"M_{g} [GeV/c^{2}]","1/N_{j}dN/dM_{g}",0,10,0,0.45);
+  Prettify1D(pAuhighEA_West_low,kRed+2,kFullDiamond,2,kRed+2,"M_{g} [GeV/c^{2}]","1/N_{j}dN/dM_{g}",0,10,0,0.45);
+  Prettify1D(pAuhighEA_West_high,kRed+2,kFullDiamond,2,kRed+2,"M_{g} [GeV/c^{2}]","1/N_{j}dN/dM_{g}",0,10,0,0.45);
   
   
   ppEW_low = (TH1D*) ppEast_low->Clone("ppEW_low");
@@ -246,6 +264,8 @@ void temp_pA_pp_w_ratios() {
   ppEast_high->Draw("same");
   tleg2->Draw("same");
   
+  ttitle->DrawLatex(2.2,0.41,"SoftDrop z_{cut} = 0.1, #beta = 0");
+
   slice->DrawLatexNDC(0.55,0.75,"p_{T} > 30 GeV/c");
   
   clow->cd(2);
@@ -318,6 +338,8 @@ void temp_pA_pp_w_ratios() {
   pAulowEA_West_high->Draw("same");
   pAulowEA_East_high->Draw("same");
   tleg3->Draw("same");
+  
+  ttitle->DrawLatex(2.2,0.41,"SoftDrop z_{cut} = 0.1, #beta = 0");
   
   slice->DrawLatexNDC(0.55,0.75,"p_{T} > 30 GeV/c");
   

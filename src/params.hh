@@ -94,7 +94,7 @@ namespace Analysis {
   const double truth_FitOverMaxPts = -1; //still don't really understand this cut
 
   //detector: event, track, tower cuts
-  const std::string det_triggerString = "ppJP2"; //these trigger strings are not really used!! It's done by hand with the triggerIDs
+  const std::string det_triggerString = "ppJP2"; //these trigger strings are not always used!! It's typically done by hand with the triggerIDs
   const double det_absMaxVz = 30.0;//cm //|Vz|<=30 cm
   const double det_vZDiff = 9999;//cm //max diff btwn selected TPC vertex & most probable VPD vertex (in ppRun6 VPD vz = 0, so vZDiff should be > absMaxVz)
   const double det_evEtMin = -1;//GeV
@@ -113,13 +113,13 @@ namespace Analysis {
   //jet cuts
   const double R = 0.4;                   //jet resolution parameter                 
   const double jet_ptmin = 5.0;//GeV      //gen-jet pT >= 5.0 GeV                 
-  const double det_jet_ptmin = 15.0;//GeV //detector-level jet pT >= 15 GeV
+  const double det_jet_ptmin = 15.0; //GeV //detector-level jet pT >= 15 GeV
   const double jet_ptmax = 1000.0;//GeV   //DEBUG
   const double max_rap = max_track_rap-R; //|eta_jet| < 1-R
-  const double NEF_max = 0.9;             //neutral energy fraction of jet must be < 90% (not used for PYTHIA) !!!!!
-  const double mass_min = 1.0;//GeV       //det-jet M >= 1.0 GeV !!!!!
-  
-  //ghosts - not used for pp (jets aren't bkground subtracted), so once I have AuAu running as well, this can be moved there
+  const double NEF_max = 0.9;            //neutral energy fraction of jet must be < 90% (not used for PYTHIA) !!!!!
+  const double mass_min = 0.0; //TEMPFORRAGHAV 1.0;//GeV       //det-jet M >= 1.0 GeV !!!!!
+ 
+  //ghosts - not used for pp (jets aren't bkground subtracted)
   const int ghost_repeat = 1;
   const double ghost_area = 0.01;
   const double ghost_maxrap = max_rap + 2.0 * R;
@@ -134,6 +134,8 @@ namespace Analysis {
   const std::string pAu_triggerString = "All";
   const std::string pAu_badTowers = "lists/bad_towers_pAu2015.list";//preliminary; once calibrations and status tables are redone, list will likely be updated
   const std::string pAu_bad_run_list = "lists/dummy_badrun.list";
+
+  const std::string combined_badTowers = "lists/combined_pp_pA_badtower.list"; //for embedding -- need a superset since arrays will be combined!
   
   //event, track, tower cuts
   const double pAu_vZDiff = 3.0; //this may be too tight of a cut - to be revisited

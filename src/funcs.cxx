@@ -207,6 +207,24 @@ namespace Analysis {
     return -1;
   }
 
+  //gets the cross section for each pT bin for the run 15 PYTHIA embedding
+  //XSEC was obtained by summing PYTHIA's pythia.info.sigmaGen(0) per event. Each pt-hat bin was run for 1e4 events. We divide by this to get the average cross section per bin.
+  double LookupRun15Xsec( TString filename ){
+    const int NUMBEROFPT = 9;
+    //! const char *PTBINS[NUMBEROFPT]={"5_7","7_9","9_11","11_15","15_25","25_35","35_45","45_55","55_65"};                                      
+    const static float XSEC[NUMBEROFPT] = {0.1604997783173907,0.0279900193730690,0.006924398431,0.0028726057079642,0.0005197051748372,0.0000140447879818,0.0000006505378525,0.0000000345848665,0.0000000016149182};
+    const static float NUMBEROFEVENT[NUMBEROFPT] = {242090.0,159181.0,96283.0,125463.0,441145.0,169818.0,58406.0,59431.0,59973.0};
+    const static std::vector<std::string> vptbins={"pt-hat57","pt-hat79","pt-hat911","pt-hat1115","pt-hat1525","pt-hat2535","pt-hat3545","pt-hat4555","pt-hat5565"};
+    
+    for ( int i=0; i<vptbins.size(); ++i ){
+      if ( filename.Contains(vptbins.at(i).data())) return XSEC[i] / NUMBEROFEVENT[i];
+    }
+
+    throw std::runtime_error("Not a valid filename");
+    return -1;
+  }
+
+
 
   //This function simply converts TStarJetVectors from the event into PseudoJets for later clustering into jets with FastJet.
   //It also very importantly assigns a mass to each particle after the conversion.
@@ -214,21 +232,31 @@ namespace Analysis {
   void GatherParticles ( TStarJetVectorContainer<TStarJetVector> * container, TStarJetVector *sv, std::vector<fastjet::PseudoJet> & Particles, const bool full, const bool py, TDatabasePDG *pdg){
     for ( int i = 0; i < container->GetEntries() ; ++i ) {
       sv = container->Get(i);
+      //cout << "DEBUG: TStarJetVector info: " << 
       fastjet::PseudoJet current = fastjet::PseudoJet( *sv );
 
       if (sv->GetCharge() != 0 && !py) { // charged at detector-level -> charged pion mass
         current.reset_PtYPhiM(sqrt(current.perp2()),current.rap(),current.phi(), chPionMass); //assigning pion mass to charged particles
       }
       else if (sv->GetCharge() == 0 && !py) { // neutral at detector-level -> zero mass
-        current.reset_PtYPhiM(sqrt(current.perp2()),current.rap(),current.phi(), 0); //neutral particles massless!
+	current.reset_PtYPhiM(sqrt(current.perp2()),current.rap(),current.phi(), 0); //neutral particles massless!
       }
       else if (py) { // at particle-level -> PDG mass
         current.reset_PtYPhiM(sqrt(current.perp2()), current.rap(), current.phi(), pdg->GetParticle(sv->mc_pdg_pid())->Mass());
       }
       //DEBUG:
-      //std::cout << "Particle-level? " << py << std::endl << "ASSIGNING MASS " << current.m() << " TO CONSTITUENT " << i << " WITH CHARGE " << sv->GetCharge() << " AND MASS " << sv->GetPicoMass() << std::endl;
-      //std::cout << "THE PARTICLE, WITH PID " << sv->mc_pdg_pid() << ", HAS MASS " << pdg->GetParticle(sv->mc_pdg_pid())->Mass() << "[should be the same as the last number above]" << std::endl;               
-
+      /*
+      if (current.pt() < 0.2) {
+	//note: sv->GetPicoMass() will always give zero I believe. That's why we use sv->mc_pdg_pid().
+	std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+	std::cout << "The TStarJetVector has pid " << sv->mc_pdg_pid() << " and mass " << pdg->GetParticle(sv->mc_pdg_pid())->Mass() << std::endl;
+	std::cout << "Additionally, the charge is " << sv->GetCharge() << std::endl;
+	std::cout << "THE BIG ENCHILADA: pz=" << sv->pz() << "; e=" << sv->e() << std::endl;
+	std::cout << "AN EQUALLY LARGE ENCHILADA: pz=" << current.pz() << "; e=" << current.e() << std::endl;
+	std::cout << "Particle-level? " << py << std::endl << "ASSIGNED MASS " << current.m() << " TO CONSTITUENT " << i << " (should match mass above if py = 1)" << std::endl;
+	std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+      }
+      */
       if ((sv->GetCharge() == 0) && (full == 0)) { continue; } //!if we don't want full jets, skip neutrals                                                     
       current.set_user_index( sv->GetCharge() );
       
@@ -244,7 +272,7 @@ namespace Analysis {
   //!the name is a bit of a misnomer, we're actually using pT, not energy
   void ApplyNEFSelection(const std::vector<fastjet::PseudoJet> init, std::vector<fastjet::PseudoJet> & result) {
     //!Implementing a neutral energy fraction cut on inclusive jets 
-    for (int i = 0; i < init.size(); ++ i) { //looping over the jet
+    for (int i = 0; i < init.size(); ++ i) { //looping over the jets
       double towersum = 0; double ptsum = 0; //start with zero energy, neutral or otherwise
       for (int j = 0; j < init[i].constituents().size(); ++ j) { //loop over the jet constituents
         if (init[i].constituents()[j].user_index() == 0) { //if it's neutral, add its pT to the towers
@@ -264,8 +292,7 @@ namespace Analysis {
   bool DiscardEvent(const TString Filename, const std::vector<fastjet::PseudoJet> p_Jets, const std::vector<fastjet::PseudoJet> g_Jets) {
     bool bad_event = 0;
     //have to do some manipulations to get the upper edge of the pT-hard bin from the file name, e.g. isolating "25" from 20_25
-    //unfortunately this only works for the naming convention of the Y12 Pythia6 and Pythia6+Geant files on disk. Will need to be rewritten slightly if
-    //used on different files.
+    //unfortunately this only works for the naming convention of the Y12 Pythia6 and Pythia6+Geant files on disk. Will need to be rewritten slightly if used on different files.
     std::string tail = ((std::string) Filename).substr(((std::string) Filename).size() - 10);
     std::string upstring = tail.substr(0,2);
     std::string upstring_copy = upstring;
@@ -281,12 +308,52 @@ namespace Analysis {
     int upbin = std::stoi(upstring);
     if (p_Jets.size() != 0) {
       if ((p_Jets[0].pt() > 2*upbin) && upstring_copy != "-1") {
-	std::cout << "Removing event from file " << Filename << /*<< " with weight " << mc_weight*/ " due to bad jet with pt, eta, phi, and m: " << p_Jets[0].pt() << " " << p_Jets[0].eta() << " " << p_Jets[0].phi() << " " << p_Jets[0].m() << std::endl;
+	//std::cout << "DEBUG: 2upbin = " << 2*upbin << std::endl;
+	//std::cout << "Removing event from file " << Filename << /*<< " with weight " << mc_weight*/ " due to bad jet with pt, eta, phi, and m: " << p_Jets[0].pt() << " " << p_Jets[0].eta() << " " << p_Jets[0].phi() << " " << p_Jets[0].m() << std::endl;
 	bad_event = 1;
+      }
+      else {
+	//std::cout << "DEBUG: should be less than " << 2*upbin << ": " << p_Jets[0].pt() << std::endl;
       }
     }
     if (g_Jets.size() != 0) {
+      //std::cout << "DEBUG: should never see this for toy_embedding since we use a dummy vector here which should have size == 0" << std::endl;
       if ((g_Jets[0].pt() > 2*upbin) && upstring_copy != "-1") {
+	//std::cout << "Removing event from file " << Filename << /*<< " with weight " << mc_weight*/ " due to bad jet with pt, eta, phi, and m: " << g_Jets[0].pt() << " " << g_Jets[0].eta() << " " << g_Jets[0].phi() << " " << g_Jets[0].m() << std::endl;
+	bad_event = 1;
+      }
+    }
+    
+    return bad_event;
+  }
+  
+  //discards events on the grounds of them having jets of pT > double the high end of the pT-hat bin from which they came. Both the Py & Py+Ge event will be thrown out.
+  //NOTE: I don't think the Picos save the pT-hat bin edges from the production, so I have to use the filenames instead
+  bool DiscardEmbedEvent(const TString Filename, const std::vector<fastjet::PseudoJet> p_Jets, const std::vector<fastjet::PseudoJet> g_Jets) {
+    bool bad_event = 0;
+    //have to do some manipulations to get the upper edge of the pT-hard bin from the file name, e.g. isolating "25" from "1525"
+    //unfortunately this only works for the naming convention of the Pythia6 dijet embedding into Y15 pAu MB files on disk. Will need to be rewritten slightly if used on different files.
+    //upper-bin edges are either single or double digits, e.g. 7 or 15. So 10 positions from the end of the file name will either be the full 15 or the 5 that comes before the 7, in the previous two examples. There are only two sets of files with this single-digit problem: 57 and 79 (i.e. pT-hat in (7,9)). Therefore, we can check if the first two characters in this 10 character string are 57 or 79. Since these are not numbers that appear in the pT-hat ranges (5-7-9-11-15-25-35-45-55-65), we can separate into the case of single or double digit high-end by checking for these.
+    std::string tail = ((std::string) Filename).substr(((std::string) Filename).size() - 10);
+    std::string upstring = tail.substr(0,2);
+    //if we found a "57" or "79" in the 2 digit string, we just take the last digit.
+    if (upstring.find("57") != std::string::npos || upstring.find("79") != std::string::npos) {
+      upstring = upstring.substr(1,1);
+    }
+    int upbin = std::stoi(upstring);
+    if (p_Jets.size() != 0) {
+      if (p_Jets[0].pt() > 2*upbin) {
+	std::cout << "DEBUG: 2upbin = " << 2*upbin << std::endl;
+	std::cout << "Removing event from file " << Filename << /*<< " with weight " << mc_weight*/ " due to bad jet with pt, eta, phi, and m: " << p_Jets[0].pt() << " " << p_Jets[0].eta() << " " << p_Jets[0].phi() << " " << p_Jets[0].m() << std::endl;
+	bad_event = 1;
+      }
+      else {
+	std::cout << "DEBUG: should be less than " << 2*upbin << ": " << p_Jets[0].pt() << std::endl;
+      }
+    }
+    if (g_Jets.size() != 0) {
+      //std::cout << "DEBUG: should never see this for toy_embedding since we use a dummy vector here which should have size == 0" << std::endl;
+      if (g_Jets[0].pt() > 2*upbin) {
 	std::cout << "Removing event from file " << Filename << /*<< " with weight " << mc_weight*/ " due to bad jet with pt, eta, phi, and m: " << g_Jets[0].pt() << " " << g_Jets[0].eta() << " " << g_Jets[0].phi() << " " << g_Jets[0].m() << std::endl;
 	bad_event = 1;
       }

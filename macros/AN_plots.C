@@ -566,7 +566,7 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
     slice->DrawLatexNDC(0.3,0.7,(pts[i]+" < p_{T} < "+pts[i+1]+" GeV/c").c_str());
   }
 
-  csys->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"systematics_new.pdf").c_str());
+  //csys->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"systematics_new.pdf").c_str());
   
   
   //taking maximum envelopes!                                                                                                                                  
@@ -697,7 +697,7 @@ void AN_plots(int radius, bool groom) {
   TFile *fsysts = new TFile(("~/jetmass2/out/sim/sim_matched"+radstring+"_test_bindropped.root").c_str(),"READ");
 
   //plots the uncorrected jet mass for a bin of pT and compares to MC
-  rawdata(fdat, fp6unmatch);
+  //rawdata(fdat, fp6unmatch);
   
   //plots the mass resolution for different pT ranges on the same panel
   //  resolution(fp6match);
@@ -706,7 +706,7 @@ void AN_plots(int radius, bool groom) {
   //  closure(fclos);
   
   //plots the systematic uncertainties
-  //  systematics(fsysts, fdat, hname, htitle, fstart);
+  systematics(fsysts, fdat, hname, htitle, fstart);
   
   //~~~~~~//
   

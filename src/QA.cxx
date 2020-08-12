@@ -127,7 +127,7 @@ int main ( int argc, const char** argv) {
   //in place for now; will encapsulate in a function if it gets much more involved. Hardcodes the trigger IDs.
   int tID1 = -9999, tID2 = -9999, tID3 = -9999;
   if (trigger == "ppJP2") {tID1 = tppJP2; tID2 = -8888; tID3 = -8888;} //-8888 just ensures it won't accidentally match a trigger
-  if (trigger == "ppHT") {tID1 = tppHTa; tID2 = tppHTb; tID3 = tppHTc;}
+  if (trigger == "ppHT") {tID1 = tppHT2a; tID2 = tppHT2b; tID3 = tppHT2c;}
   if (trigger == "ppVPDMB") {tID1 = tppVPDMB_nobsmd; tID2 = -8888; tID3 = -8888;}
   if (trigger == "pAuJP2") {tID1 = tpAuJP2a; tID2 = tpAuJP2b; tID3 = -8888;}
   if (trigger == "pAuBBCMB") {tID1 = tpAuBBCMBa; tID2 = tpAuBBCMBb; tID3 = -8888;}

@@ -115,7 +115,7 @@ int main (int argc, const char** argv) {
   const string data_file = "data_hists_ppJP2";
   const string sim_file = "unmatched_hists";
 
-  TFile *match_in = new TFile((match_path+match_file+radius+"_test.root").c_str(),"READ");
+  TFile *match_in = new TFile((match_path+match_file+radius+"_paper_new.root").c_str(),"READ");
   TFile *data_in = new TFile((data_path+data_file+radius+".root").c_str(),"READ");
   TFile *sim_in = new TFile((sim_path+sim_file+radius+".root").c_str(),"READ");
   
@@ -198,18 +198,24 @@ int main (int argc, const char** argv) {
   //  RooUnfoldResponse *mg_pt_res_MS = (RooUnfoldResponse*) match_in->Get("mg_pt_res_MS");
 
   //these are the 1D responses for the mass smear systematic
-  RooUnfoldResponse *m_res2030_nom = (RooUnfoldResponse*) match_in->Get("m_res2030_nom");
-  RooUnfoldResponse *m_res3045_nom = (RooUnfoldResponse*) match_in->Get("m_res3045_nom");
-  RooUnfoldResponse *mg_res2030_nom = (RooUnfoldResponse*) match_in->Get("mg_res2030_nom");
-  RooUnfoldResponse *mg_res3045_nom = (RooUnfoldResponse*) match_in->Get("mg_res3045_nom");
-  RooUnfoldResponse *m_res2030_h7smear = (RooUnfoldResponse*) match_in->Get("m_res2030_h7smear");
-  RooUnfoldResponse *m_res3045_h7smear = (RooUnfoldResponse*) match_in->Get("m_res3045_h7smear");
-  RooUnfoldResponse *mg_res2030_h7smear = (RooUnfoldResponse*) match_in->Get("mg_res2030_h7smear");
-  RooUnfoldResponse *mg_res3045_h7smear = (RooUnfoldResponse*) match_in->Get("mg_res3045_h7smear");
-  RooUnfoldResponse *m_res2030_p8smear = (RooUnfoldResponse*) match_in->Get("m_res2030_p8smear");
-  RooUnfoldResponse *m_res3045_p8smear = (RooUnfoldResponse*) match_in->Get("m_res3045_p8smear");
-  RooUnfoldResponse *mg_res2030_p8smear = (RooUnfoldResponse*) match_in->Get("mg_res2030_p8smear");
-  RooUnfoldResponse *mg_res3045_p8smear = (RooUnfoldResponse*) match_in->Get("mg_res3045_p8smear");
+  RooUnfoldResponse *m_res2025_nom = (RooUnfoldResponse*) match_in->Get("m_res2025_nom");
+  RooUnfoldResponse *m_res2530_nom = (RooUnfoldResponse*) match_in->Get("m_res2530_nom");
+  RooUnfoldResponse *m_res3040_nom = (RooUnfoldResponse*) match_in->Get("m_res3040_nom");  
+  RooUnfoldResponse *mg_res2025_nom = (RooUnfoldResponse*) match_in->Get("mg_res2025_nom");
+  RooUnfoldResponse *mg_res2530_nom = (RooUnfoldResponse*) match_in->Get("mg_res2530_nom");
+  RooUnfoldResponse *mg_res3040_nom = (RooUnfoldResponse*) match_in->Get("mg_res3040_nom");
+  RooUnfoldResponse *m_res2025_h7smear = (RooUnfoldResponse*) match_in->Get("m_res2025_h7smear");
+  RooUnfoldResponse *m_res2530_h7smear = (RooUnfoldResponse*) match_in->Get("m_res2530_h7smear");
+  RooUnfoldResponse *m_res3040_h7smear = (RooUnfoldResponse*) match_in->Get("m_res3040_h7smear");
+  RooUnfoldResponse *mg_res2025_h7smear = (RooUnfoldResponse*) match_in->Get("mg_res2025_h7smear");
+  RooUnfoldResponse *mg_res2530_h7smear = (RooUnfoldResponse*) match_in->Get("mg_res2530_h7smear");
+  RooUnfoldResponse *mg_res3040_h7smear = (RooUnfoldResponse*) match_in->Get("mg_res3040_h7smear");
+  RooUnfoldResponse *m_res2025_p8smear = (RooUnfoldResponse*) match_in->Get("m_res2025_p8smear");
+  RooUnfoldResponse *m_res2530_p8smear = (RooUnfoldResponse*) match_in->Get("m_res2530_p8smear");
+  RooUnfoldResponse *m_res3040_p8smear = (RooUnfoldResponse*) match_in->Get("m_res3040_p8smear");
+  RooUnfoldResponse *mg_res2025_p8smear = (RooUnfoldResponse*) match_in->Get("mg_res2025_p8smear");
+  RooUnfoldResponse *mg_res2530_p8smear = (RooUnfoldResponse*) match_in->Get("mg_res2530_p8smear");
+  RooUnfoldResponse *mg_res3040_p8smear = (RooUnfoldResponse*) match_in->Get("mg_res3040_p8smear");
   
   
   //~~~data
@@ -226,37 +232,49 @@ int main (int argc, const char** argv) {
   TH2D *mg_v_pt_g_counts = (TH2D*) sim_in->Get("mg_v_pt_counts");
   TH2D *mg_v_pt_p_counts = (TH2D*) sim_in->Get("PL_mg_v_pt_counts");
 
-  TH1D* m_2030_d = (TH1D*) m_v_pt_d->ProjectionX("m_2030_d",m_v_pt_d->GetYaxis()->FindBin(20),m_v_pt_d->GetYaxis()->FindBin(30)-1);
-  TH1D* mg_2030_d = (TH1D*) mg_v_pt_d->ProjectionX("mg_2030_d",mg_v_pt_d->GetYaxis()->FindBin(20),mg_v_pt_d->GetYaxis()->FindBin(30)-1);
-  TH1D* m_3045_d = (TH1D*) m_v_pt_d->ProjectionX("m_3045_d",m_v_pt_d->GetYaxis()->FindBin(30),m_v_pt_d->GetYaxis()->FindBin(45)-1);
-  TH1D* mg_3045_d = (TH1D*) mg_v_pt_d->ProjectionX("mg_3045_d",mg_v_pt_d->GetYaxis()->FindBin(30),mg_v_pt_d->GetYaxis()->FindBin(45)-1);
+  TH1D* m_2025_d = (TH1D*) m_v_pt_d->ProjectionX("m_2025_d",m_v_pt_d->GetYaxis()->FindBin(20),m_v_pt_d->GetYaxis()->FindBin(25)-1);
+  TH1D* mg_2025_d = (TH1D*) mg_v_pt_d->ProjectionX("mg_2025_d",mg_v_pt_d->GetYaxis()->FindBin(20),mg_v_pt_d->GetYaxis()->FindBin(25)-1);
+
+  TH1D* m_2530_d = (TH1D*) m_v_pt_d->ProjectionX("m_2530_d",m_v_pt_d->GetYaxis()->FindBin(25),m_v_pt_d->GetYaxis()->FindBin(30)-1);
+  TH1D* mg_2530_d = (TH1D*) mg_v_pt_d->ProjectionX("mg_2530_d",mg_v_pt_d->GetYaxis()->FindBin(25),mg_v_pt_d->GetYaxis()->FindBin(30)-1);
   
+  TH1D* m_3040_d = (TH1D*) m_v_pt_d->ProjectionX("m_3040_d",m_v_pt_d->GetYaxis()->FindBin(30),m_v_pt_d->GetYaxis()->FindBin(40)-1);
+  TH1D* mg_3040_d = (TH1D*) mg_v_pt_d->ProjectionX("mg_3040_d",mg_v_pt_d->GetYaxis()->FindBin(30),mg_v_pt_d->GetYaxis()->FindBin(40)-1);
 
   
   vector<int> to_drop_m; vector<int> to_drop_mg;
   vector<int> to_drop_m1D; vector<int> to_drop_mg1D; vector<int> to_drop_pt1D;
-  vector<int> to_drop_m1D_2030; vector<int> to_drop_mg1D_2030;
-  vector<int> to_drop_m1D_3045; vector<int> to_drop_mg1D_3045;
+  vector<int> to_drop_m1D_2025; vector<int> to_drop_mg1D_2025;
+  vector<int> to_drop_m1D_2530; vector<int> to_drop_mg1D_2530;
+  vector<int> to_drop_m1D_3040; vector<int> to_drop_mg1D_3040;
   
   //determining low-stats 1D mass spectra bins from data to later use the corresponding bin numbers for dropping bins from the response
-  to_drop_m1D_2030 = DropLowStatsBins(m_2030_d, m_2030_d);
-  to_drop_mg1D_2030 = DropLowStatsBins(mg_2030_d, mg_2030_d);
-  to_drop_m1D_3045 = DropLowStatsBins(m_3045_d, m_3045_d);
-  to_drop_mg1D_3045 = DropLowStatsBins(mg_3045_d, mg_3045_d);
+  to_drop_m1D_2025 = DropLowStatsBins(m_2025_d, m_2025_d);
+  to_drop_mg1D_2025 = DropLowStatsBins(mg_2025_d, mg_2025_d);
+  to_drop_m1D_2530 = DropLowStatsBins(m_2530_d, m_2530_d);
+  to_drop_mg1D_2530 = DropLowStatsBins(mg_2530_d, mg_2530_d);
+  to_drop_m1D_3040 = DropLowStatsBins(m_3040_d, m_3040_d);
+  to_drop_mg1D_3040 = DropLowStatsBins(mg_3040_d, mg_3040_d);
 
   //dropping corresponding bins from the smeared 1D responses
-  DropBins(m_res2030_nom, to_drop_m1D_2030);
-  DropBins(m_res2030_h7smear, to_drop_m1D_2030);
-  DropBins(m_res2030_p8smear, to_drop_m1D_2030);
-  DropBins(m_res3045_nom, to_drop_m1D_3045);
-  DropBins(m_res3045_h7smear, to_drop_m1D_3045);
-  DropBins(m_res3045_p8smear, to_drop_m1D_3045);
-  DropBins(mg_res2030_nom, to_drop_mg1D_2030);
-  DropBins(mg_res2030_h7smear, to_drop_mg1D_2030);
-  DropBins(mg_res2030_p8smear, to_drop_mg1D_2030);
-  DropBins(mg_res3045_nom, to_drop_mg1D_3045);
-  DropBins(mg_res3045_h7smear, to_drop_mg1D_3045);
-  DropBins(mg_res3045_p8smear, to_drop_mg1D_3045);
+  DropBins(m_res2025_nom, to_drop_m1D_2025);
+  DropBins(m_res2025_h7smear, to_drop_m1D_2025);
+  DropBins(m_res2025_p8smear, to_drop_m1D_2025);
+  DropBins(m_res2530_nom, to_drop_m1D_2530);
+  DropBins(m_res2530_h7smear, to_drop_m1D_2530);
+  DropBins(m_res2530_p8smear, to_drop_m1D_2530);
+  DropBins(m_res3040_nom, to_drop_m1D_3040);
+  DropBins(m_res3040_h7smear, to_drop_m1D_3040);
+  DropBins(m_res3040_p8smear, to_drop_m1D_3040);
+  DropBins(mg_res2025_nom, to_drop_mg1D_2025);
+  DropBins(mg_res2025_h7smear, to_drop_mg1D_2025);
+  DropBins(mg_res2025_p8smear, to_drop_mg1D_2025);
+  DropBins(mg_res2530_nom, to_drop_mg1D_2530);
+  DropBins(mg_res2530_h7smear, to_drop_mg1D_2530);
+  DropBins(mg_res2530_p8smear, to_drop_mg1D_2530);
+  DropBins(mg_res3040_nom, to_drop_mg1D_3040);
+  DropBins(mg_res3040_h7smear, to_drop_mg1D_3040);
+  DropBins(mg_res3040_p8smear, to_drop_mg1D_3040);
   
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//  
@@ -340,9 +358,9 @@ int main (int argc, const char** argv) {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
   //output files - same as inputs but with "_bindropped" appended.
-  TFile *match_out = new TFile((match_path+match_file+radius+"_test_bindropped.root").c_str(),"RECREATE");
-  TFile *data_out = new TFile((data_path+data_file+radius+"_bindropped.root").c_str(),"RECREATE");
-  TFile *sim_out = new TFile((sim_path+sim_file+radius+"_bindropped.root").c_str(),"RECREATE");
+  TFile *match_out = new TFile((match_path+match_file+radius+"_paper_bindropped_new.root").c_str(),"RECREATE");
+  TFile *data_out = new TFile((data_path+data_file+radius+"_bindropped_new.root").c_str(),"RECREATE");
+  TFile *sim_out = new TFile((sim_path+sim_file+radius+"_bindropped_new.root").c_str(),"RECREATE");
 
   match_out->cd();
   //nominal responses
@@ -366,22 +384,27 @@ int main (int argc, const char** argv) {
   m_pt_res_DS->Write(); mg_pt_res_DS->Write();
   m_pt_res_GS->Write(); mg_pt_res_GS->Write();
   //m_pt_res_MS->Write(); mg_pt_res_MS->Write();
-  m_res2030_nom->Write(); mg_res2030_nom->Write();
-  m_res2030_h7smear->Write(); mg_res2030_h7smear->Write();
-  m_res2030_p8smear->Write(); mg_res2030_p8smear->Write();
-  m_res3045_nom->Write(); mg_res3045_nom->Write();
-  m_res3045_h7smear->Write(); mg_res3045_h7smear->Write();
-  m_res3045_p8smear->Write(); mg_res3045_p8smear->Write();
+  m_res2025_nom->Write(); mg_res2025_nom->Write();
+  m_res2025_h7smear->Write(); mg_res2025_h7smear->Write();
+  m_res2025_p8smear->Write(); mg_res2025_p8smear->Write();
+  m_res2530_nom->Write(); mg_res2530_nom->Write();
+  m_res2530_h7smear->Write(); mg_res2530_h7smear->Write();
+  m_res2530_p8smear->Write(); mg_res2530_p8smear->Write();
+  m_res3040_nom->Write(); mg_res3040_nom->Write();
+  m_res3040_h7smear->Write(); mg_res3040_h7smear->Write();
+  m_res3040_p8smear->Write(); mg_res3040_p8smear->Write();
 
   
   data_out->cd();
   //data spectra
   m_v_pt_d->Write();
   mg_v_pt_d->Write();
-  m_2030_d->Write();
-  m_3045_d->Write();
-  mg_2030_d->Write();
-  mg_3045_d->Write();
+  m_2025_d->Write();
+  m_2530_d->Write();
+  m_3040_d->Write();
+  mg_2025_d->Write();
+  mg_2530_d->Write();
+  mg_3040_d->Write();
   
   
   sim_out->cd();

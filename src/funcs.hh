@@ -80,6 +80,7 @@ namespace Analysis {
 
   double LookupRun6Xsec(TString);
   double LookupRun12Xsec(TString);
+  double LookupRun15Xsec(TString);
   
   //converts tstarjetvectors into pseudojets for later clustering into jets; also assigns particle masses
   void GatherParticles (TStarJetVectorContainer<TStarJetVector> *, TStarJetVector*, std::vector<fastjet::PseudoJet> &, const bool, const bool, TDatabasePDG*);
@@ -88,6 +89,7 @@ namespace Analysis {
   void ApplyNEFSelection (const std::vector<fastjet::PseudoJet>, std::vector<fastjet::PseudoJet> &);
 
   bool DiscardEvent(const TString, const std::vector<fastjet::PseudoJet>, const std::vector<fastjet::PseudoJet>);
+  bool DiscardEmbedEvent(const TString, const std::vector<fastjet::PseudoJet>, const std::vector<fastjet::PseudoJet>);
 
   std::vector<int> MatchJets(const std::vector<fastjet::PseudoJet>, const std::vector<fastjet::PseudoJet>, std::vector<fastjet::PseudoJet> &, std::vector<fastjet::PseudoJet> &);
   std::vector<int> FakesandMisses(const std::vector<fastjet::PseudoJet>, const std::vector<fastjet::PseudoJet>, std::vector<fastjet::PseudoJet> &);

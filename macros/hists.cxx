@@ -147,6 +147,9 @@ void TreetoHist (TFile *f, string treestr, vector<TH1D*> h1Ds, vector<TH2D*> h2D
       
 	h3Ds[0]->Fill(bbc_east_rate_pAu, Pt->at(j), M->at(j), weight);
 	h3Ds[1]->Fill(bbc_east_sum_pAu, Pt->at(j), M->at(j), weight);
+	if (zg->at(j) >= 0.1) {                                                                                                                           
+	  h3Ds[2]->Fill(bbc_east_sum_pAu, Pt->at(j), mg->at(j), weight);
+	}
       }
     }//!jet loop
   }//!event loop
@@ -369,10 +372,12 @@ int main (int argc, const char ** argv) {
   //these two are actually dummies
   TH3D* PL_bbc_east_rate_v_pt_v_m = new TH3D("PL_bbc_east_rate_v_pt_v_m","",70,0,7e6,PL_ptbins,PL_ptlow,PL_pthigh,14,0,14); //luminosity dependence
   TH3D* PL_bbc_east_sum_v_pt_v_m = new TH3D("PL_bbc_east_sum_v_pt_v_m","",100,0,1e5/*6.5e4*/,PL_ptbins,PL_ptlow,PL_pthigh,14,0,14); //centrality dependence
+  TH3D* PL_bbc_east_sum_v_pt_v_mg = new TH3D("PL_bbc_east_sum_v_pt_v_mg","",100,0,1e5,PL_ptbins,PL_ptlow,PL_pthigh,14,0,14);
   
   TH3D* bbc_east_rate_v_pt_v_m = new TH3D("bbc_east_rate_v_pt_v_m","",70,0,7e6,ptbins,ptlow,pthigh,14,0,14); //luminosity dependence
   TH3D* bbc_east_sum_v_pt_v_m = new TH3D("bbc_east_sum_v_pt_v_m","",100,0,1e5/*6.5e4*/,ptbins,ptlow,pthigh,14,0,14); //centrality dependence
-  
+  TH3D* bbc_east_sum_v_pt_v_mg = new TH3D("bbc_east_sum_v_pt_v_mg","",100,0,1e5,ptbins,ptlow,pthigh,14,0,14);
+
   //angularities
   TH2D* PL_tau0_v_pt = new TH2D("PL_tau0_v_pt","",30,-8,0,PL_ptbins,PL_ptlow,PL_pthigh);
   TH2D* PL_tau05_v_pt = new TH2D("PL_tau05_v_pt","",30,-8,0,PL_ptbins,PL_ptlow,PL_pthigh);
@@ -402,11 +407,11 @@ int main (int argc, const char ** argv) {
   //putting them in a vector to more easily shuttle them back and forth in the function. Drawback: have to know their order.
   vector<TH1D*> PL_h1Ds = {PL_pt_var_bin,PL_pt,PL_eta,PL_phi,PL_e,PL_m,PL_ch_e_frac,PL_zg,PL_rg,PL_mg,PL_ptg,PL_ratio_ptg_pt,PL_mcd,PL_n_jets};
   vector<TH2D*> PL_h2Ds = {PL_m_v_pt,PL_ch_frac_v_pt,PL_zg_v_pt,PL_rg_v_pt,PL_mg_v_pt,PL_ptg_v_pt,PL_ratio_ptgpt_v_pt,PL_mcd_v_pt,PL_phi_v_pt,PL_eta_v_pt,PL_m_v_pt_counts,PL_mg_v_pt_counts,PL_tau0_v_pt,PL_tau05_v_pt,PL_tau_05_v_pt,PL_tau_1_v_pt,PL_tau0_g_v_pt,PL_tau05_g_v_pt,PL_tau_05_g_v_pt,PL_tau_1_g_v_pt};
-  vector<TH3D*> PL_h3Ds = {PL_bbc_east_rate_v_pt_v_m,PL_bbc_east_sum_v_pt_v_m};
+  vector<TH3D*> PL_h3Ds = {PL_bbc_east_rate_v_pt_v_m,PL_bbc_east_sum_v_pt_v_m, PL_bbc_east_sum_v_pt_v_mg};
   
   vector<TH1D*> h1Ds = {pt_var_bin,pt,eta,phi,e,m,ch_e_frac,zg,rg,mg,ptg,ratio_ptg_pt,mcd,n_jets};
   vector<TH2D*> h2Ds = {m_v_pt,ch_frac_v_pt,zg_v_pt,rg_v_pt,mg_v_pt,ptg_v_pt,ratio_ptgpt_v_pt,mcd_v_pt,phi_v_pt,eta_v_pt,m_v_pt_counts,mg_v_pt_counts,tau0_v_pt,tau05_v_pt,tau_05_v_pt,tau_1_v_pt,tau0_g_v_pt,tau05_g_v_pt,tau_05_g_v_pt,tau_1_g_v_pt};
-  vector<TH3D*> h3Ds = {bbc_east_rate_v_pt_v_m, bbc_east_sum_v_pt_v_m};
+  vector<TH3D*> h3Ds = {bbc_east_rate_v_pt_v_m, bbc_east_sum_v_pt_v_m, bbc_east_sum_v_pt_v_mg};
   
   vector<TH2D*> matched2Ds = {deltaPtvGePt,deltaPtvPyPt,deltaMvPyPt,deltaMgvPyPt,ratioPtvPyPt,ratioMvPyPt,ratioMgvPyPt,ratioMvGePt,ratioMgvGePt};
   

@@ -180,7 +180,7 @@ vector<TH1D*> plot_result(int radius, bool groom, int dummy) {
   DivideCanvas(cws,"0",nCols,nRows);
   
   //open files from which to pull lots of curves                                                                                              
-  TFile *funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+"_forpaper.root").c_str(),"READ");
+  TFile *funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+"_paper_new.root").c_str(),"READ");
   TFile *fp6 = new TFile(("~/jetmass2/out/sim/hists/unmatched_hists"+radstring+"_bindropped.root").c_str(),"READ");
   TFile *fp8 = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
   TFile *fh7 = new TFile(("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved"+radstring+".root").c_str(),"READ");//temporarily using the old files (they're the same, but will point to new ones later)
@@ -423,10 +423,10 @@ vector<TH1D*> plot_result(int radius, bool groom, int dummy) {
   }
   
 
-  //  cws->SaveAs(("~/jetmass2/plots/pp_paper/"+fstart+"jet_mass_3panel_w_ratios_nominalpythia.pdf").c_str());
+  //cws->SaveAs(("~/jetmass2/plots/pp_paper/"+fstart+"jet_mass_3panel_w_ratios_nominalpythia_finalizedsysts_new.pdf").c_str());
 
   //MEAN v. pT:
-
+  
   TCanvas *cm = new TCanvas("cm","cm",800,600);
   cm->cd();
   
@@ -469,7 +469,7 @@ vector<TH1D*> plot_result(int radius, bool groom, int dummy) {
   h7_m->Sumw2();
   
   Prettify1D(reco_m_copy,kRed,kFullStar,2.5,kRed,"p_{T} [GeV/c]",("\\langle \\text{"+htitle+"}\\rangle"+" \\text{ [GeV}/c^{2}\\text{]}").c_str(),20,40,0,10);
-  Prettify1D(reco_m,kRed,kFullStar,0,kRed,"p_{T} [GeV/c]",/*("\\langle \\text{"+htitle+"}\\rangle"+" \\text{ [GeV}/c^{2}\\text{]}").c_str()*/"\\langle \\text{M}_{(\\text{g})}\\rangle \\text{ [GeV}/c^{2}\\text{]}",20,40,0,10);
+  Prettify1D(reco_m,kRed,kFullStar,0,kRed,"p_{T} [GeV/c]","\\langle \\text{M}_{(\\text{g})}\\rangle \\text{ [GeV}/c^{2}\\text{]}",20,40,0,10);
   reco_m->SetFillColor(kRed - 10); reco_m->SetFillStyle(1001);
   Prettify1D(p6_m, kBlue, kOpenSquare,2,kBlue,"p_{T} [GeV/c]",("\\langle \\text{"+htitle+"}\\rangle"+" \\text{ [GeV}/c^{2}\\text{]}").c_str(),20,40,0,10);
   Prettify1D(p8_m,kBlack,kFullCircle,2,kBlack,"p_{T} [GeV/c]",("\\langle \\text{"+htitle+"}\\rangle"+" \\text{ [GeV}/c^{2}\\text{]}").c_str(),20,40,0,10);
@@ -511,6 +511,10 @@ vector<TH1D*> plot_result(int radius, bool groom, int dummy) {
   vector<TH1D*> means = {reco_m, reco_m_copy};
   
   return means;
+  /*
+  vector<TH1D*> vdummy;
+  return vdummy;
+  */
 }
 
 
@@ -541,20 +545,20 @@ void plot_result() {
   reco_mg->SetFillColor(kBlue-10);
   
   gStyle->SetPadTickY(0);
-  
+  /*
   TGaxis *raxis = new TGaxis(40,3,40,6,3,6,510,"+L");  
   raxis->SetLabelFont(42);
   raxis->SetLabelSize(0.05);
   raxis->SetTitleFont(42);
   raxis->SetTitleSize(0.05);
   // raxis->SetTitle("\\langle \\text{M}_{\\text{g}}\\rangle \\text{ [GeV}/c^{2}\\text{]}");
-
+  */
   reco_m->GetXaxis()->SetNdivisions(504);
   reco_m->GetXaxis()->SetTitleOffset(1);
   
   //legends
   TLatex *title = new TLatex();
-  TLegend *tm = new TLegend(0.5,0.2,0.8,0.35); tm->SetBorderSize(0);
+  TLegend *tm = new TLegend(0.5,0.2,0.75,0.35); tm->SetBorderSize(0);
   TH1D* for_legend_m = (TH1D*) reco_m->Clone("for_legend_m"); for_legend_m->SetMarkerSize(2);
   TH1D* for_legend_mg = (TH1D*) reco_mg->Clone("for_legend_mg"); for_legend_mg->SetMarkerSize(2);
   tm->AddEntry(for_legend_m,"Mass","pfe");
@@ -567,14 +571,14 @@ void plot_result() {
   reco_mg->Draw("E2same");
   reco_mg_copy->Draw("same");
   tm->Draw("same");
-  raxis->Draw("same");
+  //raxis->Draw("same");
   
   cout << reco_m_copy->GetBinError(1) << " " << reco_m_copy->GetBinError(2) << " " << reco_m_copy->GetBinError(3) << endl;
   
   title->DrawLatex(21,5.75, "pp 200 GeV run12 JP2");
   title->DrawLatex(21,5.55, "anti-k_{T} jets, |#eta| < 1 - R");
   title->DrawLatex(21,5.35,"SoftDrop z_{cut} = 0.1, #beta = 0");
-
+  
   //  ccomp->SaveAs("~/jetmass2/plots/pp_paper/mean_jetmass_groom_v_ungroom.gif");
   
   return;
@@ -608,7 +612,7 @@ void plot_result(bool groom) {
     if (iRow == 1) {radstring = "_R04";}
     if (iRow == 2) {radstring = "_R06";}
     //open files from which to pull lots of curves                                                                                              
-    TFile *funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+".root").c_str(),"READ");//change back if you change pt ranges!
+    TFile *funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+"_paper.root").c_str(),"READ");//change back if you change pt ranges!
     TFile *fp6 = new TFile(("~/jetmass2/out/sim/hists/unmatched_hists"+radstring+"_bindropped.root").c_str(),"READ");
     TFile *fp8 = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
     TFile *fh7 = new TFile(("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved"+radstring+".root").c_str(),"READ");//temporarily using the old files (they're the same, but will point to new ones later)
@@ -764,7 +768,7 @@ void plot_result (int radius, bool groom) {
   }
 
   //open files from which to pull lots of curves
-  TFile *funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+".root").c_str(),"READ");//change this if you change nBins!
+  TFile *funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+"_paper.root").c_str(),"READ");//change this if you change nBins!
   TFile *fp6 = new TFile(("~/jetmass2/out/sim/hists/unmatched_hists"+radstring+"_bindropped.root").c_str(),"READ");
   TFile *fp8 = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
   TFile *fh7 = new TFile(("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved"+radstring+".root").c_str(),"READ");//temporarily using the old files (they're the same, but will point to new ones later)
@@ -883,7 +887,7 @@ void plot_result (int radius, bool groom) {
 }
 
 //this file plots a 1x3 of the (groomed) mass result for various jet radii (and fixed pT)
-void plot_result (bool groom,int dummy1,int dummy2,int dummy3) {
+vector<TH1D*> plot_result (bool groom,int dummy1,int dummy2,int dummy3) {
   gROOT->ForceStyle();
   //gStyle->SetPalette(kPastel);
  
@@ -897,15 +901,15 @@ void plot_result (bool groom,int dummy1,int dummy2,int dummy3) {
   }
 
   //open files from which to pull lots of curves
-  TFile *funfold_R02 = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded_R02_forpaper.root").c_str(),"READ");
+  TFile *funfold_R02 = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded_R02_paper.root").c_str(),"READ");
   TFile *fp6_R02 = new TFile("~/jetmass2/out/sim/hists/unmatched_hists_R02_bindropped.root","READ");
   TFile *fp8_R02 = new TFile("~/jetmass2/production/out/pythia/hists/pythia8_R02_undecayed_hists.root","READ");
   TFile *fh7_R02 = new TFile("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved_R02.root","READ");//temporarily using the old files (they're the same, but will point to new ones later)
-  TFile *funfold_R04 = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded_R04_forpaper.root").c_str(),"READ");
+  TFile *funfold_R04 = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded_R04_paper.root").c_str(),"READ");
   TFile *fp6_R04 = new TFile("~/jetmass2/out/sim/hists/unmatched_hists_R04_bindropped.root","READ");
   TFile *fp8_R04 = new TFile("~/jetmass2/production/out/pythia/hists/pythia8_R04_undecayed_hists.root","READ");
   TFile *fh7_R04 = new TFile("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved_R04.root","READ");//temporarily using the old files (they're the same, but will point to new ones later)
-  TFile *funfold_R06 = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded_R06_forpaper.root").c_str(),"READ");
+  TFile *funfold_R06 = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded_R06_paper.root").c_str(),"READ");
   TFile *fp6_R06 = new TFile("~/jetmass2/out/sim/hists/unmatched_hists_R06_bindropped.root","READ");
   TFile *fp8_R06 = new TFile("~/jetmass2/production/out/pythia/hists/pythia8_R06_undecayed_hists.root","READ");
   TFile *fh7_R06 = new TFile("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved_R06.root","READ");//temporarily using the old files (they're the same, but will point to new ones later)
@@ -1015,7 +1019,92 @@ void plot_result (bool groom,int dummy1,int dummy2,int dummy3) {
     }
   }
   
-  // cws->SaveAs(("~/jetmass2/plots/pp_paper/"+fstart+"mass_result_radscan.pdf").c_str());
+  //cws->SaveAs(("~/jetmass2/plots/pp_paper/"+fstart+"mass_result_radscan_finalizedsysts.pdf").c_str());
 
+  vector<TH1D*> for_means = {w_systs[0], recos[0], w_systs[1], recos[1], w_systs[2], recos[2]};
+  
+  return for_means;
+}
+
+void plot_result(int dummy1,int dummy2,int dummy3,int dummy4,int dummy5) {
+  gStyle->SetErrorX();
+  
+  vector<TH1D*> for_means = (vector<TH1D*>) plot_result(0,0,0,0);
+  vector<TH1D*> for_means_g = (vector<TH1D*>) plot_result(1,0,0,0);
+  
+  TH1D* hmean_systs = new TH1D("hmean_systs","",3,0.1,0.7);
+  TH1D* hmean_stats = new TH1D("hmean_stats","",3,0.1,0.7);
+
+  TH1D* hmean_systs_g = new TH1D("hmean_systs_g","",3,0.1,0.7);
+  TH1D* hmean_stats_g = new TH1D("hmean_stats_g","",3,0.1,0.7);
+
+
+  const int nCols = 3; //3 radii
+  
+  for (int i = 0; i < nCols; ++ i) {
+    hmean_systs->SetBinContent(i+1, for_means[2*i]->GetMean());
+    hmean_systs->SetBinError(i+1, for_means[2*i]->GetMeanError());
+
+    hmean_stats->SetBinContent(i+1, for_means[(2*i)+1]->GetMean());
+    hmean_stats->SetBinError(i+1, for_means[(2*i)+1]->GetMeanError());
+  
+    hmean_systs_g->SetBinContent(i+1, for_means_g[2*i]->GetMean());
+    hmean_systs_g->SetBinError(i+1, for_means_g[2*i]->GetMeanError());
+
+    hmean_stats_g->SetBinContent(i+1, for_means_g[(2*i)+1]->GetMean());
+    hmean_stats_g->SetBinError(i+1, for_means_g[(2*i)+1]->GetMeanError());
+  }
+  
+  hmean_stats->Sumw2();
+  hmean_stats_g->Sumw2();
+
+  Prettify1D(hmean_systs,kRed,kFullStar,0,kRed,"jet radius, R","\\langle \\text{M}_{(\\text{g})}\\rangle \\text{ [GeV}/c^{2}\\text{]}",0.1,0.7,2.5,7.5);
+  hmean_systs->SetFillColor(kRed - 10); hmean_systs->SetFillStyle(1001);
+  Prettify1D(hmean_systs_g,kBlue,kFullStar,0,kBlue,"jet radius, R","\\langle \\text{M}_{(\\text{g})}\\rangle \\text{ [GeV}/c^{2}\\text{]}",0.1,0.7,2.5,7.5);
+  hmean_systs_g->SetFillColor(kBlue - 10); hmean_systs_g->SetFillStyle(1001);
+  
+  Prettify1D(hmean_stats,kRed,kFullStar,2.5,kRed,"jet radius, R","\\langle \\text{M}_{(\\text{g})}\\rangle \\text{ [GeV}/c^{2}\\text{]}",0.1,0.7,2.5,7.5);
+  Prettify1D(hmean_stats_g,kBlue,kFullStar,2.5,kBlue,"jet radius, R",/*"\\langle \\text{M}_{\\text{g}}\\rangle \\text{ [GeV}/c^{2}\\text{]}"*/"",0.1,0.7,2.5,7.5);
+  //hmean_systs->GetYaxis()->SetRangeUser(2.5,7.5);
+  //hmean_systs_g->GetYaxis()->SetRangeUser(2.5,7.5);
+  hmean_systs_g->SetMarkerColor(kBlue);
+  hmean_systs_g->SetLineColor(kBlue);
+  hmean_systs_g->SetFillColor(kBlue-10);
+
+  //gStyle->SetPadTickY();
+  //gStyle->SetErrorX(0);
+  hmean_systs->GetXaxis()->SetNdivisions(504);
+  hmean_systs->GetXaxis()->SetTitleOffset(1);
+  hmean_systs->GetXaxis()->SetTitleSize(0.05);
+  hmean_systs->GetYaxis()->SetTitleSize(0.05);
+  
+  //legends                                                                                                                                                     
+  TLatex *title = new TLatex();
+  TLegend *tm = new TLegend(0.5,0.2,0.75,0.35); tm->SetBorderSize(0);
+  TH1D* for_legend_m = (TH1D*) hmean_systs->Clone("for_legend_m"); for_legend_m->SetMarkerSize(2);
+  TH1D* for_legend_mg = (TH1D*) hmean_systs_g->Clone("for_legend_mg"); for_legend_mg->SetMarkerSize(2);
+  tm->AddEntry(for_legend_m,"Mass","pfe");
+  tm->AddEntry(for_legend_mg,"Groomed mass","pfe");
+  tm->SetTextSize(0.05);
+  title->SetTextSize(0.048);
+
+  TCanvas* cmr = new TCanvas("cmr","cmr",800,500);
+  cmr->cd();
+
+  hmean_systs->Draw("E2");
+  hmean_stats->Draw("same");
+  hmean_systs_g->Draw("E2same");
+  hmean_stats_g->Draw("same");
+  tm->Draw("same");
+  //raxis->Draw("same");        
+  
+  title->DrawLatex(0.13,7.05, "pp 200 GeV run12 JP2");
+  title->DrawLatex(0.13,6.6, "anti-k_{T} jets, |#eta| < 1 - R");
+  title->DrawLatex(0.13,6.15, "SoftDrop z_{cut} = 0.1, #beta = 0");
+  title->DrawLatex(0.13,5.7, "30 < p_{T} < 40 GeV/c");
+  
+  cmr->SaveAs("~/jetmass2/plots/pp_paper/mean_jetmass_groom_v_ungroom_radscan.gif"); 
+  
   return;
 }
+

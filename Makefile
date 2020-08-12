@@ -63,12 +63,13 @@ $(BDIR)/%  : $(ODIR)/%.o
 ###############################################################################
 ############################# Main Targets ####################################
 ###############################################################################
-all : $(BDIR)/QA $(BDIR)/data $(BDIR)/sim $(BDIR)/toy_embedding
+all : $(BDIR)/QA $(BDIR)/data $(BDIR)/sim $(BDIR)/toy_embedding $(BDIR)/embed
 
 QA : $(BDIR)/QA
 data : $(BDIR)/data
 sim : $(BDIR)/sim
 toy_embedding : $(BDIR)/toy_embedding
+embed : $(BDIR)/embed
 
 #$(SDIR)/dict.cxx                : $(SDIR)/ktTrackEff.hh
 #	cd ${SDIR}; rootcint -f dict.cxx -c -I. ./ktTrackEff.hh
@@ -81,12 +82,14 @@ $(ODIR)/QA.o		: $(SDIR)/QA.cxx
 $(ODIR)/data.o		: $(SDIR)/data.cxx
 $(ODIR)/sim.o		: $(SDIR)/sim.cxx
 $(ODIR)/toy_embedding.o : $(SDIR)/toy_embedding.cxx
+$(ODIR)/embed.o		: $(SDIR)/embed.cxx
 
 #data analysis
 $(BDIR)/QA		: $(ODIR)/QA.o $(ODIR)/funcs.o #$(ODIR)/ktTrackEff.o $(ODIR)/dict.o
 $(BDIR)/data		: $(ODIR)/data.o $(ODIR)/funcs.o
 $(BDIR)/sim		: $(ODIR)/sim.o $(ODIR)/funcs.o
 $(BDIR)/toy_embedding   : $(ODIR)/toy_embedding.o $(ODIR)/funcs.o
+$(BDIR)/embed		: $(ODIR)/embed.o $(ODIR)/funcs.o
 ###############################################################################
 ##################################### MISC ####################################
 ###############################################################################

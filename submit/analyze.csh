@@ -1,10 +1,10 @@
 #!/bin/csh
 #Isaac Mooney, WSU - June 2019
 #This script will expand as I add in more of the analyses: pp, pA, AA
-#It currently handles the QA and data (for all three systems). Next it will be expanded to handle the Pythia6 and Pythia6+Geant simulation on disk.
+#It currently handles the QA, data (for all three systems), and the Pythia6 and Pythia6+Geant simulation on disk. It is being expanded to handle embedded pAu.
 
 #args:
-#1: the analysis type. Current options: QA, data, sim
+#1: the analysis type. Current options: QA, data, sim, embed
 #2: the trigger. Current options for pp: JP2, HT2, VPDMB(-nobsmd); for pA: JP2, HT2, BBCMB. For MC analysis, only JP2 is allowed at the moment.
 #3: the species. Current options: pp, pA, AA
 #4: the jet radius. Options: any number > 0 & <= 9.9; passed in without the decimal, e.g. "06" for 0.6.
@@ -47,12 +47,18 @@ else if (${analysisType} == 'sim') then
     # Create the folder name for output
     set outFile = sim
     echo 'Running in sim mode!'
+else if (${analysisType} == 'embed') then
+    make bin/embed || exit
+    set execute = './bin/embed'
+    # Create the folder name for output
+    set outFile = embed
+    echo 'Running in embed mode!'
 else
     echo 'Error: unrecognized analysis type option'
     exit
 endif
 
-if (${analysisType} != 'sim') then
+if (${analysisType} == 'QA' || ${analysisType} == 'data') then
     if (${trigger} == 'JP2' && ${species} == 'pp') then
 	set trigger = "ppJP2"
 	set base = /tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum	
@@ -83,9 +89,16 @@ if (${analysisType} != 'sim') then
 	echo "Error: unrecognized trigger and/or species option!"
 	exit
     endif
-else
+else if (${analysisType} == 'sim') then
     set base = /tier2/home/groups/rhi/STAR/Data/AddedEmbedPythiaRun12pp200/Cleanpp12Pico_
     echo "Running on the Pythia6 and Pythia6+Geant (JP2-triggered) simulation!"
+else
+    #set base = /tier2/home/groups/rhi/STAR/Data/AddedEmbedPythiaRun12pp200/Cleanpp12Pico_pt5_7_
+    #set base = /tier2/home/groups/rhi/STAR/Data/temp_embed_sample_w_emc_highpt/pt-hat
+    #set base = /tier2/home/groups/rhi/STAR/Data/EmbedPythiaRun15pAu200_picos/P18ih/pAu_200_production_2015/out/HT2/pt-hat1525_
+    set base = /tier2/home/groups/rhi/STAR/Data/EmbedPythiaRun15pAu200_picos/P18ih/pAu_200_REREproduction_2015/out/HT2/pt-hat
+
+    echo "Running on the HT2-triggered pAu embedding!"
 endif
 
 # Make output directories if they don't already exist            
@@ -107,10 +120,15 @@ foreach input ( ${base}* )
     #synthesize the output file base name from the input file base name and the options passed
     set OutBase = `basename $input | sed 's/.root//g'`
     set uscore = "_" #useful for chaining variables together
-    if (${analysisType} != 'sim') then
+    if (${analysisType} == 'QA' || ${analysisType} == 'data') then
 	set OutBase = "$OutBase$uscore$trigger$uscore${wc1}${uscore}R${radius}"
+    else if (${analysisType} == 'sim') then 
+	set OutBase = "test_$OutBase$uscore${wc1}$uscore${wc2}${uscore}R${radius}"
     else
-	set OutBase = "$OutBase$uscore${wc1}$uscore${wc2}${uscore}R${radius}"
+    #set OutBase = "$OutBase${uscore}${wc2}${uscore}R${radius}"
+    #set OutBase = "test_sample_April23_$OutBase${uscore}${wc2}${uscore}R${radius}"
+    #set OutBase = "sample_pp_April20_$OutBase${uscore}${wc2}${uscore}R${radius}"
+    set OutBase = "RAGHAV_REREprod_$OutBase${uscore}${wc2}${uscore}R${radius}"
     endif
     #make the output path and names
     set outLocation = out/${outFile}/
@@ -133,7 +151,7 @@ foreach input ( ${base}* )
 	set arg = "$outLocation $outName $trigger $dummy $Files"
     else if (${analysisType} == 'data') then
 	set arg = "$outLocation $outName ${radius} $trigger ${wc1} $Files"
-    else if (${analysisType} == 'sim') then
+    else if (${analysisType} == 'sim' || ${analysisType} == 'embed') then
 	set arg = "$outLocation $outName ${radius} ${wc1} ${wc2} $Files"
     endif
 
@@ -141,6 +159,5 @@ foreach input ( ${base}* )
     echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisType} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
     qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisType} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg   
-    #add back in a second: -q erhiq
 
 end

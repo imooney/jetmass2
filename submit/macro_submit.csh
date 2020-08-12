@@ -86,8 +86,8 @@ if (${analysisTag} == 'bin_drop' || ${analysisTag} == 'stat_err_scaling' || ${an
     set arg = "$afterburner_radius $groom_flag" #groom_flag is so far only required for unfolding
     
     #this is pretty sloppy right now - I'm passing $2 as an argument to the execution, but $2 is actually the radius, not the inputType in this case...
-    echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
-    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+    echo qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+    qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
 else #anything but procedures which don't need any args or input/output help
     
@@ -99,7 +99,7 @@ else #anything but procedures which don't need any args or input/output help
 	mkdir -p log/${inputType}/${analysisTag} #making log directory
     endif
 
-    foreach input ( ${base}${tag}_R${radius}* ) #pAuHT2_${tag}_R${radius}* ) #this is specifically for pAuHT2, remove once you've run it! Or pass in the trigger so you don't have to keep doing this
+    foreach input ( ${base}*${tag}_R${radius}.root ) #pAuHT2_${tag}_R${radius}* ) #this is specifically for pAuHT2, remove once you've run it! Or pass in the trigger so you don't have to keep doing this
     
 	set OutBase = `basename $input | sed 's/.root//g'` #this removes the filetype so we can append to the filename
 	set OutBase = `basename $OutBase | sed 's:out/::g'` #this removes the out/ from the input since it is unnecessary
@@ -121,9 +121,9 @@ else #anything but procedures which don't need any args or input/output help
 	
 	#./macros/bin/root_macro out/root_macro/ file1_root_macro.root out/file1.root <- this is a (currently) working execution line on which to model the qsub
 	
-	echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+	echo qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 	
-	qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+	qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
        
     end #end of loop over input files
 

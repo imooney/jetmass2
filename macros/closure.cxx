@@ -1,5 +1,7 @@
 //Isaac Mooney, WSU, September 2019
 //This file implements the MC closure test
+//lately I've been using a more up-to-date version of this macro on my desktop, and this one is now deprecated (not irreparably)
+//if I have time later, I'll update it with the new version
 
 #include <ctime>
 #include <iostream>
@@ -58,7 +60,7 @@ int main (int argc, const char** argv) {
   const string match_file = "sim_matched";
 
   //input files                                                                                                                                                
-  TFile *f = new TFile((match_path+match_file+radius+"_bindropped.root").c_str(),"READ");
+  TFile *f = new TFile((match_path+match_file+radius+"_paper_bindropped_new.root").c_str(),"READ");
   //responses
   RooUnfoldResponse *r1D_m_A = (RooUnfoldResponse*) f->Get(("sampleA_"+hname+"_response").c_str());
   RooUnfoldResponse *r1D_pt_A = (RooUnfoldResponse*) f->Get("sampleA_pt_response");
@@ -113,7 +115,7 @@ int main (int argc, const char** argv) {
   vector<TH1D*> gen_m_A_projs = {(TH1D*) m_pt_gen_A->ProjectionX("gen_m2030",m_pt_gen_A->GetYaxis()->FindBin(20),m_pt_gen_A->GetYaxis()->FindBin(30)-1),
   (TH1D*) m_pt_gen_A->ProjectionX("gen_m3045",m_pt_gen_A->GetYaxis()->FindBin(30),m_pt_gen_A->GetYaxis()->FindBin(45)-1)};
   
-  const int nBins = 2; //20-30, 30-45
+  const int nBins = 3; //20-25, 25-30,30-40
   for (int i = 0; i < nBins; ++ i) {
     opp_m_projs[i]->Divide(gen_m_A_projs[i]); //det B unfolded w/ A, divided by gen A
     same_m_projs[i]->Divide(gen_m_A_projs[i]);//det A unfolded w/ A, divided by gen A
@@ -126,7 +128,7 @@ int main (int argc, const char** argv) {
     ftitle = "groomed_"+ftitle;
   }
 
-  TFile *fout = new TFile(("~/jetmass2/out/closure/"+ftitle+radius+".root").c_str(),"RECREATE");
+  TFile *fout = new TFile(("~/jetmass2/out/closure/"+ftitle+radius+"_new.root").c_str(),"RECREATE");
   fout->cd();
   
   reco_opp_m1D->Write();

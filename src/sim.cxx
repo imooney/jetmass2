@@ -180,6 +180,7 @@ int main (int argc, const char ** argv) {
   double p_n_jets, p_wt;
   vector<vector<double> > p_conspT;
   vector<double> p_jetMult;
+  vector<double> p_Nchcons;
   vector<double> p_Pt; vector<double> p_Eta; vector<double> p_Phi; vector<double> p_M; vector<double> p_E;
   vector<double> p_ch_e_frac;
   vector<double> p_zg; vector<double> p_rg; vector<double> p_mg; vector<double> p_ptg;
@@ -187,8 +188,10 @@ int main (int argc, const char ** argv) {
   
   int g_EventID;
   double g_n_jets, g_wt;
+  double bbc_east_sum;
   vector<vector<double> > g_conspT;
   vector<double> g_jetMult;
+  vector<double> g_Nchcons;
   vector<double> g_Pt; vector<double> g_Eta; vector<double> g_Phi; vector<double> g_M; vector<double> g_E;
   vector<double> g_ch_e_frac;
   vector<double> g_zg; vector<double> g_rg; vector<double> g_mg; vector<double> g_ptg;
@@ -199,6 +202,7 @@ int main (int argc, const char ** argv) {
   eventTree->Branch("p_n_jets", &p_n_jets);
   eventTree->Branch("p_conspT",&p_conspT);
   eventTree->Branch("p_jetMult",&p_jetMult);
+  eventTree->Branch("p_Nchcons",&p_Nchcons);
   eventTree->Branch("p_Pt", &p_Pt); eventTree->Branch("p_Eta",&p_Eta); eventTree->Branch("p_Phi",&p_Phi); eventTree->Branch("p_M",&p_M); eventTree->Branch("p_E",&p_E);
   eventTree->Branch("p_ch_e_frac", &p_ch_e_frac);
   eventTree->Branch("p_zg", &p_zg); eventTree->Branch("p_rg", &p_rg); eventTree->Branch("p_mg", &p_mg); eventTree->Branch("p_ptg",&p_ptg);
@@ -206,8 +210,10 @@ int main (int argc, const char ** argv) {
   eventTree->Branch("p_weight", &p_wt); eventTree->Branch("p_EventID", &p_EventID);
   
   eventTree->Branch("g_n_jets", &g_n_jets);
+  eventTree->Branch("bbc_east_sum",&bbc_east_sum);
   eventTree->Branch("g_conspT",&g_conspT);
   eventTree->Branch("g_jetMult",&g_jetMult);
+  eventTree->Branch("g_Nchcons",&g_Nchcons);
   eventTree->Branch("g_Pt", &g_Pt); eventTree->Branch("g_Eta",&g_Eta); eventTree->Branch("g_Phi",&g_Phi); eventTree->Branch("g_M",&g_M); eventTree->Branch("g_E",&g_E);
   eventTree->Branch("g_ch_e_frac", &g_ch_e_frac);
   eventTree->Branch("g_zg", &g_zg); eventTree->Branch("g_rg", &g_rg); eventTree->Branch("g_mg", &g_mg); eventTree->Branch("g_ptg",&g_ptg);
@@ -397,8 +403,8 @@ int main (int argc, const char ** argv) {
     
   std::vector<RooUnfoldResponse*> sampleB_res = {sampleB_pt_response,sampleB_m_response,sampleB_zg_response,sampleB_rg_response,sampleB_ptg_response,sampleB_mg_response,sampleB_m_pt_response,sampleB_m_pt_response_counts,sampleB_zg_pt_response,sampleB_rg_pt_response,sampleB_ptg_pt_response,sampleB_mg_pt_response,sampleB_mg_pt_response_counts};
   
-  std::vector<RooUnfoldResponse*> syst_msmear = {/*m_res1520_nom,*/m_res2025_nom,m_res2530_nom,m_res3040_nom,/*m_res4060_nom,m_res1520_p8smear,*/m_res2025_p8smear,m_res2530_p8smear,m_res3040_p8smear,/*m_res4060_p8smear,m_res1520_h7smear,*/m_res2025_h7smear,m_res2530_h7smear,m_res3040_h7smear,/*m_res4060_h7smear*/};
-  std::vector<RooUnfoldResponse*> syst_mgsmear = {/*mg_res1520_nom,*/mg_res2025_nom,mg_res2530_nom,mg_res3040_nom,/*mg_res4060_nom,mg_res1520_p8smear,*/mg_res2025_p8smear,mg_res2530_p8smear,mg_res3040_p8smear,/*mg_res4060_p8smear,mg_res1520_h7smear,*/mg_res2025_h7smear,mg_res2530_h7smear,mg_res3040_h7smear,/*mg_res4060_h7smear*/};
+  std::vector<RooUnfoldResponse*> syst_msmear = {/*m_res1520_nom,*/m_res2025_nom,m_res2530_nom,m_res3040_nom,/*m_res4060_nom,m_res1520_p8smear,*/m_res2025_p8smear,m_res2530_p8smear,m_res3040_p8smear,/*m_res4060_p8smear,m_res1520_h7smear,*/m_res2025_h7smear,m_res2530_h7smear,m_res3040_h7smear/*m_res4060_h7smear*/};
+  std::vector<RooUnfoldResponse*> syst_mgsmear = {/*mg_res1520_nom,*/mg_res2025_nom,mg_res2530_nom,mg_res3040_nom,/*mg_res4060_nom,mg_res1520_p8smear,*/mg_res2025_p8smear,mg_res2530_p8smear,mg_res3040_p8smear,/*mg_res4060_p8smear,mg_res1520_h7smear,*/mg_res2025_h7smear,mg_res2530_h7smear,mg_res3040_h7smear/*mg_res4060_h7smear*/};
 
     
   std::vector<RooUnfoldResponse*> syst_res = {m_pt_res_nom,m_pt_res_TS,m_pt_res_TU,m_pt_res_HC50,m_pt_res_DS,m_pt_res_GS};
@@ -438,7 +444,7 @@ int main (int argc, const char ** argv) {
   Selector select_det_jet_pt_min  = fastjet::SelectorPtMin( det_jet_ptmin );
   Selector select_gen_jet_pt_min = fastjet::SelectorPtMin( jet_ptmin );
   Selector select_jet_pt_max  = fastjet::SelectorPtMax( jet_ptmax );
-  Selector select_det_jet_m_min = fastjet::SelectorMassMin( 0.0/*mass_min*/ );
+  Selector select_det_jet_m_min = fastjet::SelectorMassMin( mass_min );
   Selector select_gen_jet_m_min = fastjet::SelectorMassMin( 0.0 );
   
   Selector sjet_gen = select_jet_rap && select_gen_jet_pt_min && select_jet_pt_max && select_gen_jet_m_min;
@@ -451,7 +457,7 @@ int main (int argc, const char ** argv) {
   double mc_weight = -1;
   
   double hc = 0.9999; //to be varied in the systematic uncertainty variation
-  const int nSources = 7; //includes the nominal settings as a "systematic".
+  const int nSources = 1;//7; //includes the nominal settings as a "systematic".
   for (int iSyst = 0; iSyst < nSources; ++ iSyst) {
     if (iSyst == 0) {cout << endl << "RUNNING WITH NOMINAL SETTINGS!" << endl << endl;}
     if (iSyst == 1) {cout << endl << "RUNNING WITH INCREASED TOWER SCALE!" << endl << endl;}
@@ -472,8 +478,8 @@ int main (int argc, const char ** argv) {
     
     //initialize both readers
     InitReader(P6Reader, P6Chain, nEvents, "All", truth_absMaxVz, truth_vZDiff, truth_evPtMax, truth_evEtMax, truth_evEtMin, truth_DCA, truth_NFitPts, truth_FitOverMaxPts, sim_maxEtTow, hc, false, sim_badTowers, sim_bad_run_list);
-    InitReader(GEANTReader, GEANTChain, nEvents, det_triggerString, det_absMaxVz, det_vZDiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, sim_maxEtTow, hc, false, sim_badTowers, sim_bad_run_list);//det_badTowers, dat_bad_run_list);
-    
+    InitReader(GEANTReader, GEANTChain, nEvents, det_triggerString/*"All"*/, det_absMaxVz, det_vZDiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, sim_maxEtTow, hc, false, sim_badTowers, sim_bad_run_list);//det_badTowers/*combined_badTowers*/, dat_bad_run_list);
+    //ABOVE IS TEMP - COMBINED BAD TOWERS TO COMPARE TO pA EMBEDDING
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~  BEGIN EVENT LOOP!  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
     
     for (int event = 0; event < P6Chain->GetEntries(); ++ event) {
@@ -489,14 +495,17 @@ int main (int argc, const char ** argv) {
       p_n_jets = -9999; p_wt = -9999;
       p_conspT.clear();
       p_jetMult.clear();
+      p_Nchcons.clear();
       p_Pt.clear(); p_Eta.clear(); p_Phi.clear(); p_M.clear(); p_E.clear();
       p_ch_e_frac.clear();
       p_zg.clear(); p_rg.clear(); p_mg.clear(); p_ptg.clear();
       p_mcd.clear();
       
       g_n_jets = -9999; g_wt = -9999;
+      bbc_east_sum = -9999;
       g_conspT.clear();
       g_jetMult.clear();
+      g_Nchcons.clear();
       g_Pt.clear(); g_Eta.clear(); g_Phi.clear(); g_M.clear(); g_E.clear();
       g_ch_e_frac.clear();
       g_zg.clear(); g_rg.clear(); g_mg.clear(); g_ptg.clear();
@@ -543,6 +552,7 @@ int main (int argc, const char ** argv) {
 	  if (!(g_sv->IsCharged())) {
 	    //cout << "DEBUG: Pre-change: " << g_sv->E() << " " << g_sv->Eta() << " " << g_sv->Phi() << " " << g_sv->M() << endl;
 	    double Enew = 1.038*g_sv->E();
+	    //g_sv is a shallow copy of g_container->Get(i) so editing it also edits the container, yay
 	    g_sv->SetE(Enew);
 	    //g_sv->SetPtEtaPhiM(sqrt(Etnew*Etnew - g_sv->M()*g_sv->M()), g_sv->Eta(), g_sv->Phi(), g_sv->M());
 	    //cout << "DEBUG: Post-change: " << g_sv->E() << " " << g_sv->Eta() << " " << g_sv->Phi() << " " << g_sv->M() << endl;
@@ -555,6 +565,11 @@ int main (int argc, const char ** argv) {
       GatherParticles ( p_container, p_sv, p_Particles, full, 1, pdg); //Pythia; full = 0 => charged-only, 1 => ch+ne
       GatherParticles ( g_container, g_sv, g_Particles, full, 0, pdg); //GEANT
       
+      cout << "DEBUG: EVENT# " << g_EventID << endl; 
+      for (int i = 0; i < g_Particles.size(); ++ i) {
+        cout << "DEBUG: " << g_Particles[i].pt() << endl;
+      }
+
       if (iSyst == 2) {//varying the tracking efficiency randomly by 4%
 	double effic_num;
 	for (int i = 0; i < g_Particles.size(); ++ i) {
@@ -600,7 +615,7 @@ int main (int argc, const char ** argv) {
       for (int i = 0; i < g_Jets.size(); ++ i) {
 	g_GroomedJets.push_back(sd(g_Jets[i]));
       }
-      
+      //TEMP: UNCOMMENT LATER:
       if (DiscardEvent(pythiaFilename, p_Jets, g_Jets)) { counter_debug ++; continue; }
       
       //for calculating charged energy fraction of the jets
@@ -708,6 +723,9 @@ int main (int argc, const char ** argv) {
 	    sampleB_mg_pt_det_counts->Fill(g_GroomedJets[i].m(),g_Jets[i].pt());
 	  }
 	}//end sampleB pseudo-data filling
+
+	//FOR PERIPHERAL pA UNFOLDING ONLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//if (g_header->GetBbcAdcSumEast() < 20000) {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~MATCHING~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 	std::vector<fastjet::PseudoJet> g_matches; std::vector<fastjet::PseudoJet> p_matches;
 	std::vector<fastjet::PseudoJet> g_matches_for_fakes; std::vector<fastjet::PseudoJet> p_matches_for_fakes; //only used to determine fakes
@@ -756,87 +774,123 @@ int main (int argc, const char ** argv) {
 	  for (int i = 0; i < misses.size(); ++ i) {
 	    //choosing to draw gen pt from the same 
 	    int j = -1;
-	    if (misses[i].pt() < 30) { j = 0;}
-	    else if (misses[i].pt() > 30) { j = 1;}
-	    prior_adjust_h7 = mh7[j]->GetBinContent(mh7[j]->GetXaxis()->FindBin(misses[i].m()));
-	    prior_adjust_h7g = mgh7[j]->GetBinContent(mgh7[j]->GetXaxis()->FindBin(p_GroomedJets[miss_indices[i]].m()));
-	    prior_adjust_p8 = mp8[j]->GetBinContent(mp8[j]->GetXaxis()->FindBin(misses[i].m()));
-	    prior_adjust_p8g = mgp8[j]->GetBinContent(mgp8[j]->GetXaxis()->FindBin(p_GroomedJets[miss_indices[i]].m()));
-	    
+	    if (misses[i].pt() > 20 && misses[i].pt() < 25) { j = 0;}
+	    else if (misses[i].pt() > 25 && misses[i].pt() < 30) { j = 1;}
+	    else if (misses[i].pt() > 30 && misses[i].pt() < 40) { j = 2;}
+
+	    if (j != -1) {
+	      prior_adjust_h7 = mh7[j]->GetBinContent(mh7[j]->GetXaxis()->FindBin(misses[i].m()));
+	      prior_adjust_h7g = mgh7[j]->GetBinContent(mgh7[j]->GetXaxis()->FindBin(p_GroomedJets[miss_indices[i]].m()));
+	      prior_adjust_p8 = mp8[j]->GetBinContent(mp8[j]->GetXaxis()->FindBin(misses[i].m()));
+	      prior_adjust_p8g = mgp8[j]->GetBinContent(mgp8[j]->GetXaxis()->FindBin(p_GroomedJets[miss_indices[i]].m()));
+	    }
+
 	    if (j == 0) {
-	      m_res2030_nom->Miss(misses[i].m(), mc_weight);
-	      m_res2030_h7smear->Miss(misses[i].m(), mc_weight * prior_adjust_h7);
-	      m_res2030_p8smear->Miss(misses[i].m(), mc_weight * prior_adjust_p8);
-	      mg_res2030_nom->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight);
-	      mg_res2030_h7smear->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight * prior_adjust_h7g);
-	      mg_res2030_p8smear->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight * prior_adjust_p8g);
+	      m_res2025_nom->Miss(misses[i].m(), mc_weight);
+	      m_res2025_h7smear->Miss(misses[i].m(), mc_weight * prior_adjust_h7);
+	      m_res2025_p8smear->Miss(misses[i].m(), mc_weight * prior_adjust_p8);
+	      mg_res2025_nom->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight);
+	      mg_res2025_h7smear->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight * prior_adjust_h7g);
+	      mg_res2025_p8smear->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight * prior_adjust_p8g);
 
 	    }
 	    if (j == 1) {
-	      m_res3045_nom->Miss(misses[i].m(), mc_weight);
-	      m_res3045_h7smear->Miss(misses[i].m(), mc_weight * prior_adjust_h7);
-	      m_res3045_p8smear->Miss(misses[i].m(), mc_weight * prior_adjust_p8);
-	      mg_res3045_nom->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight);
-	      mg_res3045_h7smear->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight * prior_adjust_h7g);
-	      mg_res3045_p8smear->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight * prior_adjust_p8g);
+	      m_res2530_nom->Miss(misses[i].m(), mc_weight);
+	      m_res2530_h7smear->Miss(misses[i].m(), mc_weight * prior_adjust_h7);
+	      m_res2530_p8smear->Miss(misses[i].m(), mc_weight * prior_adjust_p8);
+	      mg_res2530_nom->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight);
+	      mg_res2530_h7smear->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight * prior_adjust_h7g);
+	      mg_res2530_p8smear->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight * prior_adjust_p8g);
 	    }
-	  }
+	    if (j == 2) {
+	      m_res3040_nom->Miss(misses[i].m(), mc_weight);
+	      m_res3040_h7smear->Miss(misses[i].m(), mc_weight * prior_adjust_h7);
+	      m_res3040_p8smear->Miss(misses[i].m(), mc_weight * prior_adjust_p8);
+	      mg_res3040_nom->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight);
+	      mg_res3040_h7smear->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight * prior_adjust_h7g);
+	      mg_res3040_p8smear->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight * prior_adjust_p8g);
+	    }
+
+
+	  }//end loop over misses
 	  
 	  for (int i = 0; i < g_matches.size(); ++ i) {
 	    int j = -1;
 	    
 	    //because I have to assign some value no matter what, although the ratio is only constructed for jets from 20 to 30.
-	    if (p_matches[i].pt() < 30) {
+	    if (p_matches[i].pt() > 20 && p_matches[i].pt() < 25) {
 	      j = 0;
 	    }
-	    else if (p_matches[i].pt() > 30) {
+	    else if (p_matches[i].pt() > 25 && p_matches[i].pt() < 30) {
 	      j = 1;
 	    }
-	 
-	    prior_adjust_h7 = mh7[j]->GetBinContent(mh7[j]->GetXaxis()->FindBin(p_matches[i].m()));
-	    prior_adjust_h7g = mgh7[j]->GetBinContent(mh7[j]->GetXaxis()->FindBin(p_GroomedJets[match_indices[2*i]].m()));
-	    prior_adjust_p8 = mp8[j]->GetBinContent(mp8[j]->GetXaxis()->FindBin(p_matches[i].m()));
-	    prior_adjust_p8g = mgp8[j]->GetBinContent(mp8[j]->GetXaxis()->FindBin(p_GroomedJets[match_indices[2*i]].m()));
-	    
-	    if (g_matches[i].pt() > 20 && g_matches[i].pt() < 30) {
-	      m_res2030_nom->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight);
-	      m_res2030_h7smear->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight * prior_adjust_h7);
-	      m_res2030_p8smear->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight * prior_adjust_p8);
-	      mg_res2030_nom->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight);
-	      mg_res2030_h7smear->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight * prior_adjust_h7g);
-	      mg_res2030_p8smear->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight * prior_adjust_p8g);
+	    else if (p_matches[i].pt() > 30 && p_matches[i].pt() < 40) {
+	      j = 2;
 	    }
-	    else if (g_matches[i].pt() > 30 && g_matches[i].pt() < 45) {
-	      m_res3045_nom->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight);
-	      m_res3045_h7smear->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight * prior_adjust_h7);
-	      m_res3045_p8smear->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight * prior_adjust_p8);
-	      mg_res3045_nom->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight);
-	      mg_res3045_h7smear->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight * prior_adjust_h7g);
-	      mg_res3045_p8smear->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight * prior_adjust_p8g);
+	    if ( j != -1 ) {
+	      prior_adjust_h7 = mh7[j]->GetBinContent(mh7[j]->GetXaxis()->FindBin(p_matches[i].m()));
+	      prior_adjust_h7g = mgh7[j]->GetBinContent(mh7[j]->GetXaxis()->FindBin(p_GroomedJets[match_indices[2*i]].m()));
+	      prior_adjust_p8 = mp8[j]->GetBinContent(mp8[j]->GetXaxis()->FindBin(p_matches[i].m()));
+	      prior_adjust_p8g = mgp8[j]->GetBinContent(mp8[j]->GetXaxis()->FindBin(p_GroomedJets[match_indices[2*i]].m()));
 	    }
 	    
-	  }//loop over matches
+	    //j is serving a double purpose here: it tells me (directly above) which gen-level ratio to pull from; it also (below) tells me whether the match satisfies the requirement that both jet pTs (part and det level) are within the range [in conjunction with the check that the det-level match is in the range]
+	    if (g_matches[i].pt() > 20 && g_matches[i].pt() < 25 && j == 0) {
+	      m_res2025_nom->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight);
+	      m_res2025_h7smear->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight * prior_adjust_h7);
+	      m_res2025_p8smear->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight * prior_adjust_p8);
+	      mg_res2025_nom->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight);
+	      mg_res2025_h7smear->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight * prior_adjust_h7g);
+	      mg_res2025_p8smear->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight * prior_adjust_p8g);
+	    }
+	    else if (g_matches[i].pt() > 25 && g_matches[i].pt() < 30 && j == 1) {
+	      m_res2530_nom->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight);
+	      m_res2530_h7smear->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight * prior_adjust_h7);
+	      m_res2530_p8smear->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight * prior_adjust_p8);
+	      mg_res2530_nom->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight);
+	      mg_res2530_h7smear->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight * prior_adjust_h7g);
+	      mg_res2530_p8smear->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight * prior_adjust_p8g);
+	    }
+	    else if (g_matches[i].pt() > 30 && g_matches[i].pt() < 40 && j == 2) {
+	      m_res3040_nom->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight);
+	      m_res3040_h7smear->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight * prior_adjust_h7);
+	      m_res3040_p8smear->Fill(g_matches[i].m(),p_matches[i].m(),mc_weight * prior_adjust_p8);
+	      mg_res3040_nom->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight);
+	      mg_res3040_h7smear->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight * prior_adjust_h7g);
+	      mg_res3040_p8smear->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),p_GroomedJets[match_indices[2*i]].m(),mc_weight * prior_adjust_p8g);
+	    }
+
+
+	    
+	  }//end loop over matches
 
 	  for (int i = 0; i < fakes.size(); ++ i) {
 
-	    if (fakes[i].pt() > 20 && fakes[i].pt() < 30) {
-	      m_res2030_nom->Fake(fakes[i].m(),mc_weight);
-	      m_res2030_h7smear->Fake(fakes[i].m(),mc_weight);
-	      m_res2030_p8smear->Fake(fakes[i].m(),mc_weight);
-	      mg_res2030_nom->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
-	      mg_res2030_h7smear->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
-	      mg_res2030_p8smear->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
+	    if (fakes[i].pt() > 20 && fakes[i].pt() < 25) {
+	      m_res2025_nom->Fake(fakes[i].m(),mc_weight);
+	      m_res2025_h7smear->Fake(fakes[i].m(),mc_weight);
+	      m_res2025_p8smear->Fake(fakes[i].m(),mc_weight);
+	      mg_res2025_nom->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
+	      mg_res2025_h7smear->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
+	      mg_res2025_p8smear->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
 	    }
-	    if (fakes[i].pt() > 30 && fakes[i].pt() < 45) {
-	      m_res3045_nom->Fake(fakes[i].m(),mc_weight);
-	      m_res3045_h7smear->Fake(fakes[i].m(),mc_weight);
-	      m_res3045_p8smear->Fake(fakes[i].m(),mc_weight);
-	      mg_res3045_nom->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
-	      mg_res3045_h7smear->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
-	      mg_res3045_p8smear->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
+	    if (fakes[i].pt() > 25 && fakes[i].pt() < 30) {
+	      m_res2530_nom->Fake(fakes[i].m(),mc_weight);
+	      m_res2530_h7smear->Fake(fakes[i].m(),mc_weight);
+	      m_res2530_p8smear->Fake(fakes[i].m(),mc_weight);
+	      mg_res2530_nom->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
+	      mg_res2530_h7smear->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
+	      mg_res2530_p8smear->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
 	    }
-	    
-	  }//loop over fakes
+	    if (fakes[i].pt() > 30 && fakes[i].pt() < 40) {
+	      m_res3040_nom->Fake(fakes[i].m(),mc_weight);
+	      m_res3040_h7smear->Fake(fakes[i].m(),mc_weight);
+	      m_res3040_p8smear->Fake(fakes[i].m(),mc_weight);
+	      mg_res3040_nom->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
+	      mg_res3040_h7smear->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
+	      mg_res3040_p8smear->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
+	    }
+	  }//end loop over fakes
 	  
 	}//gen-level m/mg smearing
 	
@@ -850,6 +904,7 @@ int main (int argc, const char ** argv) {
 	    mg_pt_res_GS->Miss(p_GroomedJets[miss_indices[i]].m(),p_Jets[miss_indices[i]].pt() - prior_adjust,mc_weight);
 	  }
 	  else if (iSyst == 6) {//gen-level M/Mg smearing
+	    //I now have a dedicated section for this above because it got out of hand
 	    /*prior_adjust = p8ratiop6_2030->GetBinContent(p8ratiop6_2030->GetXaxis()->FindBin(misses[i].m()));
 	    prior_adjust_g = p8ratiop6_g_2030->GetBinContent(p8ratiop6_g_2030->GetXaxis()->FindBin(p_GroomedJets[miss_indices[i]].m()));
 	    m_pt_res_MS->Miss(misses[i].m(), misses[i].pt(), mc_weight * prior_adjust);
@@ -947,6 +1002,32 @@ int main (int argc, const char ** argv) {
 	  p_Eta.push_back(p_matches[i].eta());
 	  p_Phi.push_back(p_matches[i].phi());
 	  p_E.push_back(p_matches[i].e());
+
+	  //looping over constituents
+	  vector<double> p_cons_pt;
+	  vector<PseudoJet> p_cons = p_matches[i].constituents();
+	  int p_jet_size = p_cons.size();
+	  p_jetMult.push_back(p_jet_size);
+	  int p_chcount = 0;
+	  for (int j = 0; j < p_jet_size; ++ j) {
+	    if (p_cons[j].user_index() != 0 && p_cons[j].user_index() != -9999) {p_chcount ++;}//counting only charged particles 
+	    p_cons_pt.push_back(p_cons[j].pt());
+	  }
+	  p_conspT.push_back(p_cons_pt);
+	  p_Nchcons.push_back(p_chcount);
+	  //looping over constituents
+	  vector<double> g_cons_pt;
+	  vector<PseudoJet> g_cons = g_matches[i].constituents();
+	  int g_jet_size = g_cons.size();
+	  g_jetMult.push_back(g_jet_size);
+	  int g_chcount = 0;
+	  for (int j = 0; j < g_jet_size; ++ j) {
+	    if (g_cons[j].user_index() != 0 && g_cons[j].user_index() != -9999) {g_chcount ++;}//counting only charged particles 
+	    g_cons_pt.push_back(g_cons[j].pt());
+	  }
+	  g_conspT.push_back(g_cons_pt);
+	  g_Nchcons.push_back(g_chcount);
+
 	  //groomed
 	  p_mg.push_back(p_GroomedJets[match_indices[2*i]].m());
 	  p_ptg.push_back(p_GroomedJets[match_indices[2*i]].pt());
@@ -1005,12 +1086,15 @@ int main (int argc, const char ** argv) {
 	  }
 	}//for loop over fakes
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	//}//peripheral/central event selection
       }//matching-required conditional
       
       else { //matching not required
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FILL RESPONSES/HISTS/TREES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 	//looping over pythia jets
+	//cout << p_Jets.size() << " jets in event " << event << endl;
 	for (int i = 0; i < p_Jets.size(); ++ i) {
+	  //cout << p_Jets[i].pt() << " " << p_Jets[i].m() << " " << p_Jets[i].eta() << " " << p_Jets[i].phi() << " " << p_Jets[i].e() << " " << mc_weight << endl;
 	  //ungroomed
 	  p_Pt.push_back(p_Jets[i].pt());
 	  p_M.push_back(p_Jets[i].m());

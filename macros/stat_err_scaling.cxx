@@ -3,7 +3,7 @@
 //RooUnfold seems to assume that the "truth" jets which were not matched to "measured" jets still count toward the number of unfolded jets.
 //So the statistical errors are calculated basically by the square root of the number of unfolded jets, which has a contribution from these "misses".
 //This is bad statistics. We should really be scaling the error from the data jets by some factor to account for inefficiency in the truth -> measured process.
-//We should then take the errors given by RooUnfold and bin-by-bin scale them up by x = the square root of (N_matches + N_misses) / N_matches.
+//We should then take the errors given by RooUnfold and bin-by-bin scale them up by x = the square root of ((N_matches + N_misses) / N_matches).
 //This comes from a simple algebraic rearrangement of sqrt(N_matches + N_misses) * x = sqrt(N_matches) * (N_matches + N_misses) / N_matches;
 //where the LHS is asking the question "By what do we need to scale the errors given by RooUnfold to match the RHS in which we properly scale the data counts by the inefficiency factor.
 //So, in this macro, we take in the appropriate histograms (from a file produced from MC requiring matched Pythia and Pythia+Geant events, to eliminate the unnecessary contribution of event matching efficiency to the overall efficiency), and calculate this number, x, for each bin, outputting it as a histogram for use after the unfolding.
@@ -48,13 +48,17 @@ int main (int argc, const char** argv) {
 
   const string path = "~/jetmass2/out/sim/";
   const string file_in = "sim_matched";
-
-  TFile *fin = new TFile((path+file_in+radius+".root").c_str(),"READ");
+  /*
+  TFile *fin = new TFile((path+file_in+radius+"_paper_new.root").c_str(),"READ");
   cout << "DEBUG: input file name is " << fin->GetName() << endl;
   
   RooUnfoldResponse* res = (RooUnfoldResponse*) fin->Get("pt_response");
   TH1D* match_plus_miss = (TH1D*) fin->Get("pt_gen_match_plus_miss");
   TH1D* match = (TH1D*) res->Hresponse()->ProjectionY("match");
+  */
+  TFile *fin = new TFile("~/jetmass2/out/toy_embedding/response_peripheral_weighted_noMBjets_noMissesWeight_w_systs_correct_HP.root","READ");
+  TH1D* match_plus_miss = (TH1D*) fin->Get("truth_weight");
+  TH1D* match = (TH1D*) fin->Get("truth_matches_weight");
   
   TH1D* hratio = (TH1D*) match_plus_miss->Clone("hratio");
   TH1D* efficiency = (TH1D*) match->Clone("efficiency");
@@ -68,7 +72,7 @@ int main (int argc, const char** argv) {
     hratio->SetBinContent(i,sqrt(hratio->GetBinContent(i)));
   }
   
-  TFile *fout = new TFile((path+"stat_err_scaling"+radius+".root").c_str(),"RECREATE");
+  TFile *fout = new TFile((path+"stat_err_scaling"+radius+"_new_pA_peripheral_HP.root").c_str(),"RECREATE");
 
   fout->cd();
   hratio->Write();

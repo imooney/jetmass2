@@ -1,11 +1,5 @@
-//Isaac Mooney, WSU - June 2019
-//This file will run the initial analysis on data for the jet mass project.
-//It takes in the Picos, performs selections, clusters particles, performs selections on the resulting jets,
-//applies the Soft Drop grooming procedure to a copy of the jet population, fills jet trees, and writes to files.
-//It is currently capable of doing this for pp or pA and should be easily extendable to AA when I start working on it.
-
-#include <iostream>
-#include <iomanip>
+//Isaac Mooney, WSU - November 2019
+//This file embeds ppJP2 data into pAuMB data
 
 #include <TH1.h>
 #include <TH2.h>
@@ -65,10 +59,10 @@ typedef fastjet::contrib::SoftDrop SD;
 // -------------------------                                                                                                                                   
 // Command line arguments:                                                                                                                                    
 // (Defaults defined for debugging)                                                                                                                           
-// [0]: output directory                                                                                                                                      
-// [1]: name for the output root file containing histograms of observables                                                                                    
-// [2]: flag determining if we run over ch+ne (i.e. "full") jets or just ch jets. If it's "ch", runs over ch jets. If anything else, runs over full jets.
-// [3]: flag determining trigger: ppJP2, ppHT2, ppVPDMB, pAuJP2, pAuHT2, pAuBBCMB, or AA[TBD]. Also used to determine collision species
+// [0]: output directory                                                                                                                                    
+// [1]: name for the output root file containing histograms of observables                                                                                   
+// [2]: full jets (Ch+Ne) or Ch jets
+// [3]: flag determining if we run over ch+ne (i.e. "full") jets or just ch jets. If it's "ch", runs over ch jets. If anything else, runs over full jets.
 // [4]: input data: can be a single .root or a .txt or .list of root files - should always be last argument 
 
 // DEF MAIN()
@@ -85,11 +79,11 @@ int main ( int argc, const char** argv) {
   // ------------------------------
   // Defaults
   std::string executable = "./bin/data"; // placeholder                                                                                    
-  std::string outputDir = "out/"; // directory where everything will be saved                                                                                  
+  std::string outputDir = "out/"; // directory where everything will be saved                                                                                
   std::string outFileName = "test.root"; // histograms will be saved here                                                                                      
-  std::string chainList = "list.txt"; // input file: can be .root, .txt, .list                                                                                 
-  std::string chainName = "JetTree"; // tree name in input file                                                                                                
-  std::string trigger = "ppJP2"; // trigger name: ppJP2, ppHT2, ppVPDMB, pAuJP2, pAuBBCMB, AA[TBD] 
+  std::string chainList_pp = "list.txt"; // input file: can be .root, .txt, .list                                                                           
+  std::string chainList_pAu = "list.txt"; // input file: can be .root, .txt, .list                                                                                 
+  std::string chainName = "JetTree"; // tree name in input file                                                                                              
   double radius = 0.4; //jet radius parameter; input value can range from 0.1 to 9.9.
   bool full = 1; //If TRUE, run over full (ch+ne) jets. If FALSE, run over ch jets.
   
@@ -109,12 +103,12 @@ int main ( int argc, const char** argv) {
     outputDir         = arguments[0];
     outFileName       = arguments[1];
     radius            = radius_str_to_double (arguments[2]);
-    trigger           = arguments[3]; //ppJP2, ppHT2, ppVPDMB, pAuJP2, pAuHT2, pAuBBCMB, or AA [TBD]
-    if (arguments[4] == "ch") {full = 0;} else {full = 1;} //either ch+ne jets (default) or ch jets (if "ch")
-    chainList         = arguments[5];
+    if (arguments[3] == "ch") {full = 0;} else {full = 1;} //either ch+ne jets (default) or ch jets (if "ch")   
+    chainList_pp      = arguments[4];
+    chainList_pAu     = arguments[5];
             
-    std::cout << "Running analysis of " << arguments[4] << " jets in the " << trigger << "-triggered data. Results will be output to " << outputDir << "." << std::endl;
-    std::cout << "The input file is " << chainList << " and the output file is " << outFileName << "." << std::endl;
+    std::cout << "Running embedding of jets in the JP2-triggered pp data into the MB pAu data. Results will be output to " << outputDir << "." << std::endl;
+    std::cout << "The input pp file is " << chainList_pp << ", the input pAu file is " << chainList_pAu << " and the output file is " << outFileName << "." << std::endl;
     
     break;
   }
@@ -126,53 +120,68 @@ int main ( int argc, const char** argv) {
   }
 
   //Setting up specifics of analysis based on the flags that were received above!
-  string badtows = "", badruns = "";
-  double vzdiff = -1;
-  if (trigger.find("pp") != string::npos) {badtows = det_badTowers; badruns = dat_bad_run_list; vzdiff = det_vZDiff;}
-  if (trigger.find("pA") != string::npos) {badtows = pAu_badTowers; badruns = pAu_bad_run_list; vzdiff = pAu_vZDiff;}
-  if (trigger.find("AA") != string::npos) {badtows = ""; badruns = ""; vzdiff = -1;} //TBD
-
-  //TEMP (FOR COMPARISON TO EMBEDDING):
-  badtows = combined_badTowers;
+  string badtows_pp = "", badruns_pp = "", badtows_pAu = "", badruns_pAu = "";
+  double vzdiff_pp = -1, vzdiff_pAu = -1;
+  badtows_pp = det_badTowers; badruns_pp = dat_bad_run_list; vzdiff_pp = det_vZDiff;
+  badtows_pAu = pAu_badTowers; badruns_pAu = pAu_bad_run_list; vzdiff_pAu = pAu_vZDiff;
 
   //in place for now; will encapsulate in a function if it gets much more involved. Hardcodes the trigger IDs.                                                 
-  int tID1 = -9999, tID2 = -9999, tID3 = -9999;
-  if (trigger == "ppJP2") {tID1 = tppJP2; tID2 = -8888; tID3 = -8888;} //-8888 just ensures it won't accidentally match a trigger
-  if (trigger == "ppHT2") {tID1 = tppHT2a; tID2 = tppHT2b; tID3 = tppHT2c;}
-  if (trigger == "ppVPDMB") {tID1 = tppVPDMB_nobsmd; tID2 = -8888; tID3 = -8888;}
-  if (trigger == "pAuJP2") {tID1 = tpAuJP2a; tID2 = tpAuJP2b; tID3 = -8888;}
-  if (trigger == "pAuHT2") {tID1 = tpAuHT2a; tID2 = tpAuHT2b; tID3 = -8888;}
-  if (trigger == "pAuBBCMB") {tID1 = tpAuBBCMBa; tID2 = tpAuBBCMBb; tID3 = -8888;}
+  int tID_pp = -9999, tID1_pAu = -9999, tID2_pAu = -9999;
+  tID_pp = tppJP2; //ppJP2
+  tID1_pAu = tpAuBBCMBa; tID2_pAu = tpAuBBCMBb; //pAuBBCMB
   
   // Build our input now
   // --------------------
-  TChain* chain = new TChain( chainName.c_str() );
+  TChain* chain_pp = new TChain( chainName.c_str() );
+  TChain* chain_pAu = new TChain( chainName.c_str() );
+  
   
   // Check to see if the input is a .root file or a .txt
-  bool inputIsRoot = Analysis::HasEnding( chainList.c_str(), ".root" );
-  bool inputIsTxt  = Analysis::HasEnding( chainList.c_str(), ".txt"  );
-  bool inputIsList = Analysis::HasEnding( chainList.c_str(), ".list" );
+  bool inputIsRoot_pp = Analysis::HasEnding( chainList_pp.c_str(), ".root" );
+  bool inputIsTxt_pp  = Analysis::HasEnding( chainList_pp.c_str(), ".txt"  );
+  bool inputIsList_pp = Analysis::HasEnding( chainList_pp.c_str(), ".list" );
   
   // If its a recognized file type, build the chain
   // If its not recognized, exit
-  if ( inputIsRoot ) { chain->Add( chainList.c_str() ); }
-  else if ( inputIsTxt )  { chain = TStarJetPicoUtils::BuildChainFromFileList( chainList.c_str() ); }
-  else if ( inputIsList)  { chain = TStarJetPicoUtils::BuildChainFromFileList( chainList.c_str() ); }
+  if ( inputIsRoot_pp ) { chain_pp->Add( chainList_pp.c_str() ); }
+  else if ( inputIsTxt_pp )  { chain_pp = TStarJetPicoUtils::BuildChainFromFileList( chainList_pp.c_str() ); }
+  else if ( inputIsList_pp )  { chain_pp = TStarJetPicoUtils::BuildChainFromFileList( chainList_pp.c_str() ); }
   else { __ERR("data file is not recognized type: .root or .txt only.") return -1; }
-	
+
+    // Check to see if the input is a .root file or a .txt
+  bool inputIsRoot_pAu = Analysis::HasEnding( chainList_pAu.c_str(), ".root" );
+  bool inputIsTxt_pAu  = Analysis::HasEnding( chainList_pAu.c_str(), ".txt"  );
+  bool inputIsList_pAu = Analysis::HasEnding( chainList_pAu.c_str(), ".list" );
+  
+  // If its a recognized file type, build the chain
+  // If its not recognized, exit
+  if ( inputIsRoot_pAu ) { chain_pAu->Add( chainList_pAu.c_str() ); }
+  else if ( inputIsTxt_pAu )  { chain_pAu = TStarJetPicoUtils::BuildChainFromFileList( chainList_pAu.c_str() ); }
+  else if ( inputIsList_pAu )  { chain_pAu = TStarJetPicoUtils::BuildChainFromFileList( chainList_pAu.c_str() ); }
+  else { __ERR("data file is not recognized type: .root or .txt only.") return -1; }
+
+
   // Build the event structure w/ cuts
   // ---------------------------------
-  TStarJetPicoReader * reader = new TStarJetPicoReader();
-  InitReader(reader, chain, nEvents, "All"/*det_triggerString*/, det_absMaxVz, vzdiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, dat_maxEtTow, 0.9999, false, badtows, badruns);
+  TStarJetPicoReader * reader_pp = new TStarJetPicoReader();
+  InitReader(reader_pp, chain_pp, nEvents, "All"/*det_triggerString*/, det_absMaxVz, vzdiff_pp, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, dat_maxEtTow, 0.9999, false, badtows_pp, badruns_pp);
+  TStarJetPicoReader * reader_pAu = new TStarJetPicoReader();
+  InitReader(reader_pAu, chain_pAu, nEvents, "All", det_absMaxVz, vzdiff_pAu, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, dat_maxEtTow, 0.9999, false, badtows_pAu, badruns_pAu);
 
   // Data classes
   // ------------
-  TStarJetVectorContainer<TStarJetVector>* container;
-  TStarJetVector* sv; // TLorentzVector* would be sufficient
-  TStarJetPicoEventHeader* header;
-  TStarJetPicoEvent* event;
-  TStarJetPicoEventCuts* EventCuts = reader->GetEventCuts();//will use this for hardcoding checks if events passed selections
+  TStarJetVectorContainer<TStarJetVector>* container_pp;
+  TStarJetVector* sv_pp; // TLorentzVector* would be sufficient
+  TStarJetPicoEventHeader* header_pp;
+  TStarJetPicoEvent* event_pp;
+  TStarJetPicoEventCuts* EventCuts_pp = reader_pp->GetEventCuts();//will use this for hardcoding checks if events passed selections
   
+  TStarJetVectorContainer<TStarJetVector>* container_pAu;
+  TStarJetVector* sv_pAu; // TLorentzVector* would be sufficient
+  TStarJetPicoEventHeader* header_pAu;
+  TStarJetPicoEvent* event_pAu;
+  TStarJetPicoEventCuts* EventCuts_pAu = reader_pAu->GetEventCuts();//will use this for hardcoding checks if events passed selections
+
   // Histograms
   // ----------
   TH1::SetDefaultSumw2();
@@ -185,7 +194,14 @@ int main ( int argc, const char** argv) {
   double dummy_double;
 
   //variables to link to branches in the tree
-  double n_jets; double refMult, bbc_east_rate, bbc_east_sum, zdc_coinc_rate;
+  double n_jets;
+  double bbc_east_rate_pp, bbc_east_sum_pp;
+  double bbc_east_rate_pAu, bbc_east_sum_pAu;
+  
+  double zdc_coinc_rate_pp, zdc_coinc_rate_pAu;
+  
+  double bkgrho, bkgrho_m, bkgsigma, bkgsigma_m;
+  
   vector<double> Pt; vector<double> Eta; vector<double> Phi; vector<double> M; vector<double> E;
   vector<double> ch_e_frac;
   vector<double> zg; vector<double> rg; vector<double> mg; vector<double> ptg;
@@ -193,26 +209,20 @@ int main ( int argc, const char** argv) {
   vector<double> tau0; vector<double> tau05; vector<double> tau_05; vector<double> tau_1;
   vector<double> tau0_g; vector<double> tau05_g; vector<double> tau_05_g; vector<double> tau_1_g;
   
-  vector<double> ncons_ch; vector<double> ncons_neut;
-  vector<vector<double> > conspt_ch; vector<vector<double> > conspt_neut;
-  vector<vector<double> > conseta_ch; vector<vector<double> > conseta_neut;
-
-  double eventID; double runID;
   //contains all (important) jet observables for both groomed and ungroomed jets
   TTree *eventTree = new TTree("event","event");
-  eventTree->Branch("eventID",&eventID);
-  eventTree->Branch("runID",&runID);
   eventTree->Branch("n_jets", &n_jets);
-  eventTree->Branch("refMult", &refMult);//reference multiplicity
-  eventTree->Branch("bbc_east_rate", &bbc_east_rate); //~lumi
-  eventTree->Branch("bbc_east_sum", &bbc_east_sum); //~centrality
-  eventTree->Branch("zdc_coinc_rate", &zdc_coinc_rate); //~lumi
-  eventTree->Branch("ncons_ch", &ncons_ch);
-  eventTree->Branch("ncons_neut", &ncons_neut);
-  eventTree->Branch("conspt_ch", &conspt_ch);
-  eventTree->Branch("conspt_neut", &conspt_neut);
-  eventTree->Branch("conseta_ch", &conseta_ch);
-  eventTree->Branch("conseta_neut", &conseta_neut);
+  eventTree->Branch("bbc_east_rate_pp", &bbc_east_rate_pp); //~lumi
+  eventTree->Branch("bbc_east_sum_pp", &bbc_east_sum_pp); //~centrality
+  eventTree->Branch("bbc_east_rate_pAu", &bbc_east_rate_pAu); //~lumi
+  eventTree->Branch("bbc_east_sum_pAu", &bbc_east_sum_pAu); //~centrality
+  eventTree->Branch("zdc_coinc_rate_pp",&zdc_coinc_rate_pp);
+  eventTree->Branch("zdc_coinc_rate_pAu",&zdc_coinc_rate_pAu); //to match pp to pA lumi
+  eventTree->Branch("rho",&bkgrho);
+  eventTree->Branch("rho_m",&bkgrho_m);
+  eventTree->Branch("sigma",&bkgsigma);
+  eventTree->Branch("sigma_m",&bkgsigma_m);
+  
   eventTree->Branch("Pt", &Pt); eventTree->Branch("Eta",&Eta); eventTree->Branch("Phi",&Phi); eventTree->Branch("M",&M); eventTree->Branch("E",&E);
   eventTree->Branch("ch_e_frac",&ch_e_frac);
   eventTree->Branch("zg", &zg); eventTree->Branch("rg", &rg); eventTree->Branch("mg", &mg); eventTree->Branch("ptg",&ptg);
@@ -222,7 +232,7 @@ int main ( int argc, const char** argv) {
 
   // Helpers
   // -------
-  vector<PseudoJet> particles;
+  vector<PseudoJet> particles, particles_pp, particles_pAu;
   
   unsigned nJets = 0, nJetsSD = 0;
 
@@ -239,8 +249,7 @@ int main ( int argc, const char** argv) {
   Selector select_jet_pt_min  = fastjet::SelectorPtMin( det_jet_ptmin );
   Selector select_jet_pt_max  = fastjet::SelectorPtMax( jet_ptmax );
   Selector select_jet_m_min   = fastjet::SelectorMassMin( mass_min );
-  //temp, uncomment jetpt min and jetmmin later
-  Selector sjet = select_jet_rap /*&& select_jet_pt_min*/ && select_jet_pt_max/* && select_jet_m_min*/;
+  Selector sjet = select_jet_rap && select_jet_pt_min && select_jet_pt_max && select_jet_m_min;
   
   // Choose a jet and area definition
   // --------------------------------
@@ -267,7 +276,8 @@ int main ( int argc, const char** argv) {
   int nEventsUsed = 0;
   
   try{
-    while ( reader->NextEvent() ) {
+    //we check the pp event first. If it's bad, we just go to the next one. Once we find a good one, we check for a good pA event as well.
+    while ( reader_pp->NextEvent()) {
       
       //clearing vectors
       Pt.clear(); Eta.clear(); Phi.clear(); M.clear(); E.clear();
@@ -276,43 +286,67 @@ int main ( int argc, const char** argv) {
       tau0.clear(); tau05.clear(); tau_05.clear(); tau_1.clear(); //for now, angularity observables may be wrong. Don't trust until further vetting
       tau0_g.clear(); tau05_g.clear(); tau_05_g.clear(); tau_1_g.clear();
       //initializing variables to -9999
-      n_jets = -9999; refMult = -9999; bbc_east_rate = -9999; bbc_east_sum = -9999; zdc_coinc_rate = -9999;
-      eventID = -9999; runID = -9999;
-      ncons_neut.clear(); ncons_ch.clear();
-      conspt_neut.clear(); conspt_ch.clear();
-      conseta_neut.clear(); conseta_ch.clear();
-
-      reader->PrintStatus(10);
+      n_jets = -9999;
+      bbc_east_rate_pp = -9999; bbc_east_sum_pp = -9999;
+      bbc_east_rate_pAu = -9999; bbc_east_sum_pAu = -9999;
+      zdc_coinc_rate_pp = -9999; zdc_coinc_rate_pAu = -9999;
+      bkgrho = -9999; bkgrho_m = -9999; bkgsigma = -9999; bkgsigma_m = -9999;
       
+      particles.clear(); particles_pAu.clear(); particles_pp.clear();
+      
+      reader_pp->PrintStatus(10);
       //get the event header
-      event = reader->GetEvent();
-      header = event->GetHeader();
-
-      particles.clear();
-      
+      event_pp = reader_pp->GetEvent();
+      header_pp = event_pp->GetHeader();
+     
       // Get the output container from the reader
       // ----------------------------------------
-      container = reader->GetOutputContainer();
+      container_pp = reader_pp->GetOutputContainer();
+     
+      //if the event lacks the desired trigger, skip it                                                                                                        
+      //see function "SetTriggers()" for assignment of tID1, tID2 (or above until I write it)                                                                  
+      if ( ! header_pp->HasTriggerId(tID_pp) ) {
+	cout << "DEBUG: skipping this event because the pp lacks appropriate triggers." << endl;
+	continue;
+      }
+
+      else { cout << "DEBUG: this pp event is ok!" << endl;}
       
-      eventID = reader->GetNOfCurrentEvent();
-      runID = header->GetRunId();
+      while ( reader_pAu->NextEvent() ) {
+	reader_pAu->PrintStatus(10);
+      
+      //get the event header
+      event_pAu = reader_pAu->GetEvent();
+      header_pAu = event_pAu->GetHeader();
+      
+      /*
+	//require similar luminosity. Typically less than 40k for pA MB.
+      if (abs (header_pAu->GetZdcCoincidenceRate() - header_pp->GetZdcCoincidenceRate() ) > 10000) {
+	continue; //try the next pA event instead
+      }
+      */
+
+      // Get the output container from the reader
+      // ----------------------------------------
+      container_pAu = reader_pAu->GetOutputContainer();
+      
       //~~~~~~~~~~~~~~~~~~~~~~~~~~~Skipping undesired events!~~~~~~~~~~~~~~~~~~~~~~~~~~~~//                                                                    
 
       //if the event lacks the desired trigger, skip it                                                                                                        
       //see function "SetTriggers()" for assignment of tID1, tID2 (or above until I write it)                                                                  
-      if ( ! (header->HasTriggerId(tID1) || header->HasTriggerId(tID2) || header->HasTriggerId(tID3) ) ) {//cout << "DEBUG: skipping this event because it lacks appropriate triggers. Does it have trigger ID " << tID1 << "? " << header->HasTriggerId(tID1) << endl;
+      if ( ! (header_pAu->HasTriggerId(tID1_pAu) || header_pAu->HasTriggerId(tID2_pAu) ) ) {
+	cout << "DEBUG: skipping this event because the pAu lacks appropriate triggers." << endl;
 	continue;
       }
-      if (trigger.find("pA") != string::npos) {//removing some runs by hand in pA until we have bad run/tower lists
-        //TEMPORARILY SKIPPING THESE RUNS for pA [should define these runIDs somewhere later so they're not magic numbers]                                     
-        if (header->GetRunId() >= 16142059 && header->GetRunId() <= 16149001) {cout << "DEBUG: should never see this for pp!" << endl; continue;}
-        //something weird happened to the towers in run 16135032 (and it looks like it started at the end of run 16135031), so excluding both                  
-        if (header->GetRunId() == 16135031 || header->GetRunId() == 16135032) {cout << "DEBUG: should never see this for pp!" << endl; continue;}
-	//the event cuts don't check if the vzdiff is acceptable, so I have to hardcode it here. UPDATE: I believe Nick updated the eventstructuredAu to check this condition, so this line should be redundant now
-	//	if (!EventCuts->IsVertexZDiffOK(event)) {cout << "DEBUG: shouldn't see this now!" << endl; continue;}
-	//Above 64000 seems like detectors saturate (tower multiplicity explodes).                                                                             
-        if (header->GetBbcAdcSumEast() >= pAu_BBCE_ADC_sum_max) {continue;}
-      }
+      //removing some runs by hand in pA until we have bad run/tower lists
+      //TEMPORARILY SKIPPING THESE RUNS for pA [should define these runIDs somewhere later so they're not magic numbers]                                   
+      if (header_pAu->GetRunId() >= 16142059 && header_pAu->GetRunId() <= 16149001) {cout << "skipping bad pAu runs." << endl; continue;}
+      //something weird happened to the towers in run 16135032 (and it looks like it started at the end of run 16135031), so excluding both                  
+      if (header_pAu->GetRunId() == 16135031 || header_pAu->GetRunId() == 16135032) {cout << "skipping bad pAu runs." << endl; continue;}
+      //Above 64000 seems like detectors saturate (tower multiplicity explodes).                                                                             
+      if (header_pAu->GetBbcAdcSumEast() >= pAu_BBCE_ADC_sum_max) {cout << "DEBUG: BBCE ADC sum is too high! Skipping this bad pA event!" << endl; continue;}
+      
+      cout << "DEBUG: this pA event is ok! That means we have a pp-pA match!" << endl;
       
       //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~// 
 
@@ -320,28 +354,23 @@ int main ( int argc, const char** argv) {
       
       // Transform TStarJetVectors into (FastJet) PseudoJets; assign mass to particles
       // ----------------------------------------------------------
-      GatherParticles(container, sv, particles, full, 0, pdg); //"pdg" here finds the rest mass for particles with a given PID; 0 means detector-level.
+      GatherParticles(container_pp, sv_pp, particles_pp, full, 0, pdg); //"pdg" here finds the rest mass for particles with a given PID; 0 means detector-level.
+      GatherParticles(container_pAu, sv_pAu, particles_pAu, full, 0, pdg); //"pdg" here finds the rest mass for particles with a given PID; 0 means detector-level.
+      //adding both pp and pA particles to the vector of pseudojets containing the events' particles
+      //particles.push_back(particles_pp); particles.push_back(particles_pAu);
+      particles.insert(particles.end(), particles_pp.begin(), particles_pp.end());
+      particles.insert(particles.end(), particles_pAu.begin(), particles_pAu.end());
 
-      //calculating refMult (N_ch in |eta| < 0.5)                                                                                                              
-      double refmult = 0;
-      for (int i = 0; i < particles.size(); ++ i) {
-	//temporarily using a modified definition of refmult that includes neutrals to check something in the unfolding
-        if (particles[i].user_index() != 0 && particles[i].user_index() != -9999 && fabs(particles[i].eta()) < 0.5) {
-	  refmult ++;
-	}
-      }
-      //refmult = particles.size();
-      
       // Analysis
       // --------
       // Apply selector, spart (defined above, under "Constituent selectors"), to the full particle set
       vector<PseudoJet> good_parts = spart( particles );
-	
+      
       // find corresponding jets with soft constituents
       // ----------------------------------------------
       ClusterSequence/*Area*/ csa ( good_parts, jet_def/*, area_def */); // WITHOUT background subtraction
 	
-      /*
+      /*    
       // Background initialization - for later use with AA
       // -------------------------
       // Background selector - Exclude two hardest jets for background extermination
@@ -352,10 +381,17 @@ int main ( int argc, const char** argv) {
       JetDefinition jet_def_bkgd (fastjet::kt_algorithm, R );
       // Energy density estimate from median ( pt_i / area_i )
       JetMedianBackgroundEstimator bkgd_estimator (selector_bkgd, jet_def_bkgd, area_def_bkgd);
-      bkgd_estimator.set_particles( pLo );
+      bkgd_estimator.set_particles( good_parts );
       // Subtract A*rho from the original pT & m
       Subtractor bkgd_subtractor (&bkgd_estimator);
-      bkgd_subtractor.set_use_rho_m();*/
+      bkgd_subtractor.set_use_rho_m();
+      
+      //for plotting rho later:
+      bkgrho = bkgd_estimator.rho();
+      bkgsigma = bkgd_estimator.sigma();
+      bkgrho_m = bkgd_estimator.rho_m();
+      bkgsigma_m = bkgd_estimator.sigma_m();
+*/
       
       vector<PseudoJet> initial = fastjet::sorted_by_pt(sjet(/*bkgd_subtractor(*/csa.inclusive_jets())/*)*/);//applies jet selector to clustered jets
       vector<PseudoJet> good_jets; //jets in population "initial" then have NEF selection applied (since this is data)
@@ -371,20 +407,18 @@ int main ( int argc, const char** argv) {
 	  nJetsSD ++;
 	}
       }
-      //temp, uncomment the if (good_jets ) later
-      //if (good_jets.size() != 0) {
+      
+      if (good_jets.size() != 0) {
+	cout << "DEBUG: ...and we have jets!" << endl;
 	//SoftDrop is a groomer not a tagger, so if we have at least one ungroomed jet, we should also have a SoftDrop'd jet.
 	nJets += good_jets.size();
 	n_jets = good_jets.size();
-	refMult = refmult;
-	bbc_east_rate = header->GetBbcEastRate();
-	bbc_east_sum = header->GetBbcAdcSumEast(); 
-	zdc_coinc_rate = header->GetZdcCoincidenceRate();
-	if (good_jets.size() >= 3) {
-	  if (good_jets[0].pt() > 30 && good_jets[1].pt() > 25 && good_jets[2].pt() > 15) {
-	    cout << "FOR RAGHAV! : " << std::setprecision(10) << eventID << " " << runID << endl;
-	  }
-	}
+	bbc_east_rate_pp = header_pp->GetBbcEastRate();
+	bbc_east_sum_pp = header_pp->GetBbcAdcSumEast();
+	bbc_east_rate_pAu = header_pAu->GetBbcEastRate();
+	bbc_east_sum_pAu = header_pAu->GetBbcAdcSumEast(); 
+	zdc_coinc_rate_pp = header_pp->GetZdcCoincidenceRate();
+	zdc_coinc_rate_pAu = header_pAu->GetZdcCoincidenceRate();
 	for (int i = 0; i < n_jets; ++ i) {
 	  Pt.push_back(good_jets[i].pt()); Eta.push_back(good_jets[i].eta()); Phi.push_back(good_jets[i].phi());
 	  M.push_back(good_jets[i].m()); E.push_back(good_jets[i].e());
@@ -402,18 +436,6 @@ int main ( int argc, const char** argv) {
 	  double sum_tau0_g = 0; double sum_tau05_g = 0; double sum_tau_05_g = 0; double sum_tau_1_g = 0;
 	  vector<PseudoJet> cons = good_jets[i].constituents(); //ungroomed jet's constituents
 	  vector<PseudoJet> cons_g = GroomedJets[i].constituents(); //groomed jet's constituents
-
-	  int nconsch = 0, nconsneut = 0;
-	  vector<double> consptch; vector<double> consptneut;
-	  vector<double> consetach; vector<double> consetaneut;
-	  for (int j = 0; j < cons.size(); ++ j) {
-	    if (cons[j].user_index() == 0) { nconsneut ++; consptneut.push_back(cons[j].pt()); consetaneut.push_back(cons[j].eta());}
-	    if ((cons[j].user_index() != 0) && fabs(cons[j].user_index()) < 5) { nconsch ++; consptch.push_back(cons[j].pt()); consetach.push_back(cons[j].eta());}
-	  }
-	  ncons_ch.push_back(nconsch); ncons_neut.push_back(nconsneut);
-	  conspt_ch.push_back(consptch); conspt_neut.push_back(consptneut);
-	  conseta_ch.push_back(consetach); conseta_neut.push_back(consetaneut);
-
 	  //using pT, not energy, so some names are misnomers
 	  for (int j = 0; j < cons.size(); ++ j) { //looping over ungroomed jet's constituents
 	    if (cons[j].user_index() != 0) {ch_e += cons[j].pt();}
@@ -443,16 +465,16 @@ int main ( int argc, const char** argv) {
 
 	  ch_e_frac.push_back(ch_e/(double)tot_e); //CEF [charged energy fraction] in the jet
 	}//for loop over jets
-	//}//if we had jets
+      }//if we had jets
       
       // And we're done!
       // -----------------------------
-	//temp, uncomment the if (good_jets ) later
-	//if (good_jets.size() != 0) {
+      if (good_jets.size() != 0) {
 	nEventsUsed++; //this event was accepted and had at least one jet passing all criteria
 	eventTree->Fill();
-	//}
-    } // Event loop
+      }
+      } //Event loop inner
+    } // Event loop outer
   }catch ( std::exception& e) {
     std::cerr << "Caught " << e.what() << std::endl;
     return -1;

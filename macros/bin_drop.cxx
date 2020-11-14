@@ -111,13 +111,15 @@ int main (int argc, const char** argv) {
   const string sim_path = "~/jetmass2/out/sim/hists/";
   const string match_path = "~/jetmass2/out/sim/";
   const string data_path = "~/jetmass2/out/data/hists/";
-  const string match_file = "sim_matched";
-  const string data_file = "data_hists_ppJP2";
-  const string sim_file = "unmatched_hists";
+  const string match_file = "FINAL_sim_matched";
+  const string data_file = "FINAL_data_hists_ppJP2";
+  const string sim_file = "FINAL_unmatched_hists";
 
-  TFile *match_in = new TFile((match_path+match_file+radius+"_paper_new.root").c_str(),"READ");
+  TFile *match_in = new TFile((match_path+match_file+radius+"_paper.root").c_str(),"READ");
   TFile *data_in = new TFile((data_path+data_file+radius+".root").c_str(),"READ");
   TFile *sim_in = new TFile((sim_path+sim_file+radius+".root").c_str(),"READ");
+
+  cout << "A" << endl;
   
   //~~~closure - must be done first
   RooUnfoldResponse *sampleA_m_pt_response = (RooUnfoldResponse*) match_in->Get("sampleA_m_pt_response");
@@ -131,6 +133,8 @@ int main (int argc, const char** argv) {
   RooUnfoldResponse *sampleA_mg_response = (RooUnfoldResponse*) match_in->Get("sampleA_mg_response");
   RooUnfoldResponse *sampleB_mg_response = (RooUnfoldResponse*) match_in->Get("sampleB_mg_response");
  
+  cout << "B" << endl;
+
   //1D closure spectra to be pruned and to be used to prune responses
   TH1D *sampleA_pt_gen = (TH1D*) match_in->Get("sampleA_pt_gen");
   TH1D *sampleA_pt_det = (TH1D*) match_in->Get("sampleA_pt_det");
@@ -141,6 +145,8 @@ int main (int argc, const char** argv) {
   TH1D *sampleB_pt_gen_counts = (TH1D*) match_in->Get("sampleB_pt_gen_counts");
   TH1D *sampleB_pt_det_counts = (TH1D*) match_in->Get("sampleB_pt_det_counts");
   
+  cout << "C" << endl;
+
   TH1D *sampleA_m_gen = (TH1D*) match_in->Get("sampleA_m_gen");
   TH1D *sampleA_m_det = (TH1D*) match_in->Get("sampleA_m_det");
   TH1D *sampleB_m_gen = (TH1D*) match_in->Get("sampleB_m_gen");
@@ -150,6 +156,8 @@ int main (int argc, const char** argv) {
   TH1D *sampleB_m_gen_counts = (TH1D*) match_in->Get("sampleB_m_gen_counts");
   TH1D *sampleB_m_det_counts = (TH1D*) match_in->Get("sampleB_m_det_counts");
 
+  cout << "D" << endl;
+  
   TH1D *sampleA_mg_gen = (TH1D*) match_in->Get("sampleA_mg_gen");
   TH1D *sampleA_mg_det = (TH1D*) match_in->Get("sampleA_mg_det");
   TH1D *sampleB_mg_gen = (TH1D*) match_in->Get("sampleB_mg_gen");
@@ -158,6 +166,8 @@ int main (int argc, const char** argv) {
   TH1D *sampleA_mg_det_counts = (TH1D*) match_in->Get("sampleA_mg_det_counts");
   TH1D *sampleB_mg_gen_counts = (TH1D*) match_in->Get("sampleB_mg_gen_counts");
   TH1D *sampleB_mg_det_counts = (TH1D*) match_in->Get("sampleB_mg_det_counts");
+
+  cout << "E" << endl;
 
   //2D closure spectra to be pruned and to be used to prune responses
   TH2D *sampleA_m_pt_gen = (TH2D*) match_in->Get("sampleA_m_pt_gen");
@@ -176,6 +186,8 @@ int main (int argc, const char** argv) {
   TH2D *sampleA_mg_pt_det_counts = (TH2D*) match_in->Get("sampleA_mg_pt_det_counts");
   TH2D *sampleB_mg_pt_gen_counts = (TH2D*) match_in->Get("sampleB_mg_pt_gen_counts");
   TH2D *sampleB_mg_pt_det_counts = (TH2D*) match_in->Get("sampleB_mg_pt_det_counts");
+
+  cout << "F" << endl;
 
   //~~~matched MC
   RooUnfoldResponse *m_pt_response = (RooUnfoldResponse*) match_in->Get("m_pt_response");
@@ -197,6 +209,8 @@ int main (int argc, const char** argv) {
   RooUnfoldResponse *mg_pt_res_GS = (RooUnfoldResponse*) match_in->Get("mg_pt_res_GS");
   //  RooUnfoldResponse *mg_pt_res_MS = (RooUnfoldResponse*) match_in->Get("mg_pt_res_MS");
 
+  cout << "G" << endl;
+  
   //these are the 1D responses for the mass smear systematic
   RooUnfoldResponse *m_res2025_nom = (RooUnfoldResponse*) match_in->Get("m_res2025_nom");
   RooUnfoldResponse *m_res2530_nom = (RooUnfoldResponse*) match_in->Get("m_res2530_nom");
@@ -217,6 +231,8 @@ int main (int argc, const char** argv) {
   RooUnfoldResponse *mg_res2530_p8smear = (RooUnfoldResponse*) match_in->Get("mg_res2530_p8smear");
   RooUnfoldResponse *mg_res3040_p8smear = (RooUnfoldResponse*) match_in->Get("mg_res3040_p8smear");
   
+
+  cout << "H" << endl;
   
   //~~~data
   TH2D *m_v_pt_d = (TH2D*) data_in->Get("m_v_pt");
@@ -232,6 +248,8 @@ int main (int argc, const char** argv) {
   TH2D *mg_v_pt_g_counts = (TH2D*) sim_in->Get("mg_v_pt_counts");
   TH2D *mg_v_pt_p_counts = (TH2D*) sim_in->Get("PL_mg_v_pt_counts");
 
+  cout << "I" << endl;
+  
   TH1D* m_2025_d = (TH1D*) m_v_pt_d->ProjectionX("m_2025_d",m_v_pt_d->GetYaxis()->FindBin(20),m_v_pt_d->GetYaxis()->FindBin(25)-1);
   TH1D* mg_2025_d = (TH1D*) mg_v_pt_d->ProjectionX("mg_2025_d",mg_v_pt_d->GetYaxis()->FindBin(20),mg_v_pt_d->GetYaxis()->FindBin(25)-1);
 
@@ -241,12 +259,15 @@ int main (int argc, const char** argv) {
   TH1D* m_3040_d = (TH1D*) m_v_pt_d->ProjectionX("m_3040_d",m_v_pt_d->GetYaxis()->FindBin(30),m_v_pt_d->GetYaxis()->FindBin(40)-1);
   TH1D* mg_3040_d = (TH1D*) mg_v_pt_d->ProjectionX("mg_3040_d",mg_v_pt_d->GetYaxis()->FindBin(30),mg_v_pt_d->GetYaxis()->FindBin(40)-1);
 
+  cout << "J" << endl;
   
   vector<int> to_drop_m; vector<int> to_drop_mg;
   vector<int> to_drop_m1D; vector<int> to_drop_mg1D; vector<int> to_drop_pt1D;
   vector<int> to_drop_m1D_2025; vector<int> to_drop_mg1D_2025;
   vector<int> to_drop_m1D_2530; vector<int> to_drop_mg1D_2530;
   vector<int> to_drop_m1D_3040; vector<int> to_drop_mg1D_3040;
+
+  cout << "K" << endl;
   
   //determining low-stats 1D mass spectra bins from data to later use the corresponding bin numbers for dropping bins from the response
   to_drop_m1D_2025 = DropLowStatsBins(m_2025_d, m_2025_d);
@@ -256,6 +277,8 @@ int main (int argc, const char** argv) {
   to_drop_m1D_3040 = DropLowStatsBins(m_3040_d, m_3040_d);
   to_drop_mg1D_3040 = DropLowStatsBins(mg_3040_d, mg_3040_d);
 
+  cout << "L" << endl;
+  
   //dropping corresponding bins from the smeared 1D responses
   DropBins(m_res2025_nom, to_drop_m1D_2025);
   DropBins(m_res2025_h7smear, to_drop_m1D_2025);
@@ -276,6 +299,7 @@ int main (int argc, const char** argv) {
   DropBins(mg_res3040_h7smear, to_drop_mg1D_3040);
   DropBins(mg_res3040_p8smear, to_drop_mg1D_3040);
   
+  cout << "M" << endl;
   
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//  
   //dropping low-stats closure spectra bins
@@ -306,6 +330,8 @@ int main (int argc, const char** argv) {
   DropLowStatsBins(sampleB_mg_pt_det, sampleB_mg_pt_det_counts); 
   //~~~
   
+  cout << "N" << endl;
+  
   //dropping low-stats spectra bins
   DropLowStatsBins(m_v_pt_d, m_v_pt_d_counts);                                                                             
   DropLowStatsBins(m_v_pt_g, m_v_pt_g_counts);                                                                             
@@ -315,6 +341,7 @@ int main (int argc, const char** argv) {
   DropLowStatsBins(mg_v_pt_p, mg_v_pt_p_counts);
   //~~~
 
+  cout << "O" << endl;
 
   //dropping bins from the closure responses using the closure spectra
   //remember to call this block of after spectra have been pruned already
@@ -332,6 +359,8 @@ int main (int argc, const char** argv) {
   DropBins(sampleB_mg_response, to_drop_mg1D);
   //~~~
 
+  cout << "P" << endl;
+  
   //dropping bins from the responses using the closure spectra
   DropBins(m_pt_response, to_drop_m);   
   DropBins(mg_pt_response, to_drop_mg);
@@ -355,13 +384,17 @@ int main (int argc, const char** argv) {
   
   //~~~
 
+  cout << "Q" << endl;
+  
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
   //output files - same as inputs but with "_bindropped" appended.
-  TFile *match_out = new TFile((match_path+match_file+radius+"_paper_bindropped_new.root").c_str(),"RECREATE");
-  TFile *data_out = new TFile((data_path+data_file+radius+"_bindropped_new.root").c_str(),"RECREATE");
-  TFile *sim_out = new TFile((sim_path+sim_file+radius+"_bindropped_new.root").c_str(),"RECREATE");
+  TFile *match_out = new TFile((match_path+match_file+radius+"_paper_bindropped.root").c_str(),"RECREATE");
+  TFile *data_out = new TFile((data_path+data_file+radius+"_bindropped.root").c_str(),"RECREATE");
+  TFile *sim_out = new TFile((sim_path+sim_file+radius+"_bindropped.root").c_str(),"RECREATE");
 
+  cout << "R" << endl;
+  
   match_out->cd();
   //nominal responses
   m_pt_response->Write(); mg_pt_response->Write();
@@ -394,6 +427,7 @@ int main (int argc, const char** argv) {
   m_res3040_h7smear->Write(); mg_res3040_h7smear->Write();
   m_res3040_p8smear->Write(); mg_res3040_p8smear->Write();
 
+  cout << "S" << endl;
   
   data_out->cd();
   //data spectra
@@ -406,12 +440,15 @@ int main (int argc, const char** argv) {
   mg_2530_d->Write();
   mg_3040_d->Write();
   
+  cout << "T" << endl;
   
   sim_out->cd();
   //(unmatched) simulation spectra
   m_v_pt_g->Write(); m_v_pt_p->Write();
   mg_v_pt_g->Write(); mg_v_pt_p->Write();
   
+  cout << "U" << endl;
+
   cout << endl
        << "Wrote data to " << data_out->GetName() << endl
        << "Wrote sim spectra to " << sim_out->GetName() << endl
@@ -431,8 +468,7 @@ int main (int argc, const char** argv) {
     cout << to_drop_mg[i] << ", ";
   }
   cout << to_drop_mg[to_drop_mg.size() - 1] << endl;
-
-
+  
   //closing files
   data_out->Close(); sim_out->Close(); match_out->Close();
   cout << endl << "Closed \t" << data_out->GetName() << ",\n\t" << sim_out->GetName() 

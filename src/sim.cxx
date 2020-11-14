@@ -90,8 +90,8 @@ int main (int argc, const char ** argv) {
   //These histograms (from p6in and ratioin) are used to smear the priors for the systematics responses
   //this file contains the detector resolution histograms
   //arguments[2] determines the radius, so this will automatically change which file is pulled - obviously requires the files already to exist for the given R.
-  TFile *p6match = new TFile(("~/jetmass2/out/sim/hists/matched_hists_R"+(string) argv[3]+".root").c_str(),"READ");
-  
+  TFile *p6match = new TFile(("~/jetmass2/out/sim/hists/FINAL_matched_hists_R"+(string) argv[3]+".root").c_str(),"READ");
+
   TH2D *pt_res_py2D = (TH2D*) p6match->Get("deltaPtvPyPt");
   TH2D *pt_res_ge2D = (TH2D*) p6match->Get("deltaPtvGePt");
   
@@ -101,19 +101,20 @@ int main (int argc, const char ** argv) {
   
   //this file contains the ratio of pythia8 to pythia6 ungroomed/groomed mass for a given bin of pT.
   //  TFile *ratioin = new TFile(("~/jetmass2/out/sim/p8_p6_ratio_R"+(string) argv[3]+".root").c_str(),"READ");
-  TFile *p6unmatch = new TFile(("~/jetmass2/out/sim/hists/unmatched_hists_R"+(string) argv[3]+".root").c_str(),"READ");
+  TFile *p6unmatch = new TFile(("~/jetmass2/out/sim/hists/FINAL_unmatched_hists_R"+(string) argv[3]+".root").c_str(),"READ");
   TH2D *mp6_2D = (TH2D*) p6unmatch->Get("PL_m_v_pt");
   TH2D *mgp6_2D = (TH2D*) p6unmatch->Get("PL_mg_v_pt");
   mp6_2D->SetDirectory(0);
   mgp6_2D->SetDirectory(0);
   p6unmatch->Close();
-  TFile *h7unmatch = new TFile(("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved_R"+(string) argv[3]+".root").c_str(),"READ");
-  TH2D *mh7_2D = (TH2D*) h7unmatch->Get("mvpt_h7off");
-  TH2D *mgh7_2D = (TH2D*) h7unmatch->Get("mgvpt_h7off");
+  //TFile *h7unmatch = new TFile(("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved_R"+(string) argv[3]+".root").c_str(),"READ");
+  TFile *h7unmatch = new TFile(("~/jetmass2/production/out/herwig/hists/FINAL_herwig7_R"+(string) argv[3]+"_undecayed_hists.root").c_str(),"READ");
+  TH2D *mh7_2D = (TH2D*) h7unmatch->Get("mvpt");//_h7off");
+  TH2D *mgh7_2D = (TH2D*) h7unmatch->Get("mgvpt");//_h7off");
   mh7_2D->SetDirectory(0);
   mgh7_2D->SetDirectory(0);
   h7unmatch->Close();
-  TFile *p8unmatch = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8_R"+(string) argv[3]+"_undecayed_hists.root").c_str(),"READ");
+  TFile *p8unmatch = new TFile(("~/jetmass2/production/out/pythia/hists/FINAL_pythia8_R"+(string) argv[3]+"_undecayed_hists.root").c_str(),"READ");
   TH2D *mp8_2D = (TH2D*) p8unmatch->Get("mvpt");
   TH2D *mgp8_2D = (TH2D*) p8unmatch->Get("mgvpt");
   mp8_2D->SetDirectory(0);
@@ -178,8 +179,11 @@ int main (int argc, const char ** argv) {
   //defining local containers to be linked to tree branches
   int p_EventID;
   double p_n_jets, p_wt;
-  vector<vector<double> > p_conspT;
+  vector<vector<double> > p_conspT; vector<vector<double> > p_consM;
+  vector<vector<double> > p_consDelR;
+  vector<double> p_consMsum;
   vector<double> p_jetMult;
+  vector<double> p_pifrac;
   vector<double> p_Nchcons;
   vector<double> p_Pt; vector<double> p_Eta; vector<double> p_Phi; vector<double> p_M; vector<double> p_E;
   vector<double> p_ch_e_frac;
@@ -189,8 +193,11 @@ int main (int argc, const char ** argv) {
   int g_EventID;
   double g_n_jets, g_wt;
   double bbc_east_sum;
-  vector<vector<double> > g_conspT;
+  vector<vector<double> > g_conspT; vector<vector<double> > g_consM;
+  vector<vector<double> > g_consDelR;
+  vector<double> g_consMsum;
   vector<double> g_jetMult;
+  vector<double> g_pifrac;
   vector<double> g_Nchcons;
   vector<double> g_Pt; vector<double> g_Eta; vector<double> g_Phi; vector<double> g_M; vector<double> g_E;
   vector<double> g_ch_e_frac;
@@ -201,8 +208,12 @@ int main (int argc, const char ** argv) {
   TTree *eventTree = new TTree("event","event");
   eventTree->Branch("p_n_jets", &p_n_jets);
   eventTree->Branch("p_conspT",&p_conspT);
+  eventTree->Branch("p_pifrac",&p_pifrac);
   eventTree->Branch("p_jetMult",&p_jetMult);
   eventTree->Branch("p_Nchcons",&p_Nchcons);
+  eventTree->Branch("p_consM",&p_consM);
+  eventTree->Branch("p_consDelR",&p_consDelR);
+  eventTree->Branch("p_consMsum",&p_consMsum);
   eventTree->Branch("p_Pt", &p_Pt); eventTree->Branch("p_Eta",&p_Eta); eventTree->Branch("p_Phi",&p_Phi); eventTree->Branch("p_M",&p_M); eventTree->Branch("p_E",&p_E);
   eventTree->Branch("p_ch_e_frac", &p_ch_e_frac);
   eventTree->Branch("p_zg", &p_zg); eventTree->Branch("p_rg", &p_rg); eventTree->Branch("p_mg", &p_mg); eventTree->Branch("p_ptg",&p_ptg);
@@ -212,8 +223,12 @@ int main (int argc, const char ** argv) {
   eventTree->Branch("g_n_jets", &g_n_jets);
   eventTree->Branch("bbc_east_sum",&bbc_east_sum);
   eventTree->Branch("g_conspT",&g_conspT);
+  eventTree->Branch("g_pifrac",&g_pifrac);
   eventTree->Branch("g_jetMult",&g_jetMult);
   eventTree->Branch("g_Nchcons",&g_Nchcons);
+  eventTree->Branch("g_consM",&g_consM);
+  eventTree->Branch("g_consDelR",&g_consDelR);
+  eventTree->Branch("g_consMsum",&g_consMsum);
   eventTree->Branch("g_Pt", &g_Pt); eventTree->Branch("g_Eta",&g_Eta); eventTree->Branch("g_Phi",&g_Phi); eventTree->Branch("g_M",&g_M); eventTree->Branch("g_E",&g_E);
   eventTree->Branch("g_ch_e_frac", &g_ch_e_frac);
   eventTree->Branch("g_zg", &g_zg); eventTree->Branch("g_rg", &g_rg); eventTree->Branch("g_mg", &g_mg); eventTree->Branch("g_ptg",&g_ptg);
@@ -433,22 +448,24 @@ int main (int argc, const char ** argv) {
   //SELECTORS
   // Constituent selectors
   // ---------------------
-  Selector select_track_rap = fastjet::SelectorAbsRapMax(max_track_rap);
+  Selector select_track_eta = fastjet::SelectorAbsEtaMax(max_track_eta);
   Selector select_lopt      = fastjet::SelectorPtMin( partMinPt );
   Selector select_loptmax   = fastjet::SelectorPtMax( partMaxPt );
-  Selector spart = select_track_rap * select_lopt * select_loptmax;
+  Selector spart = select_track_eta * select_lopt * select_loptmax;
+  //TEMP!!!
+  //Selector spart_temp = select_track_rap * select_loptmax;
   
   // Jet candidate selectors
   // -----------------------
-  Selector select_jet_rap     = fastjet::SelectorAbsRapMax(max_rap);
+  Selector select_jet_eta     = fastjet::SelectorAbsEtaMax(max_eta);
   Selector select_det_jet_pt_min  = fastjet::SelectorPtMin( det_jet_ptmin );
   Selector select_gen_jet_pt_min = fastjet::SelectorPtMin( jet_ptmin );
   Selector select_jet_pt_max  = fastjet::SelectorPtMax( jet_ptmax );
   Selector select_det_jet_m_min = fastjet::SelectorMassMin( mass_min );
   Selector select_gen_jet_m_min = fastjet::SelectorMassMin( 0.0 );
   
-  Selector sjet_gen = select_jet_rap && select_gen_jet_pt_min && select_jet_pt_max && select_gen_jet_m_min;
-  Selector sjet_det = select_jet_rap && select_det_jet_pt_min && select_jet_pt_max && select_det_jet_m_min;
+  Selector sjet_gen = select_jet_eta && select_gen_jet_pt_min && select_jet_pt_max && select_gen_jet_m_min;
+  Selector sjet_det = select_jet_eta && select_det_jet_pt_min && select_jet_pt_max && select_det_jet_m_min;
   
   // Particle containers & counters
   vector<PseudoJet> p_Particles, g_Particles, p_JetsInitial, g_JetsInitial;
@@ -457,7 +474,7 @@ int main (int argc, const char ** argv) {
   double mc_weight = -1;
   
   double hc = 0.9999; //to be varied in the systematic uncertainty variation
-  const int nSources = 1;//7; //includes the nominal settings as a "systematic".
+  const int nSources = 7; //includes the nominal settings as a "systematic".
   for (int iSyst = 0; iSyst < nSources; ++ iSyst) {
     if (iSyst == 0) {cout << endl << "RUNNING WITH NOMINAL SETTINGS!" << endl << endl;}
     if (iSyst == 1) {cout << endl << "RUNNING WITH INCREASED TOWER SCALE!" << endl << endl;}
@@ -478,7 +495,7 @@ int main (int argc, const char ** argv) {
     
     //initialize both readers
     InitReader(P6Reader, P6Chain, nEvents, "All", truth_absMaxVz, truth_vZDiff, truth_evPtMax, truth_evEtMax, truth_evEtMin, truth_DCA, truth_NFitPts, truth_FitOverMaxPts, sim_maxEtTow, hc, false, sim_badTowers, sim_bad_run_list);
-    InitReader(GEANTReader, GEANTChain, nEvents, det_triggerString/*"All"*/, det_absMaxVz, det_vZDiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, sim_maxEtTow, hc, false, sim_badTowers, sim_bad_run_list);//det_badTowers/*combined_badTowers*/, dat_bad_run_list);
+    InitReader(GEANTReader, GEANTChain, nEvents, det_triggerString/*"All"*/, det_absMaxVz, det_vZDiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, sim_maxEtTow, hc, false, /*sim_badTowers, sim_bad_run_list);*/det_badTowers/*combined_badTowers*/, dat_bad_run_list);
     //ABOVE IS TEMP - COMBINED BAD TOWERS TO COMPARE TO pA EMBEDDING
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~  BEGIN EVENT LOOP!  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
     
@@ -494,8 +511,11 @@ int main (int argc, const char ** argv) {
       mc_weight = -9999;
       p_n_jets = -9999; p_wt = -9999;
       p_conspT.clear();
+      p_pifrac.clear();
       p_jetMult.clear();
       p_Nchcons.clear();
+      p_consDelR.clear();
+      p_consM.clear(); p_consMsum.clear();
       p_Pt.clear(); p_Eta.clear(); p_Phi.clear(); p_M.clear(); p_E.clear();
       p_ch_e_frac.clear();
       p_zg.clear(); p_rg.clear(); p_mg.clear(); p_ptg.clear();
@@ -504,8 +524,11 @@ int main (int argc, const char ** argv) {
       g_n_jets = -9999; g_wt = -9999;
       bbc_east_sum = -9999;
       g_conspT.clear();
+      g_pifrac.clear();
       g_jetMult.clear();
       g_Nchcons.clear();
+      g_consDelR.clear();
+      g_consM.clear(); g_consMsum.clear();
       g_Pt.clear(); g_Eta.clear(); g_Phi.clear(); g_M.clear(); g_E.clear();
       g_ch_e_frac.clear();
       g_zg.clear(); g_rg.clear(); g_mg.clear(); g_ptg.clear();
@@ -585,7 +608,8 @@ int main (int argc, const char ** argv) {
       
       // applying particle-level cuts
       vector<PseudoJet> p_cut_Particles = spart(p_Particles);
-      vector<PseudoJet> g_cut_Particles = spart(g_Particles);
+      //TEMP!!!
+      vector<PseudoJet> g_cut_Particles = spart/*_temp*/(g_Particles);
       
       //Clustering jets
       ClusterSequence p_Cluster(p_cut_Particles, jet_def);
@@ -667,7 +691,9 @@ int main (int argc, const char ** argv) {
 	}
 	//before the actual matching, fill the spectra for validation in the closure test
 	//(we only require there to be a matching Geant & Pythia event so our event reconstruction efficiency isn't folded unnecessarily into the closure)
-	if (p_EventID % 2 == 0) { //even events are sampleA
+	double clos_rand = gRandom->Uniform(0.0, 1.0); //ONLY CALL THIS ONCE PER EVENT!!!
+	if (clos_rand > 0.5) {
+	  //if (p_EventID % 2 == 0) { //even events are sampleA
 	  for (int i = 0; i < p_Jets.size(); ++ i) {
 	    sampleA_pt_gen->Fill(p_Jets[i].pt(),mc_weight);
 	    sampleA_m_gen->Fill(p_Jets[i].m(),mc_weight);
@@ -695,7 +721,8 @@ int main (int argc, const char ** argv) {
 	    sampleA_mg_pt_det_counts->Fill(g_GroomedJets[i].m(),g_Jets[i].pt());
 	  }
 	}//end sampleA pseudo-data filling
-	if (p_EventID % 2 != 0) { //odd events are sampleB
+        if (clos_rand < 0.5) {
+	//if (p_EventID % 2 != 0) { //odd events are sampleB
 	  for (int i = 0; i < p_Jets.size(); ++ i) {
 	    sampleB_pt_gen->Fill(p_Jets[i].pt(),mc_weight);
 	    sampleB_m_gen->Fill(p_Jets[i].m(),mc_weight);
@@ -921,14 +948,17 @@ int main (int argc, const char ** argv) {
 	  m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
 	  mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
 	  //closure sampleA responses
-	  if (match && p_EventID % 2 == 0) { //throughout this section, checking if (match) is unnecessary because of the overall conditional, but I'll leave it.
+	  //double clos_rand = gRandom->Uniform(0.0, 1.0);//already called this - don't do it again for this event
+	  if (match && clos_rand > 0.5) {
+	    //if (match && p_EventID % 2 == 0) { //throughout this section, checking if (match) is unnecessary because of the overall conditional, but I'll leave it.
 	    sampleA_pt_response->Miss(misses[i].pt(), mc_weight);
 	    sampleA_m_response->Miss(misses[i].m(), mc_weight);
 	    sampleA_m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
 	    sampleA_mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
 	  }
 	  //closure sampleB responses
-	  if (match && p_EventID % 2 != 0) {
+	  if (match && clos_rand < 0.5) {
+	  //if (match && p_EventID % 2 != 0) {
 	    sampleB_pt_response->Miss(misses[i].pt(), mc_weight);
 	    sampleB_m_response->Miss(misses[i].m(), mc_weight);
 	    sampleB_m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
@@ -979,7 +1009,9 @@ int main (int argc, const char ** argv) {
 	  mg_pt_response->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(), g_Jets[match_indices[(2*i)+1]].pt(),
 			       p_GroomedJets[match_indices[2*i]].m(), p_Jets[match_indices[2*i]].pt(), mc_weight);
 	  //closure sampleA responses
-	  if (match && p_EventID % 2 == 0) {
+	  //double clos_rand = gRandom->Uniform(0.0, 1.0); //already called this! Don't do it again for this event!
+	  if (match && clos_rand > 0.5) {
+	    //if (match && p_EventID % 2 == 0) {
 	    sampleA_pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
 	    sampleA_m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
 	    sampleA_m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
@@ -987,7 +1019,8 @@ int main (int argc, const char ** argv) {
 					 p_GroomedJets[match_indices[2*i]].m(), p_Jets[match_indices[2*i]].pt(), mc_weight);
 	  }
 	  //closure sampleB responses
-	  if (match && p_EventID % 2 != 0) {
+	  if (match && clos_rand < 0.5) {
+	  //if (match && p_EventID % 2 != 0) {
 	    sampleB_pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
 	    sampleB_m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
 	    sampleB_m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
@@ -1004,28 +1037,54 @@ int main (int argc, const char ** argv) {
 	  p_E.push_back(p_matches[i].e());
 
 	  //looping over constituents
-	  vector<double> p_cons_pt;
+	  vector<double> p_cons_pt; vector<double> p_cons_M;
+	  vector<double> p_cons_DelR;
+	  double p_masssum = 0;
 	  vector<PseudoJet> p_cons = p_matches[i].constituents();
 	  int p_jet_size = p_cons.size();
 	  p_jetMult.push_back(p_jet_size);
 	  int p_chcount = 0;
+	  int p_pinum = 0;
 	  for (int j = 0; j < p_jet_size; ++ j) {
 	    if (p_cons[j].user_index() != 0 && p_cons[j].user_index() != -9999) {p_chcount ++;}//counting only charged particles 
 	    p_cons_pt.push_back(p_cons[j].pt());
+	    p_cons_M.push_back(p_cons[j].m());
+	    p_cons_DelR.push_back(p_cons[j].delta_R(p_matches[i]));
+	    p_masssum += p_cons[j].m();
+	    if (p_cons[j].m() > 0.13 && p_cons[j].m() < 0.14) { //pion mass ~139,135
+	      p_pinum ++;
+	    }
 	  }
+	  p_pifrac.push_back(p_pinum/(double)p_jet_size);
+	  p_consM.push_back(p_cons_M);
+	  p_consMsum.push_back(p_masssum);
 	  p_conspT.push_back(p_cons_pt);
+	  p_consDelR.push_back(p_cons_DelR);
 	  p_Nchcons.push_back(p_chcount);
 	  //looping over constituents
-	  vector<double> g_cons_pt;
+	  vector<double> g_cons_pt; vector<double> g_cons_M;
+	  vector<double> g_cons_DelR;
+	  double g_masssum = 0;
 	  vector<PseudoJet> g_cons = g_matches[i].constituents();
 	  int g_jet_size = g_cons.size();
 	  g_jetMult.push_back(g_jet_size);
 	  int g_chcount = 0;
+	  int g_pinum = 0;
 	  for (int j = 0; j < g_jet_size; ++ j) {
 	    if (g_cons[j].user_index() != 0 && g_cons[j].user_index() != -9999) {g_chcount ++;}//counting only charged particles 
 	    g_cons_pt.push_back(g_cons[j].pt());
+	    g_cons_M.push_back(g_cons[j].m());
+	    g_cons_DelR.push_back(g_cons[j].delta_R(g_matches[i]));
+	    g_masssum += g_cons[j].m();
+	    if (g_cons[j].m() > 0.13 && g_cons[j].m() < 0.14) { //pion mass ~139,135
+	      g_pinum ++;
+	    }
 	  }
+	  g_pifrac.push_back(g_pinum/(double)g_jet_size);
+	  g_consM.push_back(g_cons_M);
+	  g_consMsum.push_back(g_masssum);
 	  g_conspT.push_back(g_cons_pt);
+	  g_consDelR.push_back(g_cons_DelR);
 	  g_Nchcons.push_back(g_chcount);
 
 	  //groomed
@@ -1071,14 +1130,17 @@ int main (int argc, const char ** argv) {
 	  m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
 	  mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt(), mc_weight);
 	  //closure sampleA responses
-	  if (match && p_EventID % 2 == 0) {
+	  //double clos_rand = gRandom->Uniform(0.0, 1.0); // already called this, don't do it again for this event!
+	  if (match && clos_rand > 0.5) {
+	    //if (match && p_EventID % 2 == 0) {
 	    sampleA_pt_response->Fake(fakes[i].pt(), mc_weight);
 	    sampleA_m_response->Fake(fakes[i].m(), mc_weight);
 	    sampleA_m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
 	    sampleA_mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt(), mc_weight);
 	  }
 	  //closure sampleB responses
-	  if (match && p_EventID % 2 != 0) {
+	  if (match && clos_rand < 0.5) {
+	    //if (match && p_EventID % 2 != 0) {
 	    sampleB_pt_response->Fake(fakes[i].pt(), mc_weight);
 	    sampleB_m_response->Fake(fakes[i].m(), mc_weight);
 	    sampleB_m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
@@ -1103,14 +1165,21 @@ int main (int argc, const char ** argv) {
 	  p_E.push_back(p_Jets[i].e());
 	    
 	  //looping over constituents
-	  vector<double> cons_pt;
+	  vector<double> cons_pt; vector<double> cons_M; vector<double> cons_DelR;
+	  double masssum = 0;
 	  vector<PseudoJet> cons = p_Jets[i].constituents();
 	  int p_jet_size = cons.size();
 	  p_jetMult.push_back(p_jet_size);
 	  for (int j = 0; j < p_jet_size; ++ j) {
 	    cons_pt.push_back(cons[j].pt());
+	    cons_M.push_back(cons[j].m());
+	    cons_DelR.push_back(cons[j].delta_R(p_Jets[i]));
+	    masssum += cons[j].m();
 	  }
+	  p_consM.push_back(cons_M);
+	  p_consMsum.push_back(masssum);
 	  p_conspT.push_back(cons_pt);
+	  p_consDelR.push_back(cons_DelR);
 
 	  //groomed
 	  p_mg.push_back(p_GroomedJets[i].m());
@@ -1131,14 +1200,21 @@ int main (int argc, const char ** argv) {
 	  g_E.push_back(g_Jets[i].e());
 	    
 	  //looping over constituents
-	  vector<double> cons_pt;
+	  vector<double> cons_pt; vector<double> cons_M; vector<double> cons_DelR;
+ 	  double masssum = 0;
 	  vector<PseudoJet> cons = g_Jets[i].constituents();
 	  int g_jet_size = cons.size();
 	  g_jetMult.push_back(g_jet_size);
 	  for (int j = 0; j < g_jet_size; ++ j) {
 	    cons_pt.push_back(cons[j].pt());
+	    cons_M.push_back(cons[j].m());
+	    cons_DelR.push_back(cons[j].delta_R(g_Jets[i]));
+	    masssum += cons[j].m();
 	  }
+	  g_consM.push_back(cons_M);
+	  g_consMsum.push_back(masssum);
 	  g_conspT.push_back(cons_pt);
+	  g_consDelR.push_back(cons_DelR);
 
 	  //groomed
 	  g_mg.push_back(g_GroomedJets[i].m());

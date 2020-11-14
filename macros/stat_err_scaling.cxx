@@ -47,19 +47,20 @@ int main (int argc, const char** argv) {
   TH3::SetDefaultSumw2();
 
   const string path = "~/jetmass2/out/sim/";
-  const string file_in = "sim_matched";
-  /*
-  TFile *fin = new TFile((path+file_in+radius+"_paper_new.root").c_str(),"READ");
+  const string file_in = "FINAL_sim_matched";
+  
+  TFile *fin = new TFile((path+file_in+radius+"_paper.root").c_str(),"READ");
   cout << "DEBUG: input file name is " << fin->GetName() << endl;
   
   RooUnfoldResponse* res = (RooUnfoldResponse*) fin->Get("pt_response");
   TH1D* match_plus_miss = (TH1D*) fin->Get("pt_gen_match_plus_miss");
   TH1D* match = (TH1D*) res->Hresponse()->ProjectionY("match");
-  */
+  /*
   TFile *fin = new TFile("~/jetmass2/out/toy_embedding/response_peripheral_weighted_noMBjets_noMissesWeight_w_systs_correct_HP.root","READ");
   TH1D* match_plus_miss = (TH1D*) fin->Get("truth_weight");
   TH1D* match = (TH1D*) fin->Get("truth_matches_weight");
-  
+  */
+
   TH1D* hratio = (TH1D*) match_plus_miss->Clone("hratio");
   TH1D* efficiency = (TH1D*) match->Clone("efficiency");
   
@@ -72,7 +73,8 @@ int main (int argc, const char** argv) {
     hratio->SetBinContent(i,sqrt(hratio->GetBinContent(i)));
   }
   
-  TFile *fout = new TFile((path+"stat_err_scaling"+radius+"_new_pA_peripheral_HP.root").c_str(),"RECREATE");
+  //TFile *fout = new TFile((path+"stat_err_scaling"+radius+"_new_pA_peripheral_HP.root").c_str(),"RECREATE");
+  TFile *fout = new TFile((path+"FINAL_stat_err_scaling"+radius+".root").c_str(),"RECREATE");
 
   fout->cd();
   hratio->Write();

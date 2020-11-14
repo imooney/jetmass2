@@ -25,10 +25,10 @@ void pA_pp_HT_JP_compare () {
   DivideCanvas(cm,"0",nCols,nRows);
 
 
-  TFile *fpAJP = new TFile("~/jetmass2/out/data/hists/data_hists_pAuJP2.root","READ");
-  TFile *fpAHT = new TFile("~/jetmass2/out/data/hists/data_hists_pAuHT2.root","READ");
-  TFile *fppJP = new TFile("~/jetmass2/out/data/hists/data_hists_ppJP2_R04.root","READ");
-  TFile *fppHT = new TFile("~/jetmass2/out/data/hists/data_hists_ppHT.root","READ");
+  TFile *fpAJP = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/data/hists/data_hists_pAuJP2.root","READ");
+  TFile *fpAHT = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/data/hists/data_hists_pAuHT2.root","READ");
+  TFile *fppJP = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/data/hists/data_hists_ppJP2_R04.root","READ");
+  TFile *fppHT = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/data/hists/data_hists_ppHT.root","READ");
 
   TH2D* nef_pAJP_1 = (TH2D*) fpAJP->Get("ch_frac_v_pt");
   TH2D* nef_pAJP = (TH2D*) nef_pAJP_1->Clone("nef_pAJP");
@@ -191,8 +191,8 @@ void pA_pp_HT_JP_compare () {
     slice->DrawLatexNDC(0.3,0.85,(pts[i]+" < p_{T} < "+pts[i+1]+" GeV/c").c_str());
   }
   
-  //cnef->SaveAs("~/jetmass2/plots/pA_pp_HT_JP_compare_nef.pdf");
-  //  cm->SaveAs("~/jetmass2/plots/pA_pp_HT_JP_compare_m_by_bbcsum.pdf");
+  //cnef->SaveAs("~/jetmass2_11-10-2020_11_10-2020/plots/pA_pp_HT_JP_compare_nef.pdf");
+  //  cm->SaveAs("~/jetmass2_11-10-2020_11_10-2020/plots/pA_pp_HT_JP_compare_m_by_bbcsum.pdf");
   
   
   

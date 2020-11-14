@@ -271,18 +271,18 @@ int main ( int argc, const char** argv) {
 
   // Constituent selectors
   // ---------------------
-  Selector select_track_rap = fastjet::SelectorAbsRapMax(max_track_rap);
+  Selector select_track_eta = fastjet::SelectorAbsEtaMax(max_track_eta);
   Selector select_lopt      = fastjet::SelectorPtMin( partMinPt );
   Selector select_loptmax   = fastjet::SelectorPtMax( partMaxPt );
-  Selector slo = select_track_rap * select_lopt * select_loptmax;
+  Selector slo = select_track_eta * select_lopt * select_loptmax;
 
   // Jet candidate selectors
   // -----------------------
-  Selector select_jet_rap     = fastjet::SelectorAbsRapMax(max_rap);
+  Selector select_jet_eta     = fastjet::SelectorAbsEtaMax(max_eta);
   Selector select_jet_pt_min  = fastjet::SelectorPtMin( det_jet_ptmin );
   Selector select_jet_pt_max  = fastjet::SelectorPtMax( jet_ptmax );
   Selector select_jet_m_min = fastjet::SelectorMassMin( mass_min );
-  Selector sjet = select_jet_rap && select_jet_pt_min && select_jet_pt_max && select_jet_m_min;
+  Selector sjet = select_jet_eta && select_jet_pt_min && select_jet_pt_max && select_jet_m_min;
   
   // Choose a jet and area definition
   // --------------------------------

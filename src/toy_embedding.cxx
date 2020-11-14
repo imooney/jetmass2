@@ -555,25 +555,25 @@ int main ( int argc, const char** argv) {
 
   // Constituent selectors
   // ---------------------
-  Selector select_track_rap  = fastjet::SelectorAbsRapMax(max_track_rap);
+  Selector select_track_eta  = fastjet::SelectorAbsEtaMax(max_track_eta);
   Selector select_pt_min     = fastjet::SelectorPtMin( partMinPt );
   Selector select_pt_max     = fastjet::SelectorPtMax( partMaxPt );
-  Selector spart = select_track_rap * select_pt_min * select_pt_max;
+  Selector spart = select_track_eta * select_pt_min * select_pt_max;
 
   // Jet candidate selectors
   // -----------------------
-  Selector select_jet_rap     = fastjet::SelectorAbsRapMax(max_rap);
+  Selector select_jet_eta     = fastjet::SelectorAbsEtaMax(max_eta);
   Selector select_jet_pt_min  = fastjet::SelectorPtMin( det_jet_ptmin );
   Selector select_jet_pt_max  = fastjet::SelectorPtMax( jet_ptmax );
   Selector select_jet_m_min   = fastjet::SelectorMassMin( mass_min );
-  Selector sjet = select_jet_rap && select_jet_pt_min && select_jet_pt_max && select_jet_m_min;
+  Selector sjet = select_jet_eta && select_jet_pt_min && select_jet_pt_max && select_jet_m_min;
 
-  Selector sjet_MB = select_jet_rap && select_jet_pt_max;
+  Selector sjet_MB = select_jet_eta && select_jet_pt_max;
 
   //gen-level jets:
   Selector select_gen_jet_pt_min = fastjet::SelectorPtMin( jet_ptmin );
   Selector select_gen_jet_m_min = fastjet::SelectorMassMin( 0.0 );
-  Selector sjet_gen = select_jet_rap && select_gen_jet_pt_min && select_jet_pt_max && select_gen_jet_m_min;
+  Selector sjet_gen = select_jet_eta && select_gen_jet_pt_min && select_jet_pt_max && select_gen_jet_m_min;
 
   // Choose a jet and area definition
   // --------------------------------

@@ -259,7 +259,19 @@ namespace Analysis {
       */
       if ((sv->GetCharge() == 0) && (full == 0)) { continue; } //!if we don't want full jets, skip neutrals                                                     
       current.set_user_index( sv->GetCharge() );
-      
+      /*
+      if (py) {
+	current.set_user_index(pdg->GetParticle(sv->mc_pdg_pid())->Mass());
+      }
+      if (!py && sv->GetCharge() != 0) {
+	current.set_user_index(chPionMass);
+      }
+      if (!py && sv->GetCharge() == 0) {
+	current.set_user_index(0);
+      }
+      */
+
+
       //DEBUG:
       //std::cout << "ending with charge: " << current.user_index() << " for particle " << i << std::endl;
       
@@ -361,10 +373,83 @@ namespace Analysis {
     
     return bad_event;
   }
+
+  //This function takes a vector of jets to be geometrically matched to another vector of "candidate" matches. Once matching occurs, a vector of indices is returned allowing one to index the original two vectors to fill responses etc. with the matched jet pairs. Redundantly (for debugging, etc.) the vectors of matches themselves are also updated for later use.                                                                                                                   //Note: We need to be able to remove jets from the "candidates" vector after they've been matched, so we make a copy in the function.
+//Note: In finding which jets were the matches, we know the toMatch jet match will be the 'i'th jet since we are iterating. The candidate jet should be the geometrically closest match, so the first one in the candidate list that has been sorted by deltaR to the match. Then geometrically match the matched candidate jet to the corresponding candidate_safe jet, since jets have been removed so they don't index to the same position in the list anymore
+std::vector<int> MatchJets(const std::vector<fastjet::PseudoJet> candidates_safe, const std::vector<fastjet::PseudoJet> toMatch, std::vector<fastjet::PseudoJet> & c_matches, std::vector<fastjet::PseudoJet> & t_matches) {
+    std::vector<int> match_indices;
+    if (candidates_safe.size() == 0 || toMatch.size() == 0) {
+        return match_indices; //later, match_indices being empty will tell us there were no matches                                                            
+    }
+    //define candidates outside the loop so list continually dwindles as we remove matched candidates                                                          
+    std::vector<fastjet::PseudoJet> candidates = candidates_safe;
+    for (int i = 0; i < toMatch.size(); ++ i) { //for each jet in toMatch, we try to find a match from a dwindling set of candidates                           
+        fastjet::Selector selectMatchedJets = fastjet::SelectorCircle( R );
+        selectMatchedJets.set_reference( toMatch[i] );
+        std::vector<fastjet::PseudoJet> matchedToJet = /*sorted_by_pt(*/ selectMatchedJets( candidates )/*)*/; //not sorting by pT because we sort by deltaR later                                                                                                                                                            
+        if (matchedToJet.size() == 0) { continue; } //means no match to this jet. Remove none from candidates. Continuing on to the next one.                  
+        else { //found at least one match. Need to remove the highest pT one from candidates and add the respective jets to the match vectors.                 
+            //sorting by deltaR vv                                                                                                                             
+	  std::vector<double> dists;
+            for (int j = 0; j < matchedToJet.size(); ++ j) {
+                dists.push_back(matchedToJet[j].delta_R(toMatch[i]));//fills vector with values of deltaR between matched jets and their match                 
+            }//loop over matched jets to get deltaR values to the reference jet                                                                                
+            matchedToJet = objects_sorted_by_values(matchedToJet, dists);//sorts by deltaR to toMatch[i].
+            //sorted by deltaR ^^                                                                                                                              
+
+            match_indices.push_back(i); //push back the toMatch match position                                                                                 
+            t_matches.push_back(toMatch[i]);
+            c_matches.push_back(matchedToJet[0]); //highest pT match                                                                                           
+            for (int j = 0; j < candidates_safe.size(); ++ j) {//finding the match index (needs to be separate from next loop because we're removing jets from candidates but not candidates_safe.)                                                                                                                           
+	      if (matchedToJet[0].delta_R(candidates_safe[j]) == 0) {
+		match_indices.push_back(j);
+		break; //should exit only the c_matches loop                                                                                                
+	      }//found the matched jet in the unsorted non-shrinking list of candidates to add a match index to the list of indices                           
+	    }//loop to find the matched jet in the unsorted non-shrinking corresponding list of candidates                                                     
+	    for (int j = 0; j < candidates.size(); ++ j) { //finding which one to delete from candidates before next toMatch iteration.                        
+	      if (matchedToJet[0].delta_R(candidates[j]) == 0) { //is probably the same jet                                                                   
+		candidates.erase(candidates.begin() + j); //removing the jet from the overall list of candidates so it can't be considered next time        
+		break; //should exit only the c_matches loop.                                                                                               
+	      }//found the matched jet in the unsorted shrinking list of candidates and removed it                                                            
+	    }//loop to find the matched jet in the unsorted shrinking corresponding list of candidates
+	}//found a match                                                                                                                                       
+    }//loop over jets to be matched to candidates                                                                                                              
+    
+    return match_indices;
+}
   
+//!this function is similar to the "MatchJets" function, but it instead takes a list of jets which have already been matched ("candidates_safe") and finds the jets to which they correspond in the list of unmatched jets ("toMatch") by (exact) geometrical matching. The remaining jets with no corresponding already-matched jets are either misses or fakes depending on the call.
+std::vector<int> FakesandMisses(const std::vector<fastjet::PseudoJet> candidates_safe, const std::vector<fastjet::PseudoJet> toMatch, std::vector<fastjet::PseudoJet> & unmatched) {
+  std::vector<int> miss_fake_index;
+  std::vector<fastjet::PseudoJet> candidates = candidates_safe;
+  for (int i = 0; i < toMatch.size(); ++ i) {
+    fastjet::Selector selectMatchedJets = fastjet::SelectorCircle( 0 ); //a "match" is now if we found the same exact jet.                                  
+    selectMatchedJets.set_reference( toMatch[i] );
+    std::vector<fastjet::PseudoJet> matchedToJet = /*sorted_by_pt(*/ selectMatchedJets( candidates )/*)*/;//not sorting by either pT or deltaR because we should get at most one exact match                                                                                                                               
+  if (matchedToJet.size() == 0) { //means no match to this jet. Remove none from candidates. Add it to unmatched & continue to next one.                  
+    miss_fake_index.push_back(i); //the ith jet in toMatch is a miss or a fake                                                                          
+    unmatched.push_back(toMatch[i]);
+    continue;
+  }//didn't find a match                                                                                                                                  
+  else { //found an exact match                                                                                                                           
+    for (int j = 0; j < candidates.size(); ++ j) { //finding which one to delete from candidates before next toMatch iteration.                         
+      if (matchedToJet[0].delta_R(candidates[j]) == 0) { //is the same jet                                                                            
+	candidates.erase(candidates.begin() + j); //removing the jet from the overall list of candidates so it can't be considered next time        
+	break; //should exit only the candidates loop.                                                                                              
+      }//found the match in the corresponding unsorted vector                                                                                         
+    }//loop to find the match to remove from consideration in the next go-around                                                                        
+  }//found a match                                                                                                                                        
+  }//loop over toMatches                                                                                                                                      
+  
+  return miss_fake_index;
+}
+
+
+  //OLD:
   //This function takes a vector of jets to be geometrically matched to another vector of "candidate" matches. Once matching occurs, a vector of indices is returned allowing one to index the original two vectors to fill responses etc. with the matched jet pairs. Redundantly (for debugging, etc.) the vectors of matches themselves are also updated for later use.
   //Note: We need to be able to remove jets from the "candidates" vector after they've been matched, so we make a copy in the function. Also make a copy candidates vector for each iteration on toMatch since this vector has selections applied to it
   //Note: In finding which jets were the matches, we know the toMatch jet match will be the 'i'th jet since we are iterating. The candidate_copy jet should be the highest pT match, so the first one in the candidate_copy list. Geometrically match the candidate_copy jet to the nearest candidate jet, since jets have been removed so they don't index to the same jet anymore
+  /*
   std::vector<int> MatchJets(const std::vector<fastjet::PseudoJet> candidates_safe, const std::vector<fastjet::PseudoJet> toMatch, std::vector<fastjet::PseudoJet> & c_matches, std::vector<fastjet::PseudoJet> & t_matches) {
     std::vector<int> match_indices;
     if (candidates_safe.size() == 0 || toMatch.size() == 0) {
@@ -395,7 +480,9 @@ namespace Analysis {
     }
     return match_indices;
   }
-  
+  */
+  //OLD:
+  /*
   //!this function is similar to the "MatchJets" function, but it instead takes a list of jets which have already been matched ("candidates_safe") and finds the jets to which they correspond in the list of unmatched jets ("toMatch") by (exact) geometrical matching. The remaining jets with no corresponding already-matched jets are either misses or fakes depending on the call.
   std::vector<int> FakesandMisses(const std::vector<fastjet::PseudoJet> candidates_safe, const std::vector<fastjet::PseudoJet> toMatch, std::vector<fastjet::PseudoJet> & unmatched) {
     std::vector<int> miss_fake_index;
@@ -421,7 +508,7 @@ namespace Analysis {
     }
     return miss_fake_index;
   }
-  
+  */
   //~~~~~~~FILL HISTS [not used currently, but might be useful in the future so saving it here]~~~~~~~//
   
   void FillHistsHelper(Collection<std::string, TH1D> & c1D, Collection<std::string, TH2D> &c2D, Collection<std::string, TH3D> & c3D, const std::string flag, const fastjet::PseudoJet jet, const double weight) {

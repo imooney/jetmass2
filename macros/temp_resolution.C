@@ -1,6 +1,6 @@
 void temp_resolution () {
   
-  TFile* matchFile = new TFile( "~/jetmass2/out/sim/sim_matched_R04_no_masscut.root", "READ");
+  TFile* matchFile = new TFile( "~/jetmass2_11-10-2020_11_10-2020/out/sim/sim_matched_R04_no_masscut.root", "READ");
 
   TTree *t = (TTree*) matchFile->Get("event");
   
@@ -24,7 +24,7 @@ void temp_resolution () {
   
   t->ResetBranchAddresses();
   
-  TFile *fout = new TFile("~/jetmass2/out/sim/hists/temp_resolution_no_mass_cut.root","RECREATE");
+  TFile *fout = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/sim/hists/temp_resolution_no_mass_cut.root","RECREATE");
   
   fout->cd();
   

@@ -20,12 +20,12 @@ void temp_pA_pp_w_ratios() {
   const int nCols = 2; //20-30,30-45
   
   //open files from which to pull curves                                                        
-  TFile *fpAu = new TFile("~/jetmass2/out/data/data_pAuJP2.root","READ");
+  TFile *fpAu = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/data/data_pAuJP2.root","READ");
   //get histograms from the files
   TTree *tpAu = (TTree*) fpAu->Get("event");
   //  TTree *tpAu = (TTree*) tpAu_pre->CloneTree();//("tpAu");
   
-  TFile *fpp = new TFile("~/jetmass2/out/data/data_ppJP2_R04.root","READ");
+  TFile *fpp = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/data/data_ppJP2_R04.root","READ");
   TTree *tpp = (TTree*) fpp->Get("event");
   //TTree *tpp = (TTree*) tpp_pre->CloneTree();//("tpp");
   

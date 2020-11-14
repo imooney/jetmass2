@@ -21,8 +21,8 @@ void plot_result () {
   TCanvas *cgun = new TCanvas("cgun","cgun",800,500);
   
   //open files from which to pull curves                                                                                              
-  TFile *funfold = new TFile("~/jetmass2/out/unfold/unfolded_R04_forpaper.root","READ");
-  TFile *funfoldg = new TFile("~/jetmass2/out/unfold/groomed_unfolded_R04_forpaper.root","READ");
+  TFile *funfold = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/unfold/unfolded_R04_forpaper.root","READ");
+  TFile *funfoldg = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/unfold/groomed_unfolded_R04_forpaper.root","READ");
   
   //get histograms from the files
   vector<TH1D*> recos_g = {(TH1D*) funfoldg->Get("nom_0"),(TH1D*) funfoldg->Get("nom_1"),(TH1D*) funfoldg->Get("nom_2")};
@@ -151,7 +151,7 @@ void plot_result () {
   
   one->Draw("same");
 
-  cgun->SaveAs("~/jetmass2/plots/pp_paper/singlepT_and_R_mass_groomed_v_ungroomed.pdf");
+  cgun->SaveAs("~/jetmass2_11-10-2020_11_10-2020/plots/pp_paper/singlepT_and_R_mass_groomed_v_ungroomed.pdf");
   
   return;
 } 
@@ -180,11 +180,11 @@ vector<TH1D*> plot_result(int radius, bool groom, int dummy) {
   DivideCanvas(cws,"0",nCols,nRows);
   
   //open files from which to pull lots of curves                                                                                              
-  TFile *funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+"_paper_new.root").c_str(),"READ");
-  TFile *fp6 = new TFile(("~/jetmass2/out/sim/hists/unmatched_hists"+radstring+"_bindropped.root").c_str(),"READ");
-  TFile *fp8 = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
+  TFile *funfold = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/unfold/"+fstart+"unfolded"+radstring+"_paper_new.root").c_str(),"READ");
+  TFile *fp6 = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/sim/hists/unmatched_hists"+radstring+"_bindropped.root").c_str(),"READ");
+  TFile *fp8 = new TFile(("~/jetmass2_11-10-2020_11_10-2020/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
   TFile *fh7 = new TFile(("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved"+radstring+".root").c_str(),"READ");//temporarily using the old files (they're the same, but will point to new ones later)
-  //TFile *fPL = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_FSR_only_undecayed_hists.root").c_str(),"READ");
+  //TFile *fPL = new TFile(("~/jetmass2_11-10-2020_11_10-2020/production/out/pythia/hists/pythia8"+radstring+"_FSR_only_undecayed_hists.root").c_str(),"READ");
 
   //get histograms from the files
   vector<TH1D*> recos = {(TH1D*) funfold->Get("nom_0"),(TH1D*) funfold->Get("nom_1"),(TH1D*) funfold->Get("nom_2")};
@@ -423,7 +423,7 @@ vector<TH1D*> plot_result(int radius, bool groom, int dummy) {
   }
   
 
-  //cws->SaveAs(("~/jetmass2/plots/pp_paper/"+fstart+"jet_mass_3panel_w_ratios_nominalpythia_finalizedsysts_new.pdf").c_str());
+  //cws->SaveAs(("~/jetmass2_11-10-2020_11_10-2020/plots/pp_paper/"+fstart+"jet_mass_3panel_w_ratios_nominalpythia_finalizedsysts_new.pdf").c_str());
 
   //MEAN v. pT:
   
@@ -505,7 +505,7 @@ vector<TH1D*> plot_result(int radius, bool groom, int dummy) {
     ttitle->DrawLatex(22,7,"SoftDrop z_{cut} = 0.1, #beta = 0");
   }
 
-  //  cm->SaveAs(("~/jetmass2/plots/pp_paper/"+fstart+"mean_jet_mass.pdf").c_str());
+  //  cm->SaveAs(("~/jetmass2_11-10-2020_11_10-2020/plots/pp_paper/"+fstart+"mean_jet_mass.pdf").c_str());
   
   //syst, statist
   vector<TH1D*> means = {reco_m, reco_m_copy};
@@ -579,7 +579,7 @@ void plot_result() {
   title->DrawLatex(21,5.55, "anti-k_{T} jets, |#eta| < 1 - R");
   title->DrawLatex(21,5.35,"SoftDrop z_{cut} = 0.1, #beta = 0");
   
-  //  ccomp->SaveAs("~/jetmass2/plots/pp_paper/mean_jetmass_groom_v_ungroom.gif");
+  //  ccomp->SaveAs("~/jetmass2_11-10-2020_11_10-2020/plots/pp_paper/mean_jetmass_groom_v_ungroom.gif");
   
   return;
 }
@@ -612,11 +612,11 @@ void plot_result(bool groom) {
     if (iRow == 1) {radstring = "_R04";}
     if (iRow == 2) {radstring = "_R06";}
     //open files from which to pull lots of curves                                                                                              
-    TFile *funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+"_paper.root").c_str(),"READ");//change back if you change pt ranges!
-    TFile *fp6 = new TFile(("~/jetmass2/out/sim/hists/unmatched_hists"+radstring+"_bindropped.root").c_str(),"READ");
-    TFile *fp8 = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
+    TFile *funfold = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/unfold/"+fstart+"unfolded"+radstring+"_paper.root").c_str(),"READ");//change back if you change pt ranges!
+    TFile *fp6 = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/sim/hists/unmatched_hists"+radstring+"_bindropped.root").c_str(),"READ");
+    TFile *fp8 = new TFile(("~/jetmass2_11-10-2020_11_10-2020/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
     TFile *fh7 = new TFile(("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved"+radstring+".root").c_str(),"READ");//temporarily using the old files (they're the same, but will point to new ones later)
-    //TFile *fPL = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_FSR_only_undecayed_hists.root").c_str(),"READ");
+    //TFile *fPL = new TFile(("~/jetmass2_11-10-2020_11_10-2020/production/out/pythia/hists/pythia8"+radstring+"_FSR_only_undecayed_hists.root").c_str(),"READ");
 
     //get histograms from the files
     vector<TH1D*> recos = {(TH1D*) funfold->Get("nom_0"),(TH1D*) funfold->Get("nom_1")/*,(TH1D*) funfold->Get("nom_2")*/};
@@ -744,7 +744,7 @@ void plot_result(bool groom) {
     }
   }
 
-  //cws->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"jet_mass_6panel.pdf").c_str());
+  //cws->SaveAs(("~/jetmass2_11-10-2020_11_10-2020/plots/DNP_talk/"+fstart+"jet_mass_6panel.pdf").c_str());
 
   return;
 }
@@ -768,11 +768,11 @@ void plot_result (int radius, bool groom) {
   }
 
   //open files from which to pull lots of curves
-  TFile *funfold = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded"+radstring+"_paper.root").c_str(),"READ");//change this if you change nBins!
-  TFile *fp6 = new TFile(("~/jetmass2/out/sim/hists/unmatched_hists"+radstring+"_bindropped.root").c_str(),"READ");
-  TFile *fp8 = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
+  TFile *funfold = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/unfold/"+fstart+"unfolded"+radstring+"_paper.root").c_str(),"READ");//change this if you change nBins!
+  TFile *fp6 = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/sim/hists/unmatched_hists"+radstring+"_bindropped.root").c_str(),"READ");
+  TFile *fp8 = new TFile(("~/jetmass2_11-10-2020_11_10-2020/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
   TFile *fh7 = new TFile(("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved"+radstring+".root").c_str(),"READ");//temporarily using the old files (they're the same, but will point to new ones later)
-  //TFile *fPL = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_FSR_only_undecayed_hists.root").c_str(),"READ");
+  //TFile *fPL = new TFile(("~/jetmass2_11-10-2020_11_10-2020/production/out/pythia/hists/pythia8"+radstring+"_FSR_only_undecayed_hists.root").c_str(),"READ");
   
   //get histograms from the files
   vector<TH1D*> recos = {(TH1D*) funfold->Get("nom_0"),(TH1D*) funfold->Get("nom_1")};
@@ -881,7 +881,7 @@ void plot_result (int radius, bool groom) {
     if (i == 1) { tleg2->Draw("same");}
   }
 
-  // cws->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"mass_result"+radstring+".pdf").c_str());
+  // cws->SaveAs(("~/jetmass2_11-10-2020_11_10-2020/plots/DNP_talk/"+fstart+"mass_result"+radstring+".pdf").c_str());
 
   return;
 }
@@ -901,17 +901,17 @@ vector<TH1D*> plot_result (bool groom,int dummy1,int dummy2,int dummy3) {
   }
 
   //open files from which to pull lots of curves
-  TFile *funfold_R02 = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded_R02_paper.root").c_str(),"READ");
-  TFile *fp6_R02 = new TFile("~/jetmass2/out/sim/hists/unmatched_hists_R02_bindropped.root","READ");
-  TFile *fp8_R02 = new TFile("~/jetmass2/production/out/pythia/hists/pythia8_R02_undecayed_hists.root","READ");
+  TFile *funfold_R02 = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/unfold/"+fstart+"unfolded_R02_paper.root").c_str(),"READ");
+  TFile *fp6_R02 = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/sim/hists/unmatched_hists_R02_bindropped.root","READ");
+  TFile *fp8_R02 = new TFile("~/jetmass2_11-10-2020_11_10-2020/production/out/pythia/hists/pythia8_R02_undecayed_hists.root","READ");
   TFile *fh7_R02 = new TFile("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved_R02.root","READ");//temporarily using the old files (they're the same, but will point to new ones later)
-  TFile *funfold_R04 = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded_R04_paper.root").c_str(),"READ");
-  TFile *fp6_R04 = new TFile("~/jetmass2/out/sim/hists/unmatched_hists_R04_bindropped.root","READ");
-  TFile *fp8_R04 = new TFile("~/jetmass2/production/out/pythia/hists/pythia8_R04_undecayed_hists.root","READ");
+  TFile *funfold_R04 = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/unfold/"+fstart+"unfolded_R04_paper.root").c_str(),"READ");
+  TFile *fp6_R04 = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/sim/hists/unmatched_hists_R04_bindropped.root","READ");
+  TFile *fp8_R04 = new TFile("~/jetmass2_11-10-2020_11_10-2020/production/out/pythia/hists/pythia8_R04_undecayed_hists.root","READ");
   TFile *fh7_R04 = new TFile("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved_R04.root","READ");//temporarily using the old files (they're the same, but will point to new ones later)
-  TFile *funfold_R06 = new TFile(("~/jetmass2/out/unfold/"+fstart+"unfolded_R06_paper.root").c_str(),"READ");
-  TFile *fp6_R06 = new TFile("~/jetmass2/out/sim/hists/unmatched_hists_R06_bindropped.root","READ");
-  TFile *fp8_R06 = new TFile("~/jetmass2/production/out/pythia/hists/pythia8_R06_undecayed_hists.root","READ");
+  TFile *funfold_R06 = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/unfold/"+fstart+"unfolded_R06_paper.root").c_str(),"READ");
+  TFile *fp6_R06 = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/sim/hists/unmatched_hists_R06_bindropped.root","READ");
+  TFile *fp8_R06 = new TFile("~/jetmass2_11-10-2020_11_10-2020/production/out/pythia/hists/pythia8_R06_undecayed_hists.root","READ");
   TFile *fh7_R06 = new TFile("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved_R06.root","READ");//temporarily using the old files (they're the same, but will point to new ones later)
   
 
@@ -1019,7 +1019,7 @@ vector<TH1D*> plot_result (bool groom,int dummy1,int dummy2,int dummy3) {
     }
   }
   
-  //cws->SaveAs(("~/jetmass2/plots/pp_paper/"+fstart+"mass_result_radscan_finalizedsysts.pdf").c_str());
+  //cws->SaveAs(("~/jetmass2_11-10-2020_11_10-2020/plots/pp_paper/"+fstart+"mass_result_radscan_finalizedsysts.pdf").c_str());
 
   vector<TH1D*> for_means = {w_systs[0], recos[0], w_systs[1], recos[1], w_systs[2], recos[2]};
   
@@ -1103,7 +1103,7 @@ void plot_result(int dummy1,int dummy2,int dummy3,int dummy4,int dummy5) {
   title->DrawLatex(0.13,6.15, "SoftDrop z_{cut} = 0.1, #beta = 0");
   title->DrawLatex(0.13,5.7, "30 < p_{T} < 40 GeV/c");
   
-  cmr->SaveAs("~/jetmass2/plots/pp_paper/mean_jetmass_groom_v_ungroom_radscan.gif"); 
+  cmr->SaveAs("~/jetmass2_11-10-2020_11_10-2020/plots/pp_paper/mean_jetmass_groom_v_ungroom_radscan.gif"); 
   
   return;
 }

@@ -140,12 +140,12 @@ int main (int argc, const char** argv) {
     
   const string match_path = "~/jetmass2/out/sim/";
   const string data_path = "~/jetmass2/out/data/hists/";
-  const string match_file = "sim_matched";
-  const string data_file = "data_hists_ppJP2";
+  const string match_file = "FINAL_sim_matched";
+  const string data_file = "FINAL_data_hists_ppJP2";
   
   //input files
-  TFile *fres = new TFile((match_path+match_file+radius+"_paper_bindropped_new.root").c_str(),"READ");
-  TFile *fdat = new TFile((data_path+data_file+radius+"_bindropped_new.root").c_str(),"READ");
+  TFile *fres = new TFile((match_path+match_file+radius+"_paper_bindropped.root").c_str(),"READ");
+  TFile *fdat = new TFile((data_path+data_file+radius+"_bindropped.root").c_str(),"READ");
   cout << "A" << endl;
   //systematics responses (rnom is nominal response for unfolding)
   RooUnfoldResponse *rnom = (RooUnfoldResponse*) fres->Get((hname+"_pt_res_nom").c_str());
@@ -462,7 +462,7 @@ int main (int argc, const char** argv) {
   }
    
   //scaling errors
-  TFile *fstats = new TFile(("~/jetmass2/out/sim/stat_err_scaling"+radius+"_new.root").c_str(),"READ");
+  TFile *fstats = new TFile(("~/jetmass2/out/sim/FINAL_stat_err_scaling"+radius+".root").c_str(),"READ");
   TH1D* scalefactors = (TH1D*) fstats->Get("hratio");
 
   for (int i = 0; i < nBins; ++ i) {
@@ -491,7 +491,7 @@ int main (int argc, const char** argv) {
     ftitle = "groomed_"+ftitle;
   }
 
-  TFile *fout = new TFile(("~/jetmass2/out/unfold/"+ftitle+radius+"_paper_new.root").c_str(),"RECREATE");
+  TFile *fout = new TFile(("~/jetmass2/out/unfold/FINAL_"+ftitle+radius+"_paper.root").c_str(),"RECREATE");
   fout->cd();
     
   for (int i = 0; i < nBins; ++ i) {

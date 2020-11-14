@@ -45,8 +45,8 @@ echo 'Species is '${species}'!'
 #setting input files based on command-line arguments
 if (${species} == 'pp') then 
     if (${inputType} == 'data') then
-	set base = out/${inputType}/pp12Pico_pass #this is for HT! Comment this out and uncomment the next line for ppJP2 instead!
-	#set base = out/${inputType}/sum #Be careful! This also catches charged jets in its net, if the files exist. But later, using $tag makes it work fine.
+	#set base = out/${inputType}/pp12Pico_pass #this is for HT! Comment this out and uncomment the next line for ppJP2 instead!
+	set base = out/${inputType}/sum #Be careful! This also catches charged jets in its net, if the files exist. But later, using $tag makes it work fine.
     else if (${inputType} == 'sim') then
 	set base = out/${inputType}/Cleanpp12Pico
     endif
@@ -87,7 +87,8 @@ if (${analysisTag} == 'bin_drop' || ${analysisTag} == 'stat_err_scaling' || ${an
     
     #this is pretty sloppy right now - I'm passing $2 as an argument to the execution, but $2 is actually the radius, not the inputType in this case...
     echo qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
-    qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+    #qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+    sbatch --mem-per-cpu=4GB -q express -p erhip -o $LogFile -e $ErrFile -t 120 --job-name=${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
 else #anything but procedures which don't need any args or input/output help
     
@@ -98,7 +99,7 @@ else #anything but procedures which don't need any args or input/output help
     if ( ! -d log/${inputType}/${analysisTag}) then
 	mkdir -p log/${inputType}/${analysisTag} #making log directory
     endif
-
+    
     foreach input ( ${base}*${tag}_R${radius}.root ) #pAuHT2_${tag}_R${radius}* ) #this is specifically for pAuHT2, remove once you've run it! Or pass in the trigger so you don't have to keep doing this
     
 	set OutBase = `basename $input | sed 's/.root//g'` #this removes the filetype so we can append to the filename
@@ -123,8 +124,9 @@ else #anything but procedures which don't need any args or input/output help
 	
 	echo qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 	
-	qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
-       
+	#qsub -V -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+	sbatch --mem-per-cpu=4GB -q express -p erhip -o $LogFile -e $ErrFile -t 120 --job-name=${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+
     end #end of loop over input files
 
 endif

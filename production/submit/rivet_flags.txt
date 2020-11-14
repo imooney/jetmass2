@@ -1,7 +1,7 @@
 #Determines whether Herwig or Pythia HepMC files will be the input
-inputIsPythia = TRUE
+inputIsPythia = FALSE
 #Sets the jet radius parameter for clustering
-jetRadius = 04
+jetRadius = 02
 #If hadronic final state, turns weak decays on or off; otherwise, partonic FS
 decayFlag = undecayed
 

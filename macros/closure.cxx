@@ -56,7 +56,7 @@ int main (int argc, const char** argv) {
   TH2::SetDefaultSumw2();
   TH3::SetDefaultSumw2();
 
-  const string match_path = "~/jetmass2/out/sim/";
+  const string match_path = "~/jetmass2_11-10-2020_11_10-2020/out/sim/";
   const string match_file = "sim_matched";
 
   //input files                                                                                                                                                
@@ -128,7 +128,7 @@ int main (int argc, const char** argv) {
     ftitle = "groomed_"+ftitle;
   }
 
-  TFile *fout = new TFile(("~/jetmass2/out/closure/"+ftitle+radius+"_new.root").c_str(),"RECREATE");
+  TFile *fout = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/closure/"+ftitle+radius+"_new.root").c_str(),"RECREATE");
   fout->cd();
   
   reco_opp_m1D->Write();

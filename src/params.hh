@@ -106,7 +106,7 @@ namespace Analysis {
   const double det_FitOverMaxPts = 0.52;
 
   //particle cuts
-  const double max_track_rap = 1.0;       //detector acceptance - mimicked in Pythia as well
+  const double max_track_eta = 1.0;       //detector acceptance - mimicked in Pythia as well
   const double partMinPt = 0.2;           //30.0 GeV >= particle pT >= 0.2 GeV 
   const double partMaxPt = 30.0;          
 
@@ -115,14 +115,14 @@ namespace Analysis {
   const double jet_ptmin = 5.0;//GeV      //gen-jet pT >= 5.0 GeV                 
   const double det_jet_ptmin = 15.0; //GeV //detector-level jet pT >= 15 GeV
   const double jet_ptmax = 1000.0;//GeV   //DEBUG
-  const double max_rap = max_track_rap-R; //|eta_jet| < 1-R
+  const double max_eta = max_track_eta-R; //|eta_jet| < 1-R
   const double NEF_max = 0.9;            //neutral energy fraction of jet must be < 90% (not used for PYTHIA) !!!!!
-  const double mass_min = 0.0; //TEMPFORRAGHAV 1.0;//GeV       //det-jet M >= 1.0 GeV !!!!!
+  const double mass_min = 1.0; //GeV       //det-jet M >= 1.0 GeV !!!!!
  
   //ghosts - not used for pp (jets aren't bkground subtracted)
   const int ghost_repeat = 1;
   const double ghost_area = 0.01;
-  const double ghost_maxrap = max_rap + 2.0 * R;
+  const double ghost_maxrap = max_eta + 2.0 * R;
 
   //Soft Drop params
   const double z_cut = 0.10;

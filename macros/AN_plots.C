@@ -97,7 +97,7 @@ void rawdata(TFile *fdat, TFile *fsim ) {
 
   cout << "Finished drawing raw data plots" << endl;
   
-  craw->SaveAs("~/jetmass2/plots/pp_AN/raw_mass.pdf");
+  craw->SaveAs("~/jetmass2_11-10-2020_11_10-2020/plots/pp_AN/raw_mass.pdf");
 
   return;
 }
@@ -190,7 +190,7 @@ void resolution(TFile* fp6match) {
   //
   cout << "Finished drawing resolution plots" << endl;
   
-  cres->SaveAs("~/jetmass2/plots/pp_paper/mass_resolution_v_detpt.pdf");
+  cres->SaveAs("~/jetmass2_11-10-2020_11_10-2020/plots/pp_paper/mass_resolution_v_detpt.pdf");
   
   return;
 }
@@ -277,7 +277,7 @@ void closure(TFile *fclos) {
   ltitle->DrawLatex(0.5,0.7,"anti-k_{T}, R = 0.4");
   ltitle->DrawLatex(0.5,0.62,"Ch+Ne jets, |#eta| < 0.6");
   ltitle->DrawLatex(0.5,0.54,"1D Bayesian unfolding closure");
-  cm1D->SaveAs("~/jetmass2/plots/pp_AN/mass_closure_1D.pdf");
+  cm1D->SaveAs("~/jetmass2_11-10-2020_11_10-2020/plots/pp_AN/mass_closure_1D.pdf");
   
   cpt1D->cd();
   same_pt1D->Draw();
@@ -290,7 +290,7 @@ void closure(TFile *fclos) {
   ltitle->DrawLatex(7.5,0.7,"anti-k_{T}, R = 0.4");
   ltitle->DrawLatex(7.5,0.62,"Ch+Ne jets, |#eta| < 0.6");
   ltitle->DrawLatex(7.5,0.54,"1D Bayesian unfolding closure");
-  cpt1D->SaveAs("~/jetmass2/plots/pp_AN/pt_closure_1D.pdf");
+  cpt1D->SaveAs("~/jetmass2_11-10-2020_11_10-2020/plots/pp_AN/pt_closure_1D.pdf");
 */  
   cm2D->cd();
   cm2D->cd(1);
@@ -312,7 +312,7 @@ void closure(TFile *fclos) {
   minus_m->Draw("same");
   ptrange->DrawLatex(3,1.3,"30 < p_{T} < 45 GeV/c");
   
-  cm2D->SaveAs("~/jetmass2/plots/pp_AN/m_pt_closure_2D.pdf");
+  cm2D->SaveAs("~/jetmass2_11-10-2020_11_10-2020/plots/pp_AN/m_pt_closure_2D.pdf");
   
   return;
 }
@@ -566,7 +566,7 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
     slice->DrawLatexNDC(0.3,0.7,(pts[i]+" < p_{T} < "+pts[i+1]+" GeV/c").c_str());
   }
 
-  //csys->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"systematics_new.pdf").c_str());
+  //csys->SaveAs(("~/jetmass2_11-10-2020_11_10-2020/plots/DNP_talk/"+fstart+"systematics_new.pdf").c_str());
   
   
   //taking maximum envelopes!                                                                                                                                  
@@ -662,7 +662,7 @@ void systematics (TFile *fres, TFile *fdat, string hname, string htitle, string 
   }
   */
   
-  //cenvs->SaveAs(("~/jetmass2/plots/DNP_talk/"+fstart+"systematic_envelopes_new.pdf").c_str());
+  //cenvs->SaveAs(("~/jetmass2_11-10-2020_11_10-2020/plots/DNP_talk/"+fstart+"systematic_envelopes_new.pdf").c_str());
   
 }
 
@@ -686,15 +686,15 @@ void AN_plots(int radius, bool groom) {
   //~~~~~~//
 
   //~~~OPEN NECESSARY FILES~~~//
-  TFile *fdat = new TFile(("~/jetmass2/out/data/hists/data_hists_ppJP2"+radstring+"_bindropped.root").c_str(),"READ");
-  TFile *fp6unmatch = new TFile(("~/jetmass2/out/sim/hists/unmatched_hists"+radstring+".root").c_str(),"READ");
-  TFile *fp6match = new TFile(("~/jetmass2/out/sim/hists/matched_hists"+radstring+".root").c_str(),"READ");
-  TFile *fp8 = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
+  TFile *fdat = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/data/hists/data_hists_ppJP2"+radstring+"_bindropped.root").c_str(),"READ");
+  TFile *fp6unmatch = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/sim/hists/unmatched_hists"+radstring+".root").c_str(),"READ");
+  TFile *fp6match = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/sim/hists/matched_hists"+radstring+".root").c_str(),"READ");
+  TFile *fp8 = new TFile(("~/jetmass2_11-10-2020_11_10-2020/production/out/pythia/hists/pythia8"+radstring+"_undecayed_hists.root").c_str(),"READ");
   TFile *fh7 = new TFile(("~/jetmass/production/macros/hists/hists_allsim_lowzgremoved"+radstring+".root").c_str(),"READ");//temporarily using the old files (they're the same, but will point to new ones later)                                                                                                             
-  //  TFile *fPL = new TFile(("~/jetmass2/production/out/pythia/hists/pythia8"+radstring+"_FSR_only_undecayed_hists.root").c_str(),"READ");
+  //  TFile *fPL = new TFile(("~/jetmass2_11-10-2020_11_10-2020/production/out/pythia/hists/pythia8"+radstring+"_FSR_only_undecayed_hists.root").c_str(),"READ");
   
-  TFile *fclos = new TFile(("~/jetmass2/out/closure/closure"+radstring+".root").c_str(),"READ");
-  TFile *fsysts = new TFile(("~/jetmass2/out/sim/sim_matched"+radstring+"_test_bindropped.root").c_str(),"READ");
+  TFile *fclos = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/closure/closure"+radstring+".root").c_str(),"READ");
+  TFile *fsysts = new TFile(("~/jetmass2_11-10-2020_11_10-2020/out/sim/sim_matched"+radstring+"_test_bindropped.root").c_str(),"READ");
 
   //plots the uncorrected jet mass for a bin of pT and compares to MC
   //rawdata(fdat, fp6unmatch);

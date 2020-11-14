@@ -61,7 +61,6 @@ namespace Rivet {
 	return std::pair<double,double>(-1,-1);
     }
 
-    //this function has a small bug. Grab the fixed one from ../../src/funcs.cxx later.
     std::vector<int> MatchJets(const std::vector<fastjet::PseudoJet> candidates_safe, const std::vector<fastjet::PseudoJet> toMatch, std::vector<fastjet::PseudoJet> & c_matches, std::vector<fastjet::PseudoJet> & t_matches) {
       std::vector<int> match_indices;
       if (candidates_safe.size() == 0 || toMatch.size() == 0) {
@@ -184,51 +183,51 @@ namespace Rivet {
       //! final state and jet projection
       //! generic final state
       FinalState fs(-1.0, 1.0, 0.*GeV);
-      addProjection(fs, "FS");
+      declare(fs, "FS");
       FastJets fj(fs, FastJets::ANTIKT, _jetR);
-      addProjection(fj, "Jets");
+      declare(fj, "Jets");
     
       //! skips hadronization
       FinalPartons fp(Cuts::abseta < 1.0);
-      addProjection(fp, "FP");
+      declare(fp, "FP");
       FastJets pj(fp, FastJets::ANTIKT, _jetR);
-      addProjection(pj, "PartonJets");
+      declare(pj, "PartonJets");
 
       //handles the output for each pt-hat bin
       if(_mode == 0){
 	//! For P6: "../out/py6_decayed_jewel_pthatbin580_R%s.root"
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_5pthatbin10_R"+radiusText+"_"+decays+/*"_HeavyIons"*/".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_5pthatbin10_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }    
       else if(_mode == 1){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_10pthatbin15_R"+radiusText+"_"+decays+/*"_HeavyIons"*/".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_10pthatbin15_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 2){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_15pthatbin20_R"+radiusText+"_"+decays+/*"_HeavyIons"*/".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_15pthatbin20_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 3){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_20pthatbin25_R"+radiusText+"_"+decays+/*"_HeavyIons"*/".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_20pthatbin25_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 4){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_25pthatbin30_R"+radiusText+"_"+decays+/*"_HeavyIons"*/".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_25pthatbin30_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 5){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_30pthatbin35_R"+radiusText+"_"+decays+/*"_HeavyIons"*/".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_30pthatbin35_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 6){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_35pthatbin40_R"+radiusText+"_"+decays+/*"_HeavyIons"*/".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_35pthatbin40_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 7){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_40pthatbin45_R"+radiusText+"_"+decays+/*"_HeavyIons"*/".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_40pthatbin45_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 8){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_45pthatbin50_R"+radiusText+"_"+decays+/*"_HeavyIons"*/".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_45pthatbin50_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 9){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_50pthatbin60_R"+radiusText+"_"+decays+/*"_HeavyIons"*/".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_50pthatbin60_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }else if(_mode == 10){
-	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_60pthatbin80_R"+radiusText+"_"+decays+/*"_HeavyIons"*/".root").c_str(),"RECREATE");
+	fout = new TFile(("../out/star_mass_"+sim_name+"_IsaacsHepmcs_60pthatbin80_R"+radiusText+"_"+decays+"_HeavyIons.root").c_str(),"RECREATE");
 	fout->cd();
       }
       
@@ -479,8 +478,8 @@ namespace Rivet {
       fastjet::Selector select_pt_lo   = fastjet::SelectorPtMin(0.001);
       fastjet::Selector select_both_hi = select_pt_hi && select_eta;
       fastjet::Selector select_both_lo = select_pt_lo && select_eta;
-      const ParticleVector& FS = applyProjection<FinalState>(event, "FS").particlesByPt();     
-      const ParticleVector& FP = applyProjection<FinalPartons>(event, "FP").particlesByPt();
+      const ParticleVector& FS = apply<FinalState>(event, "FS").particlesByPt();     
+      const ParticleVector& FP = apply<FinalPartons>(event, "FP").particlesByPt();
       
       Cut cuts = Cuts::etaIn(-1, 1) & (Cuts::pT > _pTCut*GeV); 
 
@@ -494,9 +493,9 @@ namespace Rivet {
       vector<int> identity; vector<PseudoJet> hardparton;
       //for (int i = 0; i < event.genEvent()->particles_size(); ++ i) {
       foreach (const Particle &p, event.allParticles()) {
-	//if (!py_input) {
-	//std::cout << "WARNING! Quark v. gluon identification is not a feature of the Herwig analysis. Do not use output pertaining to q v. g discrimination!" << std::endl;
-	//}
+	if (!py_input) {
+	  std::cout << "WARNING! Quark v. gluon identification is not a feature of the Herwig analysis. Do not use output pertaining to q v. g discrimination!" << std::endl;
+	}
 	if (/*event.genEvent()->statusHepMC(i)*/ p.genParticle()->status() == 23) {//PYTHIA only! NEED TO CHANGE FOR HERWIG?
 	  if (p.pid() <=6 && p.pid() >= 1) {
 	    identity.push_back(0);//0 MEANS QUARK!

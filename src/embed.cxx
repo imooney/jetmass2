@@ -341,10 +341,10 @@ int main (int argc, const char ** argv) {
   //SELECTORS
   // Constituent selectors
   // ---------------------
-  Selector select_track_rap = fastjet::SelectorAbsRapMax(max_track_rap);
+  Selector select_track_eta = fastjet::SelectorAbsEtaMax(max_track_eta);
   Selector select_lopt      = fastjet::SelectorPtMin( partMinPt );
   Selector select_loptmax   = fastjet::SelectorPtMax( partMaxPt );
-  Selector spart = select_track_rap * select_lopt * select_loptmax;
+  Selector spart = select_track_eta * select_lopt * select_loptmax;
   
   //for tests
   //  Selector spart_nocuts = fastjet::SelectorPtMax(1000);
@@ -352,7 +352,7 @@ int main (int argc, const char ** argv) {
 
   // Jet candidate selectors
   // -----------------------
-  Selector select_jet_rap     = fastjet::SelectorAbsRapMax(max_rap);
+  Selector select_jet_eta     = fastjet::SelectorAbsEtaMax(max_eta);
   Selector select_det_jet_pt_min  = fastjet::SelectorPtMin( det_jet_ptmin );
   Selector select_gen_jet_pt_min = fastjet::SelectorPtMin( jet_ptmin );
   Selector select_jet_pt_max  = fastjet::SelectorPtMax( jet_ptmax );
@@ -364,9 +364,9 @@ int main (int argc, const char ** argv) {
   Selector select_temp_jetmin = fastjet::SelectorPtMin( 15.0 );
   Selector select_temp_jetmax = fastjet::SelectorPtMax( 30.0 );
   
-  Selector sjet_gen = select_jet_rap && select_gen_jet_pt_min && select_jet_pt_max /*select_temp_jetmin && select_temp_jetmax*/ && select_gen_jet_m_min;
+  Selector sjet_gen = select_jet_eta && select_gen_jet_pt_min && select_jet_pt_max /*select_temp_jetmin && select_temp_jetmax*/ && select_gen_jet_m_min;
  
-  Selector sjet_det = select_jet_rap && select_det_jet_pt_min && select_jet_pt_max && select_det_jet_m_min;
+  Selector sjet_det = select_jet_eta && select_det_jet_pt_min && select_jet_pt_max && select_det_jet_m_min;
   
   //for tests
   //Selector sjet_nocuts = fastjet::SelectorPtMax(1000);

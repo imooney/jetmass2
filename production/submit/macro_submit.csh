@@ -63,7 +63,7 @@ if ( ! -d log/${inputType}/${analysisTag}) then
 mkdir -p log/${inputType}/${analysisTag} #making log directory
 endif
  
-foreach input ( ${base}*R${radius}_${finalstate}_HeavyIons.root )
+foreach input ( ${base}*R${radius}_${finalstate}.root ) #_HeavyIons.root )
 
     set OutBase = `basename $input | sed 's/.root//g'` #this removes the filetype so we can append to the filename
     set OutBase = `basename $OutBase | sed 's:out/::g'` #this removes the out/ from the input since it is unnecessary
@@ -87,6 +87,7 @@ foreach input ( ${base}*R${radius}_${finalstate}_HeavyIons.root )
 
     echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
-    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+    #qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N $1 -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+    sbatch --mem-per-cpu=4GB -q express -p erhip -o $LogFile -e $ErrFile -t 120 --job-name=${analysisTag} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
 end #end of loop over input files

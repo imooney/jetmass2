@@ -26,12 +26,12 @@ echo 'Running toy embedding!'
 
 set trigger_pp = "ppJP2"
 #set base_pp = /tier2/home/groups/rhi/STAR/Data/ppJP2Run12/sum	
-set base_pp = ~/jetmass2/lists/pp_embed_filelist
+set base_pp = ~/jetmass2_11-10-2020_11_10-2020/lists/pp_embed_filelist
 echo "Running on the ppJP2-triggered data!"
 	
 set trigger_pAu = "pAuBBCMB"
 #set base_pAu = /tier2/home/groups/rhi/STAR/Data/P16id/production_pAu200_2015/MB/pAu_2015_200_MB_1
-set base_pAu = ~/jetmass2/lists/new_pAu_MB_filelist
+set base_pAu = ~/jetmass2_11-10-2020_11_10-2020/lists/new_pAu_MB_filelist
 echo "Running on the pAuBBCMB-triggered data!"
 
 # Make output directories if they don't already exist            

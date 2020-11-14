@@ -58,6 +58,8 @@ else
     exit
 endif
 
+# if you ever need it, here's the path to decayed Pythia6 with STAR tune: /tier2/home/groups/rhi/STAR/Data/IsaacsPy6_hadds/decay_1_startune_1/decay_1_startune_1_*
+
 if (${analysisType} == 'QA' || ${analysisType} == 'data') then
     if (${trigger} == 'JP2' && ${species} == 'pp') then
 	set trigger = "ppJP2"
@@ -123,7 +125,7 @@ foreach input ( ${base}* )
     if (${analysisType} == 'QA' || ${analysisType} == 'data') then
 	set OutBase = "$OutBase$uscore$trigger$uscore${wc1}${uscore}R${radius}"
     else if (${analysisType} == 'sim') then 
-	set OutBase = "test_$OutBase$uscore${wc1}$uscore${wc2}${uscore}R${radius}"
+	set OutBase = "$OutBase$uscore${wc1}$uscore${wc2}${uscore}R${radius}"
     else
     #set OutBase = "$OutBase${uscore}${wc2}${uscore}R${radius}"
     #set OutBase = "test_sample_April23_$OutBase${uscore}${wc2}${uscore}R${radius}"
@@ -158,6 +160,8 @@ foreach input ( ${base}* )
     echo "now submitting this script: "
     echo qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisType} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
-    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisType} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg   
+#OLD (PBS):    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisType} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg   
+#NEW (Slurm):
+sbatch --mem-per-cpu=4GB -q express -p erhip -o $LogFile -e $ErrFile -t 120 --job-name=${analysisType} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
 end

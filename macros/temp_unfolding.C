@@ -7,9 +7,9 @@ using namespace std;
 void temp_unfolding () {
   gStyle->SetPalette(kPastel);
   
-  TFile *fdat = new TFile("~/jetmass2/out/data/hists/data_hists_ppJP2_bindropped.root","READ");
-  TFile *fres = new TFile("~/jetmass2/out/sim/hists/matched_hists_bindropped.root","READ");
-  TFile *fold = new TFile("~/jetmass2/out/unfold/unfolded_v1.root","READ");
+  TFile *fdat = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/data/hists/data_hists_ppJP2_bindropped.root","READ");
+  TFile *fres = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/sim/hists/matched_hists_bindropped.root","READ");
+  TFile *fold = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/unfold/unfolded_v1.root","READ");
 
   vector<TH1D*> m_pt_unf_old = {(TH1D*) fold->Get("nom_0"),(TH1D*) fold->Get("nom_1"),(TH1D*) fold->Get("nom_2")};
   vector<TH1D*> dats_old = {(TH1D*) fold->Get("m_v_pt_dx23"),(TH1D*) fold->Get("m_v_pt_dx34"),(TH1D*) fold->Get("m_v_pt_dx46")};
@@ -41,7 +41,7 @@ void temp_unfolding () {
   }
   */
   //scaling errors
-  TFile *fstats = new TFile("~/jetmass2/out/sim/stat_err_scaling.root","READ");
+  TFile *fstats = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/sim/stat_err_scaling.root","READ");
   TH1D* scalefactors = (TH1D*) fstats->Get("hratio");
   
   for (int i = 0; i < nBins; ++ i) {
@@ -86,7 +86,7 @@ void temp_unfolding () {
     if (i == 2) { twsysts2->Draw("same9");}
   }
 
-  //  cws->SaveAs("~/jetmass2/plots/compare_code_v1_v2_w_bugs.pdf");
+  //  cws->SaveAs("~/jetmass2_11-10-2020_11_10-2020/plots/compare_code_v1_v2_w_bugs.pdf");
 
   return;
 }

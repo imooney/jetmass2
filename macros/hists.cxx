@@ -350,7 +350,7 @@ int main (int argc, const char ** argv) {
 
   //detector resolutions:
   //matched hists (2D)
-  TH2D *deltaPtvGePt = new TH2D("deltaPtvGePt",";Det. p^{jet}_{T} [GeV/c];#Delta p_{T}^{jet} (Det - Gen) / p_{T}^{gen-jet}",11,5,60,220,-40,40);//because we divide by gen pT so the y-axis can go beyond -1 to 1.
+  TH2D *deltaPtvGePt = new TH2D("deltaPtvGePt",";Det. p^{jet}_{T} [GeV/c];#Delta p_{T}^{jet} (Det - Gen) / p_{T}^{gen-jet}",11,5,60,220,-6,6);//because we divide by gen pT so the y-axis can go beyond -1 to 1.
   //it's legacy from me being dumb that the ratios and deltas have flipped axes. Should eventually get around to flipping one or the other (careful of downstream effects).
   TH2D *deltaPtvPyPt = new TH2D("deltaPtvPyPt",";Gen. p^{jet}_{T} [GeV/c];#Delta p_{T}^{jet} (Det - Gen) / p_{T}^{gen-jet}",11,5,60,220,-1,1);
   TH2D *ratioPtvPyPt = new TH2D("ratioPtvPyPt",";p_{T}^{det-jet} / p_{T}^{gen-jet};Gen. p^{jet}_{T} [GeV/c]",25,0,2,15,5,80);

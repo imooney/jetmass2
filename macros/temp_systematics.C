@@ -7,11 +7,11 @@ using namespace std;
 void temp_systematics () {
   gStyle->SetPalette(kPastel);
 
-  TFile *fold = new TFile("~/jetmass2/out/unfold/groomed_unfolded_v1.root","READ");
+  TFile *fold = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/unfold/groomed_unfolded_v1.root","READ");
   vector<TH1D*> systs_old = {(TH1D*) fold->Get("w_systs_0"),(TH1D*) fold->Get("w_systs_1"),(TH1D*) fold->Get("w_systs_2")};
   vector<TH1D*> reco_old = {(TH1D*) fold->Get("nom_0"),(TH1D*) fold->Get("nom_1"),(TH1D*) fold->Get("nom_2")};
   
-  TFile *fres = new TFile("~/jetmass2/out/sim/sim_matched_allbugsfixed_bindropped.root","READ");
+  TFile *fres = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/sim/sim_matched_allbugsfixed_bindropped.root","READ");
   RooUnfoldResponse *rnom = (RooUnfoldResponse*) fres->Get("mg_pt_res_nom"); //!
   RooUnfoldResponse *rTS = (RooUnfoldResponse*) fres->Get("mg_pt_res_TS"); //!
   RooUnfoldResponse *rTU = (RooUnfoldResponse*) fres->Get("mg_pt_res_TU"); //!
@@ -20,7 +20,7 @@ void temp_systematics () {
   RooUnfoldResponse *rGS = (RooUnfoldResponse*) fres->Get("mg_pt_res_GS"); //!
   RooUnfoldResponse *rMS = (RooUnfoldResponse*) fres->Get("mg_pt_res_MS"); //!
   
-  TFile *fdat = new TFile("~/jetmass2/out/data/hists/data_hists_ppJP2_bindropped.root","READ");
+  TFile *fdat = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/data/hists/data_hists_ppJP2_bindropped.root","READ");
   
   TH2D* mg_pt_dat = (TH2D*) fdat->Get("mg_v_pt");
   
@@ -308,7 +308,7 @@ void temp_systematics () {
   }
    
   //scaling errors
-  TFile *fstats = new TFile("~/jetmass2/out/sim/stat_err_scaling.root","READ");
+  TFile *fstats = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/sim/stat_err_scaling.root","READ");
   TH1D* scalefactors = (TH1D*) fstats->Get("hratio");
 
   for (int i = 0; i < nBins; ++ i) {
@@ -395,7 +395,7 @@ void temp_systematics () {
     unity->Draw("same");
   }
   /*  
-  TFile *fout = new TFile("~/jetmass2/out/unfold/unfolded_v2_bugsfixed.root","RECREATE");
+  TFile *fout = new TFile("~/jetmass2_11-10-2020_11_10-2020/out/unfold/unfolded_v2_bugsfixed.root","RECREATE");
   fout->cd();
   for (int i = 0; i < nBins; ++ i) {
     reco_noms_copy[i]->Write();

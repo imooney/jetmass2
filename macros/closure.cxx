@@ -56,8 +56,8 @@ int main (int argc, const char** argv) {
   TH2::SetDefaultSumw2();
   TH3::SetDefaultSumw2();
 
-  const string match_path = "~/jetmass2_11-10-2020_11_10-2020/out/sim/";
-  const string match_file = "sim_matched";
+  const string match_path = "~/jetmass2/out/sim/";
+  const string match_file = "FINAL_sim_matched";
 
   //input files                                                                                                                                                
   TFile *f = new TFile((match_path+match_file+radius+"_paper_bindropped_new.root").c_str(),"READ");

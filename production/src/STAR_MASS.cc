@@ -61,7 +61,51 @@ namespace Rivet {
 	return std::pair<double,double>(-1,-1);
     }
 
-    //this function has a small bug. Grab the fixed one from ../../src/funcs.cxx later.
+    //This function takes a vector of jets to be geometrically matched to another vector of "candidate" matches. Once matching occurs, a vector of indices is returned allowing one to index the original two vectors to fill responses etc. with the matched jet pairs. Redundantly (for debugging, etc.) the vectors of matches themselves are also updated for later use.
+    //Note: We need to be able to remove jets from the "candidates" vector after they've been matched, so we make a copy in the function.
+    //Note: In finding which jets were the matches, we know the toMatch jet match will be the 'i'th jet since we are iterating. The candidate jet should be the geometrically closest match, so the first one in the candidate list that has been sorted by deltaR to the match. Then geometrically match the matched candidate jet to the corresponding candidate_safe jet, since jets have been removed so they don't index to the same position in the list anymore
+    std::vector<int> MatchJets(const std::vector<fastjet::PseudoJet> candidates_safe, const std::vector<fastjet::PseudoJet> toMatch, std::vector<fastjet::PseudoJet> & c_matches, std::vector<fastjet::PseudoJet> & t_matches) {
+      std::vector<int> match_indices;
+      if (candidates_safe.size() == 0 || toMatch.size() == 0) {
+        return match_indices; //later, match_indices being empty will tell us there were no matches
+      }
+      //define candidates outside the loop so list continually dwindles as we remove matched candidates
+      std::vector<fastjet::PseudoJet> candidates = candidates_safe;
+      for (int i = 0; i < toMatch.size(); ++ i) { //for each jet in toMatch, we try to find a match from a dwindling set of candidates   
+        fastjet::Selector selectMatchedJets = fastjet::SelectorCircle( R );
+        selectMatchedJets.set_reference( toMatch[i] );
+        std::vector<fastjet::PseudoJet> matchedToJet = /*sorted_by_pt(*/ selectMatchedJets( candidates )/*)*/; //not sorting by pT because we sort by deltaR later
+	if (matchedToJet.size() == 0) { continue; } //means no match to this jet. Remove none from candidates. Continuing on to the next one.
+	else { //found at least one match. Need to remove the highest pT one from candidates and add the respective jets to the match vectors.
+	  //sorting by deltaR vv
+	  std::vector<double> dists;
+	  for (int j = 0; j < matchedToJet.size(); ++ j) {
+	    dists.push_back(matchedToJet[j].delta_R(toMatch[i]));//fills vector with values of deltaR between matched jets and their match
+	  }//loop over matched jets to get deltaR values to the reference jet
+	  matchedToJet = objects_sorted_by_values(matchedToJet, dists);//sorts by deltaR to toMatch[i].
+	  //sorted by deltaR ^^
+	  match_indices.push_back(i); //push back the toMatch match position
+	  t_matches.push_back(toMatch[i]);
+	  c_matches.push_back(matchedToJet[0]); //highest pT match                                                       
+	  for (int j = 0; j < candidates_safe.size(); ++ j) {//finding the match index (needs to be separate from next loop because we're removing jets from candidates but not candidates_safe.)
+	    if (matchedToJet[0].delta_R(candidates_safe[j]) == 0) {
+	      match_indices.push_back(j);
+	      break; //should exit only the c_matches loop
+	    }//found the matched jet in the unsorted non-shrinking list of candidates to add a match index to the list of indices
+	  }//loop to find the matched jet in the unsorted non-shrinking corresponding list of candidates                                                                                                                                                                                                     
+	  for (int j = 0; j < candidates.size(); ++ j) { //finding which one to delete from candidates before next toMatch iteration.
+	    if (matchedToJet[0].delta_R(candidates[j]) == 0) { //is probably the same jet
+	      candidates.erase(candidates.begin() + j); //removing the jet from the overall list of candidates so it can't be considered next time
+	      break; //should exit only the c_matches loop.
+	    }//found the matched jet in the unsorted shrinking list of candidates and removed it
+	  }//loop to find the matched jet in the unsorted shrinking corresponding list of candidates
+	}//found a match
+      }//loop over jets to be matched to candidates
+      return match_indices;
+    }
+    
+    /*
+    //this function has a small bug. The one defined above is a fixed and tested version, but I haven't run the code again since importing it so I'm keeping this old version in case I need a definitely functioning example.
     std::vector<int> MatchJets(const std::vector<fastjet::PseudoJet> candidates_safe, const std::vector<fastjet::PseudoJet> toMatch, std::vector<fastjet::PseudoJet> & c_matches, std::vector<fastjet::PseudoJet> & t_matches) {
       std::vector<int> match_indices;
       if (candidates_safe.size() == 0 || toMatch.size() == 0) {
@@ -93,7 +137,7 @@ namespace Rivet {
       }
       return match_indices;
     }
-       
+*/       
     //! Book histograms and initialise projections before the run
     void init() {
 

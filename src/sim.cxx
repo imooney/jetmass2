@@ -986,7 +986,7 @@ int main (int argc, const char ** argv) {
 	    double res_for_this_jet = pt_res_py->GetBinContent(pt_res_py->GetXaxis()->FindBin(p_matches[i].pt()));
 	    prior_adjust = fabs(gRandom->Gaus(0,fabs(res_for_this_jet*p_matches[i].pt())));
 	    m_pt_res_GS->Fill(g_matches[i].m(),g_matches[i].pt(),p_matches[i].m(),p_matches[i].pt()-prior_adjust,mc_weight);
-	    mg_pt_res_DS->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),g_Jets[match_indices[(2*i)+1]].pt(),p_GroomedJets[match_indices[2*i]].m(),p_Jets[match_indices[2*i]].pt()-prior_adjust,mc_weight);
+	    mg_pt_res_GS->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(),g_Jets[match_indices[(2*i)+1]].pt(),p_GroomedJets[match_indices[2*i]].m(),p_Jets[match_indices[2*i]].pt()-prior_adjust,mc_weight);
                     
 	  }
 	  else if (iSyst == 6) {//gen-level M/Mg smearing

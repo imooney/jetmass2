@@ -129,11 +129,9 @@ int main ( int argc, const char** argv) {
   string badtows = "", badruns = "";
   double vzdiff = -1;
   if (trigger.find("pp") != string::npos) {badtows = det_badTowers; badruns = dat_bad_run_list; vzdiff = det_vZDiff;}
-  if (trigger.find("pA") != string::npos) {badtows = pAu_badTowers; badruns = pAu_bad_run_list; vzdiff = pAu_vZDiff;}
+  //TEMP (COMBINED_BADTOWERS FOR COMPARISON TO EMBEDDING):
+  if (trigger.find("pA") != string::npos) {badtows = /*pAu_badTowers*/combined_badTowers; badruns = pAu_bad_run_list; vzdiff = pAu_vZDiff;}
   if (trigger.find("AA") != string::npos) {badtows = ""; badruns = ""; vzdiff = -1;} //TBD
-
-  //TEMP (FOR COMPARISON TO EMBEDDING):
-  badtows = combined_badTowers;
 
   //in place for now; will encapsulate in a function if it gets much more involved. Hardcodes the trigger IDs.                                                 
   int tID1 = -9999, tID2 = -9999, tID3 = -9999;
@@ -239,8 +237,7 @@ int main ( int argc, const char** argv) {
   Selector select_jet_pt_min  = fastjet::SelectorPtMin( det_jet_ptmin );
   Selector select_jet_pt_max  = fastjet::SelectorPtMax( jet_ptmax );
   Selector select_jet_m_min   = fastjet::SelectorMassMin( mass_min );
-  //temp, uncomment jetpt min and jetmmin later
-  Selector sjet = select_jet_eta /*&& select_jet_pt_min*/ && select_jet_pt_max/* && select_jet_m_min*/;
+  Selector sjet = select_jet_eta && select_jet_pt_min && select_jet_pt_max && select_jet_m_min;
   
   // Choose a jet and area definition
   // --------------------------------
@@ -372,7 +369,7 @@ int main ( int argc, const char** argv) {
 	}
       }
       //temp, uncomment the if (good_jets ) later
-      //if (good_jets.size() != 0) {
+      if (good_jets.size() != 0) {
 	//SoftDrop is a groomer not a tagger, so if we have at least one ungroomed jet, we should also have a SoftDrop'd jet.
 	nJets += good_jets.size();
 	n_jets = good_jets.size();
@@ -443,15 +440,15 @@ int main ( int argc, const char** argv) {
 
 	  ch_e_frac.push_back(ch_e/(double)tot_e); //CEF [charged energy fraction] in the jet
 	}//for loop over jets
-	//}//if we had jets
+      }//if we had jets
       
       // And we're done!
       // -----------------------------
-	//temp, uncomment the if (good_jets ) later
-	//if (good_jets.size() != 0) {
+      //temp, uncomment the if (good_jets ) later
+      if (good_jets.size() != 0) {
 	nEventsUsed++; //this event was accepted and had at least one jet passing all criteria
 	eventTree->Fill();
-	//}
+      }
     } // Event loop
   }catch ( std::exception& e) {
     std::cerr << "Caught " << e.what() << std::endl;

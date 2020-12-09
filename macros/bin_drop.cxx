@@ -111,8 +111,8 @@ int main (int argc, const char** argv) {
   const string sim_path = "~/jetmass2/out/sim/hists/";
   const string match_path = "~/jetmass2/out/sim/";
   const string data_path = "~/jetmass2/out/data/hists/";
-  const string match_file = "FINAL_sim_matched";
-  const string data_file = "FINAL_data_hists_ppJP2";
+  const string match_file = "1201-FINAL_sim_matched";
+  const string data_file = "1130-FINAL_data_hists_ppJP2";
   const string sim_file = "FINAL_unmatched_hists";
 
   TFile *match_in = new TFile((match_path+match_file+radius+"_paper.root").c_str(),"READ");

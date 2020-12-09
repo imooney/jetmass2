@@ -374,7 +374,8 @@ namespace Analysis {
     return bad_event;
   }
 
-  //This function takes a vector of jets to be geometrically matched to another vector of "candidate" matches. Once matching occurs, a vector of indices is returned allowing one to index the original two vectors to fill responses etc. with the matched jet pairs. Redundantly (for debugging, etc.) the vectors of matches themselves are also updated for later use.                                                                                                                   //Note: We need to be able to remove jets from the "candidates" vector after they've been matched, so we make a copy in the function.
+  //This function takes a vector of jets to be geometrically matched to another vector of "candidate" matches. Once matching occurs, a vector of indices is returned allowing one to index the original two vectors to fill responses etc. with the matched jet pairs. Redundantly (for debugging, etc.) the vectors of matches themselves are also updated for later use.
+//Note: We need to be able to remove jets from the "candidates" vector after they've been matched, so we make a copy in the function.
 //Note: In finding which jets were the matches, we know the toMatch jet match will be the 'i'th jet since we are iterating. The candidate jet should be the geometrically closest match, so the first one in the candidate list that has been sorted by deltaR to the match. Then geometrically match the matched candidate jet to the corresponding candidate_safe jet, since jets have been removed so they don't index to the same position in the list anymore
 std::vector<int> MatchJets(const std::vector<fastjet::PseudoJet> candidates_safe, const std::vector<fastjet::PseudoJet> toMatch, std::vector<fastjet::PseudoJet> & c_matches, std::vector<fastjet::PseudoJet> & t_matches) {
     std::vector<int> match_indices;

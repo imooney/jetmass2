@@ -94,13 +94,26 @@ if (${analysisType} == 'QA' || ${analysisType} == 'data') then
 else if (${analysisType} == 'sim') then
     set base = /tier2/home/groups/rhi/STAR/Data/AddedEmbedPythiaRun12pp200/Cleanpp12Pico_
     echo "Running on the Pythia6 and Pythia6+Geant (JP2-triggered) simulation!"
+else if (${analysisType} == 'embed') then
+    if (${trigger} == 'JP2' && ${species} == 'pA') then
+	set trigger = "pAuJP2"
+	set base = /tier2/home/groups/rhi/STAR/Data/EmbedPythiaRun15pAu200_picos/P18ih/pAu_200_REREproduction_2015/out/JP2/pt-hat
+	echo "Running on the JP2-triggered pAu embedding!"	
+    else if (${trigger} == 'HT2' && ${species} == 'pA') then
+        set trigger = "pAuHT2"
+        #set base = /tier2/home/groups/rhi/STAR/Data/AddedEmbedPythiaRun12pp200/Cleanpp12Pico_pt5_7_                                                          
+        #set base = /tier2/home/groups/rhi/STAR/Data/temp_embed_sample_w_emc_highpt/pt-hat                                                                    
+        #set base = /tier2/home/groups/rhi/STAR/Data/EmbedPythiaRun15pAu200_picos/P18ih/pAu_200_production_2015/out/HT2/pt-hat1525_                           
+        #I know the file path says "JP2" but this should also contain the HT2-triggered events.
+	set base = /tier2/home/groups/rhi/STAR/Data/EmbedPythiaRun15pAu200_picos/P18ih/pAu_200_REREproduction_2015/out/JP2/pt-hat
+        echo "Running on the HT2-triggered pAu embedding!"
+	#note: need to make sure there actually is a BBCMB trigger set up in the embedding before I can code it here. As first approx. of MB, can just run embedding analysis without a trigger
+    else 
+	echo "Wrong trigger/species/analysis-type combo!"
+    endif
 else
-    #set base = /tier2/home/groups/rhi/STAR/Data/AddedEmbedPythiaRun12pp200/Cleanpp12Pico_pt5_7_
-    #set base = /tier2/home/groups/rhi/STAR/Data/temp_embed_sample_w_emc_highpt/pt-hat
-    #set base = /tier2/home/groups/rhi/STAR/Data/EmbedPythiaRun15pAu200_picos/P18ih/pAu_200_production_2015/out/HT2/pt-hat1525_
-    set base = /tier2/home/groups/rhi/STAR/Data/EmbedPythiaRun15pAu200_picos/P18ih/pAu_200_REREproduction_2015/out/HT2/pt-hat
-
-    echo "Running on the HT2-triggered pAu embedding!"
+    echo "Wrong analysis type!"
+    exit
 endif
 
 # Make output directories if they don't already exist            
@@ -130,7 +143,7 @@ foreach input ( ${base}* )
     #set OutBase = "$OutBase${uscore}${wc2}${uscore}R${radius}"
     #set OutBase = "test_sample_April23_$OutBase${uscore}${wc2}${uscore}R${radius}"
     #set OutBase = "sample_pp_April20_$OutBase${uscore}${wc2}${uscore}R${radius}"
-    set OutBase = "RAGHAV_REREprod_$OutBase${uscore}${wc2}${uscore}R${radius}"
+    set OutBase = "$OutBase${uscore}${wc2}${uscore}R${radius}"
     endif
     #make the output path and names
     set outLocation = out/${outFile}/
@@ -153,8 +166,10 @@ foreach input ( ${base}* )
 	set arg = "$outLocation $outName $trigger $dummy $Files"
     else if (${analysisType} == 'data') then
 	set arg = "$outLocation $outName ${radius} $trigger ${wc1} $Files"
-    else if (${analysisType} == 'sim' || ${analysisType} == 'embed') then
+    else if (${analysisType} == 'sim') then
 	set arg = "$outLocation $outName ${radius} ${wc1} ${wc2} $Files"
+    else if (${analysisType} == 'embed') then
+	set arg = "$outLocation $outName ${radius} $trigger ${wc1} ${wc2} $Files"
     endif
 
     echo "now submitting this script: "

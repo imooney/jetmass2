@@ -34,6 +34,7 @@ int main (int argc, const char ** argv) {
   std::string outputDir = "out/"; // directory where everything will be saved
   std::string outFileName = "test.root"; //output file
   std::string chainList = "simlist.txt"; // input file: can be .root, .txt, .list
+  std::string trigger = "pAuJP2";
   double radius = 0.4; //jet radius parameter; input value can range from 0.1 to 9.9.
   bool full = 1;  //full = 1 => ch+ne; full = 0 => ch only.
   bool match = 0; //match = 0 => no match between Pythia & Pythia+Geant events.
@@ -43,7 +44,7 @@ int main (int argc, const char ** argv) {
   case 1: // Default case
     __OUT("Using Default Settings");
     break;
-  case 7: { // Custom case
+  case 8: { // Custom case
     __OUT("Using Custom Settings");
     std::vector<std::string> arguments( argv+1, argv+argc );
     
@@ -53,12 +54,18 @@ int main (int argc, const char ** argv) {
     outputDir         = arguments[0];
     outFileName       = arguments[1];
     radius            = radius_str_to_double (arguments[2]);
-    if (arguments[3] == "ch") {full = 0;} else {full = 1;}
-    if (arguments[4] == "matched") {match = 1;} else if (arguments[4] == "unmatched") {match = 0;} else {cerr << "Not a valid flag!" << endl; exit(1);}
-    chainList         = arguments[5];
+    trigger           = arguments[3]; //ppJP2, ppHT2, ppVPDMB, pAuJP2, pAuHT2, pAuBBCMB, or AA [TBD]     
+    if (arguments[4] == "ch") {full = 0;} else {full = 1;}
+    if (arguments[5] == "matched") {match = 1;} else if (arguments[4] == "unmatched") {match = 0;} else {cerr << "Not a valid flag!" << endl; exit(1);}
+    chainList         = arguments[6];
     
+    //test:
+    for (int i = 0; i < 7; ++ i) {
+      cout << "no argument there! " << arguments[i] << endl;
+    }
+
     //Printing settings:
-    cout << "Outputting to: " << (outputDir+outFileName).c_str() << "\nSettings:\nR = " << radius << " " <<  arguments[3] << " jets;\n match pythia and geant? " << match << ";\n input file: " << chainList << "\n";
+    cout << "Outputting to: " << (outputDir+outFileName).c_str() << "\nSettings:\nR = " << radius << " " <<  arguments[4] << " jets;\n match pythia and geant? " << match << ";\n input file: " << chainList << "\n";
     break;
   }
   default: { // Error: invalid custom settings
@@ -72,11 +79,9 @@ int main (int argc, const char ** argv) {
   //Setting up specifics of analysis based on the flags that were received above!                                                                               
   string badtows = "", badruns = "";
   double vzdiff = -1;
-  //trigger is hardcoded here since we have only one option in the embedding files right now (HT2)!!
-  const std::string trigger = "pAuHT2";
-  
+
   if (trigger.find("pp") != string::npos) {badtows = det_badTowers; badruns = dat_bad_run_list; vzdiff = det_vZDiff;}
-  if (trigger.find("pA") != string::npos) {badtows = pAu_badTowers; badruns = pAu_bad_run_list; vzdiff = pAu_vZDiff;}
+  if (trigger.find("pA") != string::npos) {badtows = /*pAu_badTowers*/combined_badTowers; badruns = pAu_bad_run_list; vzdiff = pAu_vZDiff;}
   if (trigger.find("AA") != string::npos) {badtows = ""; badruns = ""; vzdiff = -1;} //TBD                                                                      
   //in place for now; will encapsulate in a function if it gets much more involved. Hardcodes the trigger IDs.                                                 
   int tID1 = -9999, tID2 = -9999, tID3 = -9999;
@@ -283,6 +288,7 @@ int main (int argc, const char ** argv) {
   eventTree->Branch("p_weight", &p_wt); eventTree->Branch("p_EventID", &p_EventID);
   
   eventTree->Branch("g_n_jets", &g_n_jets);
+  eventTree->Branch("g_BbcAdcSumEast",&g_BbcAdcSumEast);
   eventTree->Branch("g_conspT",&g_conspT);
   eventTree->Branch("g_jetMult",&g_jetMult);
   eventTree->Branch("g_Pt", &g_Pt); eventTree->Branch("g_Eta",&g_Eta); eventTree->Branch("g_Phi",&g_Phi); eventTree->Branch("g_M",&g_M); eventTree->Branch("g_E",&g_E);
@@ -401,7 +407,7 @@ int main (int argc, const char ** argv) {
     
     //initialize both readers
     InitReader(P6Reader, P6Chain, nEvents, "All", truth_absMaxVz, truth_vZDiff, truth_evPtMax, truth_evEtMax, truth_evEtMin, truth_DCA, truth_NFitPts, truth_FitOverMaxPts, sim_maxEtTow, hc, false, sim_badTowers, sim_bad_run_list);
-    InitReader(GEANTReader, GEANTChain, nEvents, "All", det_absMaxVz, /*det_vZDiff*/ vzdiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, sim_maxEtTow, hc, false, pAu_badTowers, pAu_bad_run_list);
+    InitReader(GEANTReader, GEANTChain, nEvents, "All", det_absMaxVz, /*det_vZDiff*/ vzdiff, det_evPtMax, det_evEtMax, det_evEtMin, det_DCA, det_NFitPts, det_FitOverMaxPts, sim_maxEtTow, hc, false, /*pAu_badTowers*/badtows, pAu_bad_run_list);
     
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~  BEGIN EVENT LOOP!  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
     
@@ -569,14 +575,14 @@ int main (int argc, const char ** argv) {
 	g_wt = LookupRun15Xsec( geantFilename );
 
 	//if the event lacks the desired trigger, skip it
-	//NOT REQUIRING TRIGGER RIGHT NOW. Makes it MB-like for comparison to PYTHIA. CHANGE LATER!
-	/*
+	//TEMP! NOT REQUIRING TRIGGER RIGHT NOW. Makes it MB-like for comparison to PYTHIA. CHANGE LATER!
+	
 	//see function "SetTriggers()" for assignment of tID1, tID2 (or above until I write it)
 	if ( ! (g_header->HasTriggerId(tID1) || g_header->HasTriggerId(tID2) || g_header->HasTriggerId(tID3) ) ) {//cout << "DEBUG: skipping this event because it lacks appropriate triggers. Does it have trigger ID " << tID1 << "? " << header->HasTriggerId(tID1) << endl;
 	  token_Ge_bad = 1;
 	  if (match) {continue;} //biases the pythia during matched mode, since we drop pythia events where the matching geant isn't triggered
 	}
-	*/
+	
 	if (trigger.find("pA") != string::npos) {//removing some runs by hand in pA until we have bad run/tower lists                                            
 	  //TEMPORARILY SKIPPING THESE RUNS for pA [should define these runIDs somewhere later so they're not magic numbers]
 	  
@@ -633,6 +639,12 @@ int main (int argc, const char ** argv) {
 	int countieboi = 0;
         while (TStarJetPicoPrimaryTrack* g_track = (TStarJetPicoPrimaryTrack *) nextgtrk()) {
 	  double track_pt = (double) sqrt(g_track->GetPx()*g_track->GetPx() + g_track->GetPy()*g_track->GetPy());
+	  //TEMP!! (testing effect of increased Nbin on observables)
+	  if (g_track->GetTofTime() != -999 && track_pt >= 0.5) {//yes it's -999 and not -9999
+	    token_Ge_bad = 1;
+	    break;
+	  }
+	  //TEMP!! ^^
 	  if (fabs(g_track->GetEta()) < 1 && track_pt > 0.2 && track_pt < 30.0) {
 	    //countieboi ++; cout << countieboi << "th track";
 	    g_prim_Charge.push_back(g_track->GetCharge());
@@ -645,6 +657,8 @@ int main (int argc, const char ** argv) {
             //cout << " has dEdx = " << g_track->GetdEdx() << endl;
 	  }
         }
+	//TEMP (catching the events with high pT tracks in the MB)
+	if (match && token_Ge_bad == 1) { continue; }
 	//}
     //if (g_NOfTowers > 0) {
     TList *g_tows = GEANTReader->GetListOfSelectedTowers();//GetTowers();

@@ -97,7 +97,7 @@ else if (${analysisType} == 'sim') then
 else if (${analysisType} == 'embed') then
     if (${trigger} == 'JP2' && ${species} == 'pA') then
 	set trigger = "pAuJP2"
-	set base = /tier2/home/groups/rhi/STAR/Data/EmbedPythiaRun15pAu200_picos/P18ih/pAu_200_REREproduction_2015/out/JP2/pt-hat
+	set base = /tier2/home/groups/rhi/STAR/Data/EmbedPythiaRun15pAu200_picos/P18ih/pAu_200_REREproduction_2015_JPfix/out/JP2/pt-hat
 	echo "Running on the JP2-triggered pAu embedding!"	
     else if (${trigger} == 'HT2' && ${species} == 'pA') then
         set trigger = "pAuHT2"
@@ -178,5 +178,7 @@ foreach input ( ${base}* )
 #OLD (PBS):    qsub -V -q erhiq -l mem=4GB -o $LogFile -e $ErrFile -N ${analysisType} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg   
 #NEW (Slurm):
 sbatch --mem-per-cpu=4GB -q express -p erhip -o $LogFile -e $ErrFile -t 120 --job-name=${analysisType} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
+
+#sbatch --mem-per-cpu=4GB -q primary -o $LogFile -e $ErrFile -t 120 --job-name=${analysisType} -- ${ExecPath}/submit/qwrap.sh ${ExecPath} $execute $arg
 
 end

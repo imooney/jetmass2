@@ -183,7 +183,7 @@ int main ( int argc, const char** argv) {
   double dummy_double;
 
   //variables to link to branches in the tree
-  double n_jets; double refMult, bbc_east_rate, bbc_east_sum, zdc_coinc_rate;
+  double n_jets; double refMult, bbc_east_rate, bbc_east_sum, zdc_coinc_rate, UE_avgpt, UEnpart;
   vector<double> Pt; vector<double> Eta; vector<double> Phi; vector<double> M; vector<double> E;
   vector<double> ch_e_frac;
   vector<double> zg; vector<double> rg; vector<double> mg; vector<double> ptg;
@@ -202,6 +202,8 @@ int main ( int argc, const char** argv) {
   eventTree->Branch("runID",&runID);
   eventTree->Branch("n_jets", &n_jets);
   eventTree->Branch("refMult", &refMult);//reference multiplicity
+  eventTree->Branch("UE_avgpt", &UE_avgpt);
+  eventTree->Branch("UEnpart", &UEnpart);
   eventTree->Branch("bbc_east_rate", &bbc_east_rate); //~lumi
   eventTree->Branch("bbc_east_sum", &bbc_east_sum); //~centrality
   eventTree->Branch("zdc_coinc_rate", &zdc_coinc_rate); //~lumi
@@ -217,6 +219,14 @@ int main ( int argc, const char** argv) {
   eventTree->Branch("mcd",&mcd);
   eventTree->Branch("tau0",&tau0); eventTree->Branch("tau05",&tau05); eventTree->Branch("tau_05",&tau_05); eventTree->Branch("tau_1",&tau_1);
   eventTree->Branch("tau0_g",&tau0_g); eventTree->Branch("tau05_g",&tau05_g); eventTree->Branch("tau_05_g",&tau_05_g); eventTree->Branch("tau_1_g",&tau_1_g);
+
+  //TEMP check of the dN/d#eta of particles to compare to embedding for pA!
+  vector<double> part_pt; vector<double> part_eta;
+  TTree *particle_tree = new TTree("particle_tree","particle_tree");
+  particle_tree->Branch("refMult", &refMult);
+  particle_tree->Branch("bbc_east_sum", &bbc_east_sum);
+  particle_tree->Branch("Pt",&part_pt);
+  particle_tree->Branch("Eta",&part_eta);
 
   // Helpers
   // -------
@@ -267,6 +277,9 @@ int main ( int argc, const char** argv) {
     while ( reader->NextEvent() ) {
       
       //clearing vectors
+      //temp!
+      part_pt.clear(); part_eta.clear();
+      
       Pt.clear(); Eta.clear(); Phi.clear(); M.clear(); E.clear();
       zg.clear(); rg.clear(); mg.clear(); ptg.clear();
       ch_e_frac.clear(); mcd.clear();
@@ -279,6 +292,9 @@ int main ( int argc, const char** argv) {
       conspt_neut.clear(); conspt_ch.clear();
       conseta_neut.clear(); conseta_ch.clear();
 
+      UE_avgpt = -9999;
+      UEnpart = -9999;
+      
       reader->PrintStatus(10);
       
       //get the event header
@@ -298,16 +314,16 @@ int main ( int argc, const char** argv) {
       //if the event lacks the desired trigger, skip it                                                                                                        
       //see function "SetTriggers()" for assignment of tID1, tID2 (or above until I write it)                                                                  
       if ( ! (header->HasTriggerId(tID1) || header->HasTriggerId(tID2) || header->HasTriggerId(tID3) ) ) {//cout << "DEBUG: skipping this event because it lacks appropriate triggers. Does it have trigger ID " << tID1 << "? " << header->HasTriggerId(tID1) << endl;
-	continue;
+      	continue;
       }
       if (trigger.find("pA") != string::npos) {//removing some runs by hand in pA until we have bad run/tower lists
         //TEMPORARILY SKIPPING THESE RUNS for pA [should define these runIDs somewhere later so they're not magic numbers]                                     
         if (header->GetRunId() >= 16142059 && header->GetRunId() <= 16149001) {cout << "DEBUG: should never see this for pp!" << endl; continue;}
         //something weird happened to the towers in run 16135032 (and it looks like it started at the end of run 16135031), so excluding both                  
         if (header->GetRunId() == 16135031 || header->GetRunId() == 16135032) {cout << "DEBUG: should never see this for pp!" << endl; continue;}
-	//the event cuts don't check if the vzdiff is acceptable, so I have to hardcode it here. UPDATE: I believe Nick updated the eventstructuredAu to check this condition, so this line should be redundant now
-	//	if (!EventCuts->IsVertexZDiffOK(event)) {cout << "DEBUG: shouldn't see this now!" << endl; continue;}
-	//Above 64000 seems like detectors saturate (tower multiplicity explodes).                                                                             
+      	//the event cuts don't check if the vzdiff is acceptable, so I have to hardcode it here. UPDATE: I believe Nick updated the eventstructuredAu to check this condition, so this line should be redundant now
+      	//	if (!EventCuts->IsVertexZDiffOK(event)) {cout << "DEBUG: shouldn't see this now!" << endl; continue;}
+      	//Above 64000 seems like detectors saturate (tower multiplicity explodes).                                                                             
         if (header->GetBbcAdcSumEast() >= pAu_BBCE_ADC_sum_max) {continue;}
       }
       
@@ -319,21 +335,23 @@ int main ( int argc, const char** argv) {
       // ----------------------------------------------------------
       GatherParticles(container, sv, particles, full, 0, pdg); //"pdg" here finds the rest mass for particles with a given PID; 0 means detector-level.
 
-      //calculating refMult (N_ch in |eta| < 0.5)                                                                                                              
-      double refmult = 0;
-      for (int i = 0; i < particles.size(); ++ i) {
-	//temporarily using a modified definition of refmult that includes neutrals to check something in the unfolding
-        if (particles[i].user_index() != 0 && particles[i].user_index() != -9999 && fabs(particles[i].eta()) < 0.5) {
-	  refmult ++;
-	}
-      }
-      //refmult = particles.size();
+
       
       // Analysis
       // --------
       // Apply selector, spart (defined above, under "Constituent selectors"), to the full particle set
       vector<PseudoJet> good_parts = spart( particles );
-	
+
+      //calculating refMult (N_ch in |eta| < 0.5)                                                                                                              
+      double refmult = 0;
+      for (int i = 0; i < good_parts.size(); ++ i) {
+      	//temporarily using a modified definition of refmult that includes neutrals to check something in the unfolding
+        if (good_parts[i].user_index() != 0 && good_parts[i].user_index() != -9999 && fabs(good_parts[i].eta()) < 0.5) {
+      	  refmult ++;
+      	}
+      }	
+      //refmult = particles.size();
+      
       // find corresponding jets with soft constituents
       // ----------------------------------------------
       ClusterSequence/*Area*/ csa ( good_parts, jet_def/*, area_def */); // WITHOUT background subtraction
@@ -360,6 +378,25 @@ int main ( int argc, const char** argv) {
       //Implementing a neutral energy fraction cut of 90% on inclusive jets
       ApplyNEFSelection(initial, good_jets);
       
+
+      //temp: get UE                                                                                                                                           
+      vector<fastjet::PseudoJet> UE;
+      if (good_jets.size() > 0) {
+        GatherUE (good_jets[0], container , UE );
+      }
+      double avgUEpt = -9999;
+      if (UE.size() != 0) {
+	avgUEpt = 0; // prevents filling with 0 entries for avg pT when no particles in the away-region.
+        for (int i = 0; i < UE.size(); ++ i) {
+          avgUEpt += UE[i].pt();
+        }
+        avgUEpt /= (double) UE.size();
+      }
+      UE_avgpt = avgUEpt;
+
+      UEnpart = UE.size();
+
+
       vector<PseudoJet> GroomedJets;
       //loop over the jets which passed cuts, groom them, and add to a vector (sorted by pt of the original jet)
       for (int i = 0; i < good_jets.size(); ++ i) {
@@ -368,7 +405,7 @@ int main ( int argc, const char** argv) {
 	  nJetsSD ++;
 	}
       }
-      //temp, uncomment the if (good_jets ) later
+      
       if (good_jets.size() != 0) {
 	//SoftDrop is a groomer not a tagger, so if we have at least one ungroomed jet, we should also have a SoftDrop'd jet.
 	nJets += good_jets.size();
@@ -382,6 +419,12 @@ int main ( int argc, const char** argv) {
 	    cout << "FOR RAGHAV! : " << std::setprecision(10) << eventID << " " << runID << endl;
 	  }
 	}
+	//temp! particle loop for good events
+	for (int i = 0; i < good_parts.size(); ++ i) {
+	  part_pt.push_back(good_parts[i].pt());
+	  part_eta.push_back(good_parts[i].eta());
+	}
+
 	for (int i = 0; i < n_jets; ++ i) {
 	  Pt.push_back(good_jets[i].pt()); Eta.push_back(good_jets[i].eta()); Phi.push_back(good_jets[i].phi());
 	  M.push_back(good_jets[i].m()); E.push_back(good_jets[i].e());
@@ -448,6 +491,7 @@ int main ( int argc, const char** argv) {
       if (good_jets.size() != 0) {
 	nEventsUsed++; //this event was accepted and had at least one jet passing all criteria
 	eventTree->Fill();
+	particle_tree->Fill();
       }
     } // Event loop
   }catch ( std::exception& e) {
@@ -462,7 +506,7 @@ int main ( int argc, const char** argv) {
   // Close up shop
   // -------------
   eventTree->Write();
-  
+  particle_tree->Write();
   //fout->Write();
   fout->Close();
 

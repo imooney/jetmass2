@@ -55,10 +55,15 @@ int main (int argc, const char** argv) {
   RooUnfoldResponse* res = (RooUnfoldResponse*) fin->Get("pt_response");
   TH1D* match_plus_miss = (TH1D*) fin->Get("pt_gen_match_plus_miss");
   TH1D* match = (TH1D*) res->Hresponse()->ProjectionY("match");
-  /*
-  TFile *fin = new TFile("~/jetmass2/out/toy_embedding/response_peripheral_weighted_noMBjets_noMissesWeight_w_systs_correct_HP.root","READ");
-  TH1D* match_plus_miss = (TH1D*) fin->Get("truth_weight");
-  TH1D* match = (TH1D*) fin->Get("truth_matches_weight");
+  
+  /*  
+  //TFile *fin = new TFile("~/jetmass2/out/toy_embedding/response_peripheral_weighted_noMBjets_noMissesWeight_w_systs_correct_HP.root","READ");
+  TFile *fin = new TFile("~/jetmass2/out/embed/embed_JP2_R04_0-30cent_wsyst.root","READ");
+  TH1D* match_plus_miss = (TH1D*) fin->Get("pt_gen_match_plus_miss");
+  RooUnfoldResponse* res = (RooUnfoldResponse*) fin->Get("pt_response");
+  TH1D* match = (TH1D*) res->Hresponse()->ProjectionY("match");
+  //TH1D* match_plus_miss = (TH1D*) fin->Get("truth_weight");
+  //TH1D* match = (TH1D*) fin->Get("truth_matches_weight");
   */
 
   TH1D* hratio = (TH1D*) match_plus_miss->Clone("hratio");
@@ -75,6 +80,7 @@ int main (int argc, const char** argv) {
   
   //TFile *fout = new TFile((path+"stat_err_scaling"+radius+"_new_pA_peripheral_HP.root").c_str(),"RECREATE");
   TFile *fout = new TFile((path+"FINAL_stat_err_scaling"+radius+".root").c_str(),"RECREATE");
+  //TFile *fout = new TFile("pA_0-30cent_stat_err_scaling_R04.root","RECREATE");
 
   fout->cd();
   hratio->Write();

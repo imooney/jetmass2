@@ -141,6 +141,22 @@ namespace Analysis {
   const double pAu_vZDiff = 3.0; //this may be too tight of a cut - to be revisited
   const double pAu_BBCE_ADC_sum_max = 64000.0; //tower multiplicity in event explodes above this number. Detectors probably saturated.
   
+  //Activity ranges from the deciles of the min. bias iBBCE distribution. Currently using 0-50 and 50-100% [Hard Probes]
+  /*
+  const double lowEA_low = 0.0; //100%
+  const double lowEA_high = 17669.1; //50%
+  const double highEA_low = 17669.1; //50%
+  const double highEA_high = 64000.0; //0%
+  */
+
+  //Activity ranges from the deciles of the min. bias iBBCE distribution. Currently using 0-40 and 70-90% [official STAR embedding]
+  const double lowEA_low = 3559.12; //90%
+  const double lowEA_high = 13752.1;//60%
+  const double highEA_low = 26718.1; //30%
+  const double highEA_high = 64000.0; //0%
+  
+
+
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 }
 

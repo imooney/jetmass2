@@ -208,12 +208,15 @@ namespace Analysis {
   }
 
   //gets the cross section for each pT bin for the run 15 PYTHIA embedding
-  //XSEC was obtained by summing PYTHIA's pythia.info.sigmaGen(0) per event. Each pt-hat bin was run for 1e4 events. We divide by this to get the average cross section per bin.
+  //XSEC was obtained by summing PYTHIA's pythia.info.sigmaGen(0) per event. Each pt-hat bin was run for 1e4 events. We divide by the number of jet events (defined as events with jets above 2 GeV (or 5 GeV?)) to get the average cross section per bin.
+  //UPDATE: Feb. 2021. The original values were run on PYTHIA-8 out-of-the-box, which apparently does have a much different spectrum than Pythia-6 Perugia 2012 STAR tune, so the old values are commented out now, with the new ones coming from the embedding log files from Xianglei.
   double LookupRun15Xsec( TString filename ){
     const int NUMBEROFPT = 9;
     //! const char *PTBINS[NUMBEROFPT]={"5_7","7_9","9_11","11_15","15_25","25_35","35_45","45_55","55_65"};                                      
-    const static float XSEC[NUMBEROFPT] = {0.1604997783173907,0.0279900193730690,0.006924398431,0.0028726057079642,0.0005197051748372,0.0000140447879818,0.0000006505378525,0.0000000345848665,0.0000000016149182};
-    const static float NUMBEROFEVENT[NUMBEROFPT] = {242090.0,159181.0,96283.0,125463.0,441145.0,169818.0,58406.0,59431.0,59973.0};
+    //const static float XSEC[NUMBEROFPT] = {0.1604997783173907,0.0279900193730690,0.006924398431,0.0028726057079642,0.0005197051748372,0.0000140447879818,0.0000006505378525,0.0000000345848665,0.0000000016149182};//old, from PYTHIA-8
+    //const static float NUMBEROFEVENT[NUMBEROFPT] = {242090.0,159181.0,96283.0,125463.0,441145.0,169818.0,58406.0,59431.0,59973.0};//old
+    const static float XSEC[NUMBEROFPT] = {0.107509,0.019097,0.004752,0.001988,0.000361,0.00000965,0.000000471,0.0000000268,0.00000000138};
+    const static float NUMBEROFEVENT[NUMBEROFPT] = {421890,241080,120540,180791,542430,180810,60270,60270,60270};
     const static std::vector<std::string> vptbins={"pt-hat57","pt-hat79","pt-hat911","pt-hat1115","pt-hat1525","pt-hat2535","pt-hat3545","pt-hat4555","pt-hat5565"};
     
     for ( int i=0; i<vptbins.size(); ++i ){
@@ -224,8 +227,27 @@ namespace Analysis {
     return -1;
   }
 
+  //Veronica's function to get charged particles away from the jet
+  //now serving as charged+neutral UE
+  std::vector<fastjet::PseudoJet> GatherUE ( fastjet::PseudoJet trigJet, TStarJetVectorContainer<TStarJetVector> * container , std::vector<fastjet::PseudoJet> & Particles ){
+    for ( int i=0; i < container->GetEntries() ; ++i ) {
+      TStarJetVector* sv = container->Get(i);
+      fastjet::PseudoJet current = fastjet::PseudoJet( *sv );
+      //if ( sv->GetCharge() == 0 ) { continue; } //full, not charged!
 
+      double absDeltaPhi = fabs( current.delta_phi_to( trigJet ) );
+      if ( absDeltaPhi < 1.0  ||  absDeltaPhi > 2.14159265 ) { continue; }       //  1 < delta phi < ( pi - 1 )
+      
+      if ( std::abs(current.eta()) > max_track_eta )      { continue; }  // removes particles with |eta|>1
+      if ( current.pt() < partMinPt )      { continue; }  // removes particles with pt<0.2GeV
 
+      current.set_user_index( sv->GetCharge() );
+
+      Particles.push_back(current);
+    }
+    return Particles;
+  }
+  
   //This function simply converts TStarJetVectors from the event into PseudoJets for later clustering into jets with FastJet.
   //It also very importantly assigns a mass to each particle after the conversion.
   //The assigned mass is dependent on whether the function call is for particle-level (e.g. Pythia) [where we know the rest masses] or detector-level (e.g. Geant, data) [where we don't know them].

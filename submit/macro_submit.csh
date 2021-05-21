@@ -6,7 +6,7 @@
 #and writes each output to a similarly named file, to be hadded afterward
 
 # command line arguments
-    #1: the executable; this also doubles as the "analysisTag", i.e. the generic action taken on the files, e.g. "unfolded", or "closure"
+    #1: the executable; this also doubles as the "analysisTag", i.e. the generic action taken on the files, e.g. "unfold", or "closure"
     #2: the input type, e.g. 'data', 'QA', 'sim', 'toy_embedding', ...
     #3: the collision species: pp, pA, or AA; also pppA to denote pp embedded in pA
     #4: the jet radius. Options: any number > 0 & <= 9.9; passed in without the decimal, e.g. "06" for 0.6.        
@@ -30,7 +30,7 @@ cd .. #back to the top-level directory
 set base = ""
 
 #this block is used for the main analysis (running MC / data, making histograms,...)
-set analysisTag = $1 #this could be e.g. "unfolded" or "bin_drop"
+set analysisTag = $1 #this could be e.g. "unfold" or "bin_drop"
 set inputType = $2 #this could be e.g. "data" or "sim"
 set species = $3 #i.e. pp, pA, AA
 set radius = $4 #e.g. 04 for 0.4

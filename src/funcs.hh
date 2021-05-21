@@ -82,6 +82,9 @@ namespace Analysis {
   double LookupRun12Xsec(TString);
   double LookupRun15Xsec(TString);
   
+  //Veronica's function to get charged UE away from the jet
+  std::vector<fastjet::PseudoJet> GatherUE ( fastjet::PseudoJet, TStarJetVectorContainer<TStarJetVector> *, std::vector<fastjet::PseudoJet> &);
+
   //converts tstarjetvectors into pseudojets for later clustering into jets; also assigns particle masses
   void GatherParticles (TStarJetVectorContainer<TStarJetVector> *, TStarJetVector*, std::vector<fastjet::PseudoJet> &, const bool, const bool, TDatabasePDG*);
 

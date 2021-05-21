@@ -56,7 +56,7 @@ int main (int argc, const char ** argv) {
     radius            = radius_str_to_double (arguments[2]);
     trigger           = arguments[3]; //ppJP2, ppHT2, ppVPDMB, pAuJP2, pAuHT2, pAuBBCMB, or AA [TBD]     
     if (arguments[4] == "ch") {full = 0;} else {full = 1;}
-    if (arguments[5] == "matched") {match = 1;} else if (arguments[4] == "unmatched") {match = 0;} else {cerr << "Not a valid flag!" << endl; exit(1);}
+    if (arguments[5] == "matched") {match = 1;} else if (arguments[5] == "unmatched") {match = 0;} else {cerr << "Not a valid flag!" << endl; exit(1);}
     chainList         = arguments[6];
     
     //test:
@@ -91,7 +91,10 @@ int main (int argc, const char ** argv) {
   if (trigger == "pAuJP2") {tID1 = tpAuJP2a; tID2 = tpAuJP2b; tID3 = -8888;}
   if (trigger == "pAuHT2") {tID1 = tpAuHT2a; tID2 = tpAuHT2b; tID3 = -8888;}
   if (trigger == "pAuBBCMB") {tID1 = tpAuBBCMBa; tID2 = tpAuBBCMBb; tID3 = -8888;}
-  
+
+
+  bool lowEA = 0;//sets activity to low or high (currently 60-90% and 0-30% respectively).
+
   //  Initialize readers and provide chains
   TStarJetPicoReader* P6Reader = new TStarJetPicoReader();
   TChain* P6Chain = new TChain( "JetTreeMc" ); // PURE PYTHIA (particle)
@@ -110,6 +113,66 @@ int main (int argc, const char ** argv) {
   else if ( inputIsList)  { P6Chain = TStarJetPicoUtils::BuildChainFromFileList(chainList.c_str()); GEANTChain = TStarJetPicoUtils::BuildChainFromFileList(chainList.c_str());}
   else { __ERR("data file is not recognized type: .root or .txt only.") return -1; }
   
+  /*
+  //~~~
+  TFile *fweight = new TFile(("~/jetmass2/out/embed/weight_for_embedding_R"+(string) argv[3]+".root").c_str(),"READ");
+  TH1D *refmult_rat_lowEA = (TH1D*) fweight->Get("hrat_ref_lowEA");
+  TH1D *refmult_rat_highEA = (TH1D*) fweight->Get("hrat_ref_highEA");
+  TH1D *pt_rat_lowEA = (TH1D*) fweight->Get("hrat_pt_lowEA");
+  TH1D* pt_rat_highEA = (TH1D*) fweight->Get("hrat_pt_highEA");
+  TF1* frefmult_rat_lowEA = (TF1*) fweight->Get("frat_ref_lowEA");
+  TF1* frefmult_rat_highEA = (TF1*) fweight->Get("frat_ref_highEA");
+  refmult_rat_lowEA->SetDirectory(0);
+  refmult_rat_highEA->SetDirectory(0);
+  pt_rat_lowEA->SetDirectory(0);
+  pt_rat_highEA->SetDirectory(0);
+  fweight->Close();
+  //~~~
+  */
+  /*
+  //TEST! UNCOMMENT ABOVE AFTER
+  TFile *fweight = new TFile(("~/jetmass2/out/embed/weight_for_embedding_mpt_R"+(string) argv[3]+".root").c_str(),"READ");
+  TH1D *pt_rat_lowEA = (TH1D*) fweight->Get("hrat_pt_lowEA");
+  TH1D* pt_rat_highEA = (TH1D*) fweight->Get("hrat_pt_highEA");
+  pt_rat_lowEA->SetDirectory(0);
+  pt_rat_highEA->SetDirectory(0);
+  TH1D *m1520_rat_lowEA = (TH1D*) fweight->Get("hrat_m1520_lowEA");
+  TH1D* m1520_rat_highEA = (TH1D*) fweight->Get("hrat_m1520_highEA");
+  TH1D *m2025_rat_lowEA = (TH1D*) fweight->Get("hrat_m2025_lowEA");
+  TH1D* m2025_rat_highEA = (TH1D*) fweight->Get("hrat_m2025_highEA");
+  TH1D *m2530_rat_lowEA = (TH1D*) fweight->Get("hrat_m2530_lowEA");
+  TH1D* m2530_rat_highEA = (TH1D*) fweight->Get("hrat_m2530_highEA");
+  TH1D *m3040_rat_lowEA = (TH1D*) fweight->Get("hrat_m3040_lowEA");
+  TH1D* m3040_rat_highEA = (TH1D*) fweight->Get("hrat_m3040_highEA");
+  TH1D *m40up_rat_lowEA = (TH1D*) fweight->Get("hrat_m40up_lowEA");
+  TH1D* m40up_rat_highEA = (TH1D*) fweight->Get("hrat_m40up_highEA");
+  m1520_rat_lowEA->SetDirectory(0);
+  m1520_rat_highEA->SetDirectory(0);
+  m2025_rat_lowEA->SetDirectory(0);
+  m2025_rat_highEA->SetDirectory(0);
+  m2530_rat_lowEA->SetDirectory(0);
+  m2530_rat_highEA->SetDirectory(0);
+  m3040_rat_lowEA->SetDirectory(0);
+  m3040_rat_highEA->SetDirectory(0);
+  m40up_rat_lowEA->SetDirectory(0);
+  m40up_rat_highEA->SetDirectory(0);
+  
+  fweight->Close();
+  */
+
+  TFile *fweightrefptfit = new TFile(("~/jetmass2/out/embed/weight_for_embedding_allmethods_R"+(string) argv[3]+".root").c_str(),"READ");
+  TF1* frefmult_rat_lowEA = (TF1*) fweightrefptfit->Get("frat_ref_lowEA");                                                        
+  TF1* frefmult_rat_highEA = (TF1*) fweightrefptfit->Get("frat_ref_highEA");    
+  TF2* frefmult_pt_rat_lowEA = (TF2*) fweightrefptfit->Get("frat_ref_pt_lowEA");
+  TF2* frefmult_pt_rat_highEA = (TF2*) fweightrefptfit->Get("frat_ref_pt_highEA");
+  TH2D* pt_m_rat_lowEA = (TH2D*) fweightrefptfit->Get("hrat_pt_m_lowEA");
+  TH2D* pt_m_rat_highEA = (TH2D*) fweightrefptfit->Get("hrat_pt_m_highEA");
+  pt_m_rat_lowEA->SetDirectory(0);
+  pt_m_rat_highEA->SetDirectory(0);
+  fweightrefptfit->Close();
+  
+
+
   TFile *fout = new TFile( ( outputDir + outFileName ).c_str() ,"RECREATE");
   fout->cd();
   
@@ -144,17 +207,18 @@ int main (int argc, const char ** argv) {
   
   int g_EventID;
   double g_n_jets, g_wt;
+  double event_weight;
   vector<vector<double> > g_conspT;
   vector<double> g_jetMult;
   vector<double> g_Pt; vector<double> g_Eta; vector<double> g_Phi; vector<double> g_M; vector<double> g_E;
   vector<double> g_ch_e_frac;
   vector<double> g_zg; vector<double> g_rg; vector<double> g_mg; vector<double> g_ptg;
   vector<double> g_mcd;
-    
+
     //QA containers
     //EventHeader
     int p_EventId; int p_RunId;
-    int p_RefMult;
+    int p_RefMult; double p_UE_avgpt; double p_UE_npart;
     int p_NOfGlobalTracks; int p_NOfTowers; int p_NOfPrimaryTracks;
     double p_PVx; double p_PVy; double p_PVz;
     double p_vpdVz;
@@ -170,7 +234,7 @@ int main (int argc, const char ** argv) {
     
     //EventHeader
     int g_EventId; int g_RunId;
-    int g_RefMult;
+    int g_RefMult; double g_UE_avgpt; double g_UE_npart;
     int g_NOfGlobalTracks; int g_NOfTowers; int g_NOfPrimaryTracks;
     double g_PVx; double g_PVy; double g_PVz;
     double g_vpdVz;
@@ -187,10 +251,20 @@ int main (int argc, const char ** argv) {
 
     vector<vector<double> > suspect_pt; vector<vector<double> > suspect_eta; vector<vector<double> > suspect_phi; vector<vector<double> > suspect_Q;
     
-    vector<double> particle_eta;//temp
+    vector<double> g_part_pt; vector<double> g_part_eta; vector<double> p_part_pt; vector<double> p_part_eta;//temp
 
+    vector<double> py_part_eta;//temp
+    
     TTree *temptree = new TTree("temptree","temptree");
-    temptree->Branch("particle_eta",&particle_eta);
+    temptree->Branch("p_RefMult",&p_RefMult);
+    temptree->Branch("g_RefMult",&g_RefMult);
+    temptree->Branch("g_BbcAdcSumEast",&g_BbcAdcSumEast);
+    temptree->Branch("weight",&g_wt);
+    temptree->Branch("g_part_eta",&g_part_eta);
+    temptree->Branch("g_part_pt",&g_part_pt);
+    temptree->Branch("p_part_eta",&p_part_eta);
+    temptree->Branch("p_part_pt",&p_part_pt);
+    
 
     //DEBUG tree
     TTree *suspects = new TTree("suspects","suspects");
@@ -239,6 +313,8 @@ int main (int argc, const char ** argv) {
     p_QATree->Branch("p_tow_EtaCorrected",&p_tow_EtaCorrected);
     p_QATree->Branch("p_tow_PhiCorrected",&p_tow_PhiCorrected);
     
+    p_QATree->Branch("py_part_eta",&py_part_eta);
+
     TTree *g_QATree = new TTree("g_QA","g_QA");
     //PYTHIA embedded into min-bias pAu data:
     g_QATree->Branch("g_weight", &g_wt);
@@ -273,7 +349,7 @@ int main (int argc, const char ** argv) {
     g_QATree->Branch("g_tow_EtaCorrected",&g_tow_EtaCorrected);
     g_QATree->Branch("g_tow_PhiCorrected",&g_tow_PhiCorrected);
     
-   
+    
     
     
   //tree to hold jet and constituent quantites
@@ -281,6 +357,8 @@ int main (int argc, const char ** argv) {
   eventTree->Branch("p_n_jets", &p_n_jets);
   eventTree->Branch("p_conspT",&p_conspT);
   eventTree->Branch("p_jetMult",&p_jetMult);
+  eventTree->Branch("p_UE_avgpt",&p_UE_avgpt);
+  eventTree->Branch("p_UE_npart",&p_UE_npart);
   eventTree->Branch("p_Pt", &p_Pt); eventTree->Branch("p_Eta",&p_Eta); eventTree->Branch("p_Phi",&p_Phi); eventTree->Branch("p_M",&p_M); eventTree->Branch("p_E",&p_E);
   eventTree->Branch("p_ch_e_frac", &p_ch_e_frac);
   eventTree->Branch("p_zg", &p_zg); eventTree->Branch("p_rg", &p_rg); eventTree->Branch("p_mg", &p_mg); eventTree->Branch("p_ptg",&p_ptg);
@@ -291,12 +369,21 @@ int main (int argc, const char ** argv) {
   eventTree->Branch("g_BbcAdcSumEast",&g_BbcAdcSumEast);
   eventTree->Branch("g_conspT",&g_conspT);
   eventTree->Branch("g_jetMult",&g_jetMult);
+  eventTree->Branch("g_RefMult",&g_RefMult);
+  eventTree->Branch("g_UE_avgpt",&g_UE_avgpt);
+  eventTree->Branch("g_UE_npart",&g_UE_npart);
   eventTree->Branch("g_Pt", &g_Pt); eventTree->Branch("g_Eta",&g_Eta); eventTree->Branch("g_Phi",&g_Phi); eventTree->Branch("g_M",&g_M); eventTree->Branch("g_E",&g_E);
   eventTree->Branch("g_ch_e_frac", &g_ch_e_frac);
   eventTree->Branch("g_zg", &g_zg); eventTree->Branch("g_rg", &g_rg); eventTree->Branch("g_mg", &g_mg); eventTree->Branch("g_ptg",&g_ptg);
   eventTree->Branch("g_mcd",&g_mcd);
   eventTree->Branch("g_weight", &g_wt); eventTree->Branch("g_EventID", &g_EventID);
-    
+  eventTree->Branch("event_weight",&event_weight);//we try weighting the events based on the refmult so embedding looks more like data
+
+
+  //hist for statistical error correction - for matched events, but unmatched jets                                                                             
+  TH1D* pt_gen_match_plus_miss = new TH1D("pt_gen_match_plus_miss","",15,5,80);
+  
+  
   //hists for use in responses - note:
   //"hist_measured and hist_truth are used to specify the dimensions of the distributions (the histogram contents are not used here), eg. for 2D or 3D distributions or non-uniform binning." - http://hepunx.rl.ac.uk/~adye/software/unfold/RooUnfold.html
   //I.e. these histograms are just used as a template, they're not actually what is being filled when the responses are constructed.
@@ -320,7 +407,9 @@ int main (int argc, const char ** argv) {
   RooUnfoldResponse *mg_response = new RooUnfoldResponse(14,0,14,14,0,14, "mg_response","");
     
   // 2D responses
-  RooUnfoldResponse *m_pt_response = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_response");
+  RooUnfoldResponse *m_pt_response_lax = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_response_lax");
+  RooUnfoldResponse *m_pt_response_med = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_response_med");
+  RooUnfoldResponse *m_pt_response_strict = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_response_strict");
   RooUnfoldResponse *m_pt_response_counts = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_response_counts");
   RooUnfoldResponse *zg_pt_response = new RooUnfoldResponse(geZgvPt, pyZgvPt, "zg_pt_response");
   RooUnfoldResponse *rg_pt_response = new RooUnfoldResponse(geRgvPt, pyRgvPt, "rg_pt_response");
@@ -328,9 +417,13 @@ int main (int argc, const char ** argv) {
   RooUnfoldResponse *mg_pt_response = new RooUnfoldResponse(geMgvPt, pyMgvPt, "mg_pt_response");
   RooUnfoldResponse *mg_pt_response_counts = new RooUnfoldResponse(geMgvPt, pyMgvPt, "mg_pt_response_counts");
   
+  RooUnfoldResponse *m_pt_res_nom = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_res_nom"); //nominal
+  RooUnfoldResponse *m_pt_res_DS = new RooUnfoldResponse(geMvPt, pyMvPt, "m_pt_res_DS"); //smear detector spectrum  
+
   //vectors of responses & hists for easy writing to file later
-  std::vector<RooUnfoldResponse*> res = {pt_response,m_response,zg_response,rg_response,ptg_response,mg_response,m_pt_response,m_pt_response_counts,zg_pt_response,rg_pt_response,ptg_pt_response,mg_pt_response,mg_pt_response_counts};    
+  std::vector<RooUnfoldResponse*> res = {pt_response,m_response,zg_response,rg_response,ptg_response,mg_response,m_pt_response_lax,m_pt_response_counts,zg_pt_response,rg_pt_response,ptg_pt_response,mg_pt_response,mg_pt_response_counts, m_pt_response_med, m_pt_response_strict};    
     
+  std::vector<RooUnfoldResponse*> res_syst = {m_pt_res_nom,m_pt_res_DS};
     
   //defining the algorithm and radius parameter for clustering jets
   JetDefinition jet_def(antikt_algorithm, radius/*R*/);
@@ -394,10 +487,11 @@ int main (int argc, const char ** argv) {
   vector<int> debug_events_Ge = {0,0,0,0,0};
   
   double hc = 0.9999; //to be varied in the systematic uncertainty variation
-  const int nSources = 1; //includes the nominal settings as a "systematic".
+  const int nSources = 1; //includes the nominal settings as a "systematic".//TEMP!
   for (int iSyst = 0; iSyst < nSources; ++ iSyst) {
     if (iSyst == 0) {cout << endl << "RUNNING WITH NOMINAL SETTINGS!" << endl << endl;}
-    
+    if (iSyst == 1) {cout << endl << "RUNNING WITH ADJUSTED DET-LEVEL pT SPECTRUM!" << endl << endl;}
+
     p_NJets = 0; g_NJets = 0; p_n_accepted = 0; g_n_accepted = 0; counter_debug = 0;
     //set parameters back to their nominal values after the previous iteration changed them.
     //hc = 0.9999;
@@ -454,8 +548,19 @@ int main (int argc, const char ** argv) {
     
 	suspect_pt.clear(); suspect_eta.clear(); suspect_phi.clear(); suspect_Q.clear();
         
-	particle_eta.clear(); //temp
-        
+	p_part_pt.clear(); //temp
+	g_part_pt.clear();
+	p_part_eta.clear();
+	g_part_eta.clear();
+
+	py_part_eta.clear();
+	
+	//temp
+	p_UE_avgpt = -9999;
+	p_UE_npart = -9999;
+	g_UE_avgpt = -9999;
+	g_UE_npart = -9999;
+	
       mc_weight = -9999;
       p_n_jets = -9999; p_wt = -9999;
       p_conspT.clear();
@@ -465,6 +570,7 @@ int main (int argc, const char ** argv) {
       p_zg.clear(); p_rg.clear(); p_mg.clear(); p_ptg.clear();
       p_mcd.clear();
       
+      event_weight = -9999;
       g_n_jets = -9999; g_wt = -9999;
       g_conspT.clear();
       g_jetMult.clear();
@@ -603,6 +709,17 @@ int main (int argc, const char ** argv) {
 	    token_Ge_bad = 1;
 	    if (match) {continue;}
 	  }
+	  //selecting an activity range for the response matrix and eventual unfolding (low)
+	  if (lowEA && (g_header->GetBbcAdcSumEast() < lowEA_low || g_header->GetBbcAdcSumEast() > lowEA_high)) {
+	    token_Ge_bad = 1;
+	    if (match) {continue;}//total "centrality" is too low (high) if < (>)                                                                   
+	  }
+	  //selecting an activity range for the response matrix and eventual unfolding (high)
+	  if ((!lowEA) && (g_header->GetBbcAdcSumEast() < highEA_low || g_header->GetBbcAdcSumEast() > highEA_high)) {
+	    token_Ge_bad = 1;
+	    if (match) {continue;}//total "centrality" is too low (high) if < (>)                                                                   
+	  }
+	  
 	
 	}
 	
@@ -640,10 +757,12 @@ int main (int argc, const char ** argv) {
         while (TStarJetPicoPrimaryTrack* g_track = (TStarJetPicoPrimaryTrack *) nextgtrk()) {
 	  double track_pt = (double) sqrt(g_track->GetPx()*g_track->GetPx() + g_track->GetPy()*g_track->GetPy());
 	  //TEMP!! (testing effect of increased Nbin on observables)
+	  /*
 	  if (g_track->GetTofTime() != -999 && track_pt >= 0.5) {//yes it's -999 and not -9999
 	    token_Ge_bad = 1;
 	    break;
 	  }
+	  */
 	  //TEMP!! ^^
 	  if (fabs(g_track->GetEta()) < 1 && track_pt > 0.2 && track_pt < 30.0) {
 	    //countieboi ++; cout << countieboi << "th track";
@@ -694,37 +813,11 @@ int main (int argc, const char ** argv) {
       GatherParticles ( p_container, p_sv, p_Particles, full, 1, pdg); //Pythia; full = 0 => charged-only, 1 => ch+ne
       GatherParticles ( g_container, g_sv, g_Particles, full, 0, pdg); //GEANT
 
-      //temp
-      for (int i = 0; i < p_Particles.size(); ++ i) {
-	particle_eta.push_back(p_Particles[i].eta());
-      }
       /*      
       GatherParticles ( p_container, p_sv, p_Particles_nocuts, full, 1, pdg); //Pythia; full = 0 => charged-only, 1 => ch+ne
       GatherParticles ( g_container, g_sv, g_Particles_nocuts, full, 0, pdg); //GEANT
       */
 
-      //calculate REFMULT!
-      //calculating refMult (N_ch in |eta| < 0.5)                                                                                                               
-      double p_refmult = 0;
-      for (int i = 0; i < p_Particles.size(); ++ i) {
-        if (p_Particles[i].user_index() != 0 && p_Particles[i].user_index() != -9999 && fabs(p_Particles[i].eta()) < 0.5) {
-          p_refmult ++;
-        }
-      }
-      p_RefMult = p_refmult;
-      double g_refmult = 0;
-      for (int i = 0; i < g_Particles.size(); ++ i) {
-        if (g_Particles[i].user_index() != 0 && g_Particles[i].user_index() != -9999 && fabs(g_Particles[i].eta()) < 0.5) {
-          g_refmult ++;
-        }
-      }
-      g_RefMult = g_refmult;
-      cout << "REFMULT TEST: " << g_header->GetReferenceMultiplicity() << " ?=? " << g_RefMult << endl;
-
-      p_QATree->Fill(); //once per event
-      if (token_Ge_bad == 0) {
-	g_QATree->Fill(); //once per event 
-      }
       
       /*      
       if (event == 2820) {
@@ -775,8 +868,40 @@ int main (int argc, const char ** argv) {
 	//}
       vector<PseudoJet> g_Jets;
       
+      //calculate REFMULT!
+      //calculating refMult (N_ch in |eta| < 0.5)                                                                                                               
+      double p_refmult = 0;
+      for (int i = 0; i < p_cut_Particles.size(); ++ i) {
+	py_part_eta.push_back(p_cut_Particles[i].eta());
+        if (p_cut_Particles[i].user_index() != 0 && p_cut_Particles[i].user_index() != -9999 && fabs(p_cut_Particles[i].eta()) < 0.5) {
+          p_refmult ++;
+        }
+      }
+      p_RefMult = p_refmult;
+      double g_refmult = 0;
+      for (int i = 0; i < g_cut_Particles.size(); ++ i) {
+        if (g_cut_Particles[i].user_index() != 0 && g_cut_Particles[i].user_index() != -9999 && fabs(g_cut_Particles[i].eta()) < 0.5) {
+          if (g_cut_Particles[i].pt() < 0.2) { cout << "uh oh, wrong ref mult?" << endl;}
+	  g_refmult ++;
+        }
+      }
+      g_RefMult = g_refmult;
+      cout << "REFMULT TEST: " << g_header->GetReferenceMultiplicity() << " ?=? " << g_RefMult << endl;
+
+      
+
+      p_QATree->Fill(); //once per event
+      if (token_Ge_bad == 0) {
+	g_QATree->Fill(); //once per event 
+      }
+      
+      
+
+
+
       //Implementing a neutral energy fraction cut (of 90% currently) on inclusive det-level jets
       p_Jets = p_JetsInitial; //just passing intermediate -> final vector (no NEF selection on Pythia)
+
 
       if (p_Jets.size() != 0) {
 	nEvts_for_weight ++;
@@ -802,7 +927,38 @@ int main (int argc, const char ** argv) {
 	g_EventId = -9999;
 	g_wt = -9999;
       }
+
+      //get UE avg pT
+      vector<fastjet::PseudoJet> g_UE, p_UE; 
+      if (g_Jets.size() > 0) {
+	GatherUE (g_Jets[0], g_container , g_UE );
+      }
+      if (p_Jets.size() > 0) {
+	GatherUE (p_Jets[0], p_container, p_UE );
+      }
+      double g_avgUEpt = -9999;
+      if (g_UE.size() != 0) {
+	g_avgUEpt = 0; //prevents zero-pT entries for events with no particles in the away-region
+	for (int i = 0; i < g_UE.size(); ++ i) {
+	  g_avgUEpt += g_UE[i].pt();
+	}
+	g_avgUEpt /= (double) g_UE.size();
+      }
+      double p_avgUEpt = -9999;
+      if (p_UE.size() != 0) {
+	p_avgUEpt = 0; //prevents zero-pT entries for events with no particles in the away-region
+	for (int i = 0; i < p_UE.size(); ++ i) {
+	  p_avgUEpt += p_UE[i].pt();
+	}
+	p_avgUEpt /= (double) p_UE.size();
+      }
+      p_UE_avgpt = p_avgUEpt;
+      g_UE_avgpt = g_avgUEpt;
       
+      //get UE npart
+      p_UE_npart = p_UE.size();
+      g_UE_npart = g_UE.size();
+
       //at this point, all criteria have been met (except checking if the event is bad in DiscardEmbedEvent() below)
       //so we can start filling jet information e.g.:
       p_n_jets = p_Jets.size();
@@ -882,11 +1038,44 @@ int main (int argc, const char ** argv) {
       if (pmcd.size() != p_Jets.size()) {cerr << "DEBUG: shouldn't have that size of M_cd vector is different than n_jets!" << endl; exit(1);}
       if (gmcd.size() != g_Jets.size()) {cerr << "DEBUG: shouldn't have that size of M_cd vector is different than n_jets!" << endl; exit(1);}
       
+      //first check that we have a jet at detector-level in this event which has passed all cuts by this point, and that the event is good, then assign the weight for this event to make the embedding more data-like:
+      if (g_Jets.size() != 0 && token_Ge_bad == 0) {
+	//int binnum = refmult_rat_lowEA->GetXaxis()->FindBin(g_RefMult);
+	if (lowEA_low < g_BbcAdcSumEast && lowEA_high > g_BbcAdcSumEast) {
+	  
+	  double refmultweight = frefmult_rat_lowEA->Eval(g_RefMult);//refmult_rat_lowEA->GetBinContent(binnum);
+	  if (refmultweight == 0) {refmultweight = 1;}
+	  event_weight = (double) mc_weight * refmultweight;
+	  
+	}
+	else if (highEA_low < g_BbcAdcSumEast && highEA_high > g_BbcAdcSumEast) {
+	  
+	  double refmultweight = frefmult_rat_highEA->Eval(g_RefMult);//refmult_rat_highEA->GetBinContent(binnum);
+	  if (refmultweight == 0) {refmultweight = 1;}
+	  event_weight = (double) mc_weight * refmultweight;
+	  
+	}  
+	else {
+	  // event_weight = mc_weight; //this won't affect the weighted response since it's outside the activity range we select
+	  if (token_Ge_bad == 0) {
+	    cout << "Should never see this: a good event that wasn't in the activity range we select. Exiting!" << endl;
+	    exit(1);
+	  }
+	}
+      }
+      //TEMP! UNWEIGHTED RESPONSE!
+      //event_weight = mc_weight;
+
       
       //We have two vectors to be filled with matched jets. If they aren't, when looping over pythia jets, we have misses. Same goes when looping over geant jets with fakes. And for matches, we just fill with however many entries there are in the matched vectors.
       //MatchJets returns a vector of pairs of indices (i,j). The first entry is the position of the jet to match, the second its match's position, the third the position of the next jet to match, the fourth its match's position, etc.
       //FakesandMisses returns a vector of indices (i) corresponding to the indices of misses or fakes from the original candidate vector.
       if (match) {
+	if (iSyst == 0) {
+	  for (int i = 0; i < p_Jets.size(); ++ i) {
+	    pt_gen_match_plus_miss->Fill(p_Jets[i].pt(),mc_weight);
+	  }
+	}
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~MATCHING~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 	std::vector<fastjet::PseudoJet> g_matches; std::vector<fastjet::PseudoJet> p_matches;
 	std::vector<fastjet::PseudoJet> g_matches_for_fakes; std::vector<fastjet::PseudoJet> p_matches_for_fakes; //only used to determine fakes
@@ -931,13 +1120,33 @@ int main (int argc, const char ** argv) {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FILL RESPONSES/HISTS/TREES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//	
 	double prior_adjust = 0, prior_adjust_g = 0;
 	for (int i = 0; i < misses.size(); ++ i) {
-	  pt_response->Miss(misses[i].pt(), mc_weight);
+	  pt_response->Miss(misses[i].pt(), mc_weight);//don't weight miss jets by the data/embedding weight
 	  m_response->Miss(misses[i].m(), mc_weight);
 	  mg_response->Miss(p_GroomedJets[miss_indices[i]].m(), mc_weight);
-	  m_pt_response->Miss(misses[i].m(), misses[i].pt(), mc_weight);
+	  cout << "A" << endl;
+	  m_pt_response_lax->Miss(misses[i].m(), misses[i].pt(), mc_weight);
+	  m_pt_response_med->Miss(misses[i].m(), misses[i].pt(), mc_weight);
+	  m_pt_response_strict->Miss(misses[i].m(), misses[i].pt(), mc_weight);
 	  mg_pt_response->Miss(p_GroomedJets[miss_indices[i]].m(), p_Jets[miss_indices[i]].pt(), mc_weight);
+	  
+	  res_syst[iSyst]->Miss(misses[i].m(), misses[i].pt(), mc_weight);
+	  cout << "B" << endl;
+	    
 	}//for loop over misses
 	
+	//temp!
+	if (g_matches.size() > 0) {//equivalently, p_matches.size()
+	  //temp
+	  for (int i = 0; i < p_cut_Particles.size(); ++ i) {
+	    p_part_pt.push_back(p_cut_Particles[i].pt());
+	    p_part_eta.push_back(p_cut_Particles[i].eta());
+	  }
+	  for (int i = 0; i < g_cut_Particles.size(); ++ i) {
+	    g_part_pt.push_back(g_cut_Particles[i].pt());
+	    g_part_eta.push_back(g_cut_Particles[i].eta());
+	  }
+	}
+
 	//IMPORTANT NOTE:
 	//match_indices contains the indices of pairs of geant and pythia matched jets. So if we loop over a list of
 	//e.g. geant matches, the index i of a given geant match will be 2*i+1 in the match_indices list.
@@ -945,22 +1154,94 @@ int main (int argc, const char ** argv) {
 	//and the corresponding pythia match, to index at position 5. When accessing pythia jets in the match_indices list,
 	//since they come first in each pair, it is similar but with 2*i instead. 
 	for (int i = 0; i < g_matches.size(); ++ i) { //g_matches.size == p_matches.size == 1/2 (match_indices.size())
+	  cout << "g_matches size " << g_matches.size() << endl;
 	  //matches should be at same index in respective vectors
-	  //RESPONSES:      
-	  pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), mc_weight);
-	  m_response->Fill(g_matches[i].m(), p_matches[i].m(), mc_weight);
-	  mg_response->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(), p_GroomedJets[match_indices[2*i]].m(), mc_weight);
-	  m_pt_response->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight);
+	  //RESPONSES:
+	  double jetweight_strict = 1;
+	  double jetweight_med = 1;
+	  cout << "a" << endl;
+	  if (lowEA_low < g_BbcAdcSumEast && lowEA_high > g_BbcAdcSumEast) {
+	    cout << "ai" << endl;
+	    jetweight_med = frefmult_pt_rat_lowEA->Eval(g_matches[i].pt(), g_BbcAdcSumEast);
+	    cout << "aii" << endl;
+	  }
+	  cout << "b" << endl;
+	  if (highEA_low < g_BbcAdcSumEast && highEA_high > g_BbcAdcSumEast) {
+	    cout << "bi" << endl;
+	    jetweight_med = frefmult_pt_rat_highEA->Eval(g_matches[i].pt(), g_BbcAdcSumEast);
+	    cout << "bii" << endl;
+	  }
+	  cout << "c" << endl;
+	  
+	  //if (iSyst == 1) {
+	    int binnum = pt_m_rat_lowEA->FindBin(g_matches[i].pt(),g_matches[i].m());
+	    cout << "d" << endl;
+	    if (lowEA_low < g_BbcAdcSumEast && lowEA_high > g_BbcAdcSumEast) {
+	      cout << "di" << endl;
+	      jetweight_strict = pt_m_rat_lowEA->GetBinContent(binnum);
+	      cout << "dii" << endl;
+	    }
+	    cout << "e" << endl;
+	    if (highEA_low < g_BbcAdcSumEast && highEA_high > g_BbcAdcSumEast) {
+	      cout << "ei" << endl;
+	      jetweight_strict = pt_m_rat_highEA->GetBinContent(binnum);
+	      cout << "eii" << endl;
+	    }
+	    cout << "f" << endl;
+	    if (jetweight_med <= 0 ) {jetweight_med = 1;}//makes sure empty bins aren't messing with things
+	    if (jetweight_strict <= 0) {jetweight_strict = 1;}//makes sure empty bins aren't messing with things
+	    
+	    //for unfolding stability:
+	    jetweight_med += 0.00001;
+	    jetweight_strict += 0.00001;
+	    
+	    cout << "LATER!" << endl;
+	    //}
+	  /*
+	  //TEMP!vv
+	  int binnumpt = pt_rat_lowEA->GetXaxis()->FindBin(g_matches[i].pt());
+	  int binnumm = m1520_rat_lowEA->GetXaxis()->FindBin(g_matches[i].m());//binning should be the same in low and high, and diff. pT selections
+	  if (lowEA_low < g_BbcAdcSumEast && lowEA_high > g_BbcAdcSumEast) {
+	    if (g_matches[i].pt() >= 15 && g_matches[i].pt() < 20) { jetweight = pt_rat_lowEA->GetBinContent(binnumpt) * m1520_rat_lowEA->GetBinContent(binnumm);}
+	    if (g_matches[i].pt() >= 20 && g_matches[i].pt() < 25) { jetweight = pt_rat_lowEA->GetBinContent(binnumpt) * m2025_rat_lowEA->GetBinContent(binnumm);}
+	    if (g_matches[i].pt() >= 25 && g_matches[i].pt() < 30) { jetweight = pt_rat_lowEA->GetBinContent(binnumpt) * m2530_rat_lowEA->GetBinContent(binnumm);}
+	    if (g_matches[i].pt() >= 30 && g_matches[i].pt() < 40) { jetweight = pt_rat_lowEA->GetBinContent(binnumpt) * m3040_rat_lowEA->GetBinContent(binnumm);}
+	    if (g_matches[i].pt() >= 40) { jetweight = pt_rat_lowEA->GetBinContent(binnumpt) * m40up_rat_lowEA->GetBinContent(binnumm);}
+	    
+	  }
+	  if (highEA_low < g_BbcAdcSumEast && highEA_high > g_BbcAdcSumEast) {   
+	    if (g_matches[i].pt() >= 15 && g_matches[i].pt() < 20) { jetweight = pt_rat_highEA->GetBinContent(binnumpt) * m1520_rat_highEA->GetBinContent(binnumm);}
+	    if (g_matches[i].pt() >= 20 && g_matches[i].pt() < 25) { jetweight = pt_rat_highEA->GetBinContent(binnumpt) * m2025_rat_highEA->GetBinContent(binnumm);}
+	    if (g_matches[i].pt() >= 25 && g_matches[i].pt() < 30) { jetweight = pt_rat_highEA->GetBinContent(binnumpt) * m2530_rat_highEA->GetBinContent(binnumm);}
+	    if (g_matches[i].pt() >= 30 && g_matches[i].pt() < 40) { jetweight = pt_rat_highEA->GetBinContent(binnumpt) * m3040_rat_highEA->GetBinContent(binnumm);}
+	    if (g_matches[i].pt() >= 40) { jetweight = pt_rat_highEA->GetBinContent(binnumpt) * m40up_rat_highEA->GetBinContent(binnumm);}
+	    
+	  }
+	  
+	  if (jetweight == 0) { jetweight = 1; }
+	  */
+	      //TEMP!^
+	  pt_response->Fill(g_matches[i].pt(), p_matches[i].pt(), event_weight);
+	  m_response->Fill(g_matches[i].m(), p_matches[i].m(), event_weight);
+	  mg_response->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(), p_GroomedJets[match_indices[2*i]].m(), event_weight);
+	  cout << "C" << endl;
+	  m_pt_response_lax->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), event_weight);
+	  m_pt_response_med->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight*jetweight_med);
+	  m_pt_response_strict->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), mc_weight*jetweight_strict);
 	  mg_pt_response->Fill(g_GroomedJets[match_indices[(2*i)+1]].m(), g_Jets[match_indices[(2*i)+1]].pt(),
-			       p_GroomedJets[match_indices[2*i]].m(), p_Jets[match_indices[2*i]].pt(), mc_weight);
+			       p_GroomedJets[match_indices[2*i]].m(), p_Jets[match_indices[2*i]].pt(), event_weight);
 	 
+	  res_syst[iSyst]->Fill(g_matches[i].m(), g_matches[i].pt(), p_matches[i].m(), p_matches[i].pt(), event_weight);
+	  cout << "D" << endl;
 	  //(matched) TREES:
+
 	  //ungroomed
 	  p_Pt.push_back(p_matches[i].pt());
 	  p_M.push_back(p_matches[i].m());
 	  p_Eta.push_back(p_matches[i].eta());
 	  p_Phi.push_back(p_matches[i].phi());
 	  p_E.push_back(p_matches[i].e());
+	  p_jetMult.push_back(p_matches[i].constituents().size());
 	  //groomed
 	  p_mg.push_back(p_GroomedJets[match_indices[2*i]].m());
 	  p_ptg.push_back(p_GroomedJets[match_indices[2*i]].pt());
@@ -972,6 +1253,7 @@ int main (int argc, const char ** argv) {
 	  g_Eta.push_back(g_matches[i].eta());
 	  g_Phi.push_back(g_matches[i].phi());
 	  g_E.push_back(g_matches[i].e());
+          g_jetMult.push_back(g_matches[i].constituents().size());
 	  //groomed
 	  g_mg.push_back(g_GroomedJets[match_indices[(2*i)+1]].m());
 	  g_ptg.push_back(g_GroomedJets[match_indices[(2*i)+1]].pt());
@@ -985,11 +1267,79 @@ int main (int argc, const char ** argv) {
 	}//for loop over matches
             
 	for (int i = 0; i < fakes.size(); ++ i) {
-          pt_response->Fake(fakes[i].pt(), mc_weight);
-	  m_response->Fake(fakes[i].m(), mc_weight);
-	  mg_response->Fake(g_GroomedJets[fake_indices[i]].m(), mc_weight);
-	  m_pt_response->Fake(fakes[i].m(), fakes[i].pt(), mc_weight);
-	  mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt(), mc_weight);
+
+	  double jetweight_strict = 1;
+	  double jetweight_med = 1;
+	  
+	  if (lowEA_low < g_BbcAdcSumEast && lowEA_high > g_BbcAdcSumEast) {
+	    jetweight_med = frefmult_pt_rat_lowEA->Eval(fakes[i].pt(), g_BbcAdcSumEast);
+	  }
+	  if (highEA_low < g_BbcAdcSumEast && highEA_high > g_BbcAdcSumEast) {
+	    jetweight_med = frefmult_pt_rat_highEA->Eval(fakes[i].pt(), g_BbcAdcSumEast);
+	  }
+	  
+	  
+	  //if (iSyst == 1) {
+	    int binnum = pt_m_rat_lowEA->FindBin(fakes[i].pt(),fakes[i].m());
+	    if (lowEA_low < g_BbcAdcSumEast && lowEA_high > g_BbcAdcSumEast) {
+	      jetweight_strict = pt_m_rat_lowEA->GetBinContent(binnum);
+	    }
+	    if (highEA_low < g_BbcAdcSumEast && highEA_high > g_BbcAdcSumEast) {
+	      jetweight_strict = pt_m_rat_highEA->GetBinContent(binnum);
+	    }
+	    if (jetweight_med <= 0 ) {jetweight_med = 1;}//makes sure empty bins aren't messing with things
+	    if (jetweight_strict <= 0) {jetweight_strict = 1;}//makes sure empty bins aren't messing with things
+	    //for unfolding stability:
+	    jetweight_med += 0.00001;
+	    jetweight_strict += 0.00001;
+
+
+	    /*
+	  //if (iSyst == 1) {
+	  int binnum = pt_rat_lowEA->GetXaxis()->FindBin(fakes[i].pt(),fakes[i].m());
+	    if (lowEA_low < g_BbcAdcSumEast && lowEA_high > g_BbcAdcSumEast) {
+	      jetweight = pt_rat_lowEA->GetBinContent(binnum);
+	    }
+	    if (highEA_low < g_BbcAdcSumEast && highEA_high > g_BbcAdcSumEast) {
+	      jetweight = pt_rat_highEA->GetBinContent(binnum);
+	    }
+	    if (jetweight == 0) {jetweight = 1;}//makes sure empty bins aren't messing with things
+	    //}
+	    */
+	  //TEMP!
+	  //TEMP!vv
+	  /*
+	  int binnumpt = pt_rat_lowEA->GetXaxis()->FindBin(fakes[i].pt());
+	  int binnumm = m1520_rat_lowEA->GetXaxis()->FindBin(fakes[i].m());//binning should be the same in low and high, and diff. pT selections
+	  if (lowEA_low < g_BbcAdcSumEast && lowEA_high > g_BbcAdcSumEast) {
+	    if (fakes[i].pt() >= 15 && fakes[i].pt() < 20) { jetweight = pt_rat_lowEA->GetBinContent(binnumpt) * m1520_rat_lowEA->GetBinContent(binnumm);}
+	    if (fakes[i].pt() >= 20 && fakes[i].pt() < 25) { jetweight = pt_rat_lowEA->GetBinContent(binnumpt) * m2025_rat_lowEA->GetBinContent(binnumm);}
+	    if (fakes[i].pt() >= 25 && fakes[i].pt() < 30) { jetweight = pt_rat_lowEA->GetBinContent(binnumpt) * m2530_rat_lowEA->GetBinContent(binnumm);}
+	    if (fakes[i].pt() >= 30 && fakes[i].pt() < 40) { jetweight = pt_rat_lowEA->GetBinContent(binnumpt) * m3040_rat_lowEA->GetBinContent(binnumm);}
+	    if (fakes[i].pt() >= 40) { jetweight = pt_rat_lowEA->GetBinContent(binnumpt) * m40up_rat_lowEA->GetBinContent(binnumm);}
+	    
+	  }
+	  if (highEA_low < g_BbcAdcSumEast && highEA_high > g_BbcAdcSumEast) {   
+	    if (fakes[i].pt() >= 15 && fakes[i].pt() < 20) { jetweight = pt_rat_highEA->GetBinContent(binnumpt) * m1520_rat_highEA->GetBinContent(binnumm);}
+	    if (fakes[i].pt() >= 20 && fakes[i].pt() < 25) { jetweight = pt_rat_highEA->GetBinContent(binnumpt) * m2025_rat_highEA->GetBinContent(binnumm);}
+	    if (fakes[i].pt() >= 25 && fakes[i].pt() < 30) { jetweight = pt_rat_highEA->GetBinContent(binnumpt) * m2530_rat_highEA->GetBinContent(binnumm);}
+	    if (fakes[i].pt() >= 30 && fakes[i].pt() < 40) { jetweight = pt_rat_highEA->GetBinContent(binnumpt) * m3040_rat_highEA->GetBinContent(binnumm);}
+	    if (fakes[i].pt() >= 40) { jetweight = pt_rat_highEA->GetBinContent(binnumpt) * m40up_rat_highEA->GetBinContent(binnumm);}
+	    
+	  }
+	  if (jetweight == 0) { jetweight = 1; }
+	  */
+	  //
+          pt_response->Fake(fakes[i].pt(), event_weight);
+	  m_response->Fake(fakes[i].m(), event_weight);
+	  mg_response->Fake(g_GroomedJets[fake_indices[i]].m(), event_weight);
+	  cout << "E" << endl;
+	  m_pt_response_lax->Fake(fakes[i].m(), fakes[i].pt(), event_weight);
+	  m_pt_response_med->Fake(fakes[i].m(), fakes[i].pt(), mc_weight*jetweight_med);
+	  m_pt_response_strict->Fake(fakes[i].m(), fakes[i].pt(), mc_weight*jetweight_strict);
+	  mg_pt_response->Fake(g_GroomedJets[fake_indices[i]].m(), g_Jets[fake_indices[i]].pt(), event_weight);
+	  res_syst[iSyst]->Fake(fakes[i].m(), fakes[i].pt(), event_weight);
+	  cout << "F" << endl;
 	}//for loop over fakes
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
       }//matching-required conditional
@@ -1064,13 +1414,14 @@ int main (int argc, const char ** argv) {
 	}//geant event okay conditional
       }//matching-not-required conditional
       
-      temptree->Fill();//temp
+      
       if (p_Jets.size() != 0 && iSyst == 0) {
 	//if (token_Ge_bad == 1) { // earlier we zero out geant jets from bad events, so here we can fill as normal
 	  
 	//}
 	if (!token_Ge_bad) { suspects->Fill(); }//TEMP. Debugging too-high-pT embedded jets
 	eventTree->Fill(); //when !match, will fill sometimes with empty geant vectors in the geant branches
+	temptree->Fill();//temp
       }
         
       p_NJets += p_Jets.size(); g_NJets += g_Jets.size(); // add jets to total
@@ -1104,6 +1455,7 @@ int main (int argc, const char ** argv) {
       temptree->Write();//temp
 
       if (match) {
+	pt_gen_match_plus_miss->Write();
 	//hists
 
 	//responses
@@ -1117,6 +1469,7 @@ int main (int argc, const char ** argv) {
       cout << endl << "nevts " << nEvts_for_weight << endl; //temp to get n-events for cross section weights
       
     }//iSyst==0 conditional
+    res_syst[iSyst]->Write();
   }//systematic variation loop
 
   cout << endl << "Writing to:  " << fout->GetName() << endl;
